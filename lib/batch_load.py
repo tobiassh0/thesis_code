@@ -1,15 +1,6 @@
-## packages
-import numpy as np
-import sdf
-import matplotlib.pyplot as plt
-import pickle
-
 ## python files
 import my_constants as const
 from list_new import *
-#from power import *
-#from energy import *
-
 
 class Simulation():
 	def __init__(self):

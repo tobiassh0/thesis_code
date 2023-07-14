@@ -16,8 +16,8 @@ import multiprocessing as mp ## parallelisation
 #from scipy.ndimage.filters import gaussian_filter
 
 ## 
-from bispectral_analysis import *
-import my_constants as const
+from lib.bispectral_analysis import *
+import lib.my_constants as const
 ## 
 
 #plt.rcParams['text.usetex'] = True
@@ -27,24 +27,8 @@ plt.tight_layout()
 kwargs={'interpolation':'nearest','origin':'lower','aspect':'auto'}
 tnrfont = {'fontsize':20,'fontname':'Times New Roman'}
 
-
-# ===============  CONSTANTS  =============== # 
-#PI=np.pi
-#e0=8.85E-12 			# F m^-1
-#mu0=1.25666E-6			# N A^-2
-#me=9.10938356E-31 		# kg // make this more precise
-#mp=1.6726E-27 			# kg // proper mass ratio 
-#qe=1.60217662E-19		# C
-#kb=1.3806E-23			# J K^-1
-#c=3E8					# m s^-1
-#me_to_mp = 1836.2		# Ratio
-#me_to_alpha = 7294.3	# ""
-#me_to_He3 = 5497.885	# ""
-#me_to_D2 = 3671.5		# ""
-## home_path = '/mnt/c/Users/twsh2/Documents/PHD/newnew/' #chnage this to wherever you want to save your plots etc.
-#home_path = ''
-# =========================================== #
-
+#---------------------------------------------------------------------------------------#
+#---------------------------------------------------------------------------------------#
 
 # Returns the file name/loc of the simulation being analysed
 def getSimulation(loc=''):
