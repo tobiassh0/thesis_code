@@ -45,6 +45,7 @@ for sim in sim_lst:
 	Nparts = np.zeros(len(species))
 	## field & species energies
 	for i in range(0,3):
+		# fields
 		Energyfield = read_pkl(fieldnames[i])
 		if fieldnames[i] == 'Bzenergy':
 			meanEnergyfield = np.mean(Energyfield[:mean_to])
@@ -90,6 +91,7 @@ for sim in sim_lst:
 		g,off = popt
 		growth.append([sim,fieldnames[i],g,off])
 
+		# particles
 		try:
 			pw = getQuantity1d(d0,'Particles_Weight_'+species[i])
 			Nparts[i] = len(pw)*np.mean(pw) # real No. particles = np. simulated * weight per particle

@@ -21,7 +21,7 @@ for j in range(len(vals)):
 		if noise_floor == 0:
 			noise1 = 0 ; noise2 = 0
 		else:
-			noise1 = np.random.normal(0,noise_floor,len(t)) + 5
+			noise1 = np.random.normal(0,noise_floor,len(t)) + 5 # creates random noise with each iteration
 			noise2 = np.random.normal(0,noise_floor,len(t)) + 5
 		sig1 = np.exp(-b1*(t-a1)**2)+noise1
 		sig2 = np.exp(-b2*(t-a2)**2)+noise2
