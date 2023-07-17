@@ -18,8 +18,11 @@ for j in range(len(vals)):
 	noise_floor = vals[j]*b1
 	pa = np.zeros(int(N)) ; ps = np.zeros(int(N))
 	for i in range(int(N)):
-		noise1 = np.random.normal(0,noise_floor,len(t)) + 5
-		noise2 = np.random.normal(0,noise_floor,len(t)) + 5
+		if noise_floor == 0:
+			noise1 = 0 ; noise2 = 0
+		else:
+			noise1 = np.random.normal(0,noise_floor,len(t)) + 5
+			noise2 = np.random.normal(0,noise_floor,len(t)) + 5
 		sig1 = np.exp(-b1*(t-a1)**2)+noise1
 		sig2 = np.exp(-b2*(t-a2)**2)+noise2
 
@@ -55,6 +58,6 @@ plt.gca().ticklabel_format(useOffset=False)
 axs[0].set_ylabel('Offset, '+r'$\tau$',**tnrfont)
 axs[1].set_ylabel(r'$\sigma_\tau/\mu_\tau$',**tnrfont)
 axs[1].set_xlabel('Noise amp./Signal amp.',**tnrfont)
-plt.savefig('correlation/noisy-shared-area_MC_errorbars-test.png')
+plt.savefig('correlation/noisy-shared-area_MC_errorbars-test1.png')
 plt.show() ; sys.exit()
 
