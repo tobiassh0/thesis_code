@@ -1,5 +1,6 @@
-from list_new import *
-import my_constants as const
+
+from func_load import *
+
 
 sim_loc = getSimulation('/storage/space2/phrmsf/cold_JET26148')
 #fm = load_batch_fieldmatrix()
@@ -15,8 +16,9 @@ wnorm = wcyc
 knorm = wcyc/vA#1/getDebyeLength(sdfread(0),'Electrons')
 klim_prime = (0.5*2*const.PI/getdxyz(sdfread(0)))/knorm
 wlim_prime = (0.5*2*const.PI/getdt(times))/wnorm
-wmax = 30
+wmax = 26
 kmax = 40 #0.05
+
 fig,axs = plt.subplots(ncols=2,figsize=(10,5),gridspec_kw={'width_ratios':[3,1]})#,sharey=True)
 fig.subplots_adjust(wspace=0.)
 ax=axs.ravel()
@@ -25,7 +27,7 @@ ax[0].set_xlim(0,kmax)
 ax[0].set_ylim(0,wmax)
 ax[0].set_xlabel(r'$kv_A/\Omega_D$',fontsize=20) # \lambda_{De}
 ax[0].set_ylabel(r'$\omega/\Omega_D$',fontsize=20)
-ax[0].set_xticklabels([0,5,10,15,20,25,30,35]) #[0,0.005,0.01,0.015,0.02,0.025,0.03,0.035]
+ax[0].set_xticklabels([0,5,10,15,20,25,30,35,40]) #[0,0.005,0.01,0.015,0.02,0.025,0.03,0.035]
 ax[0].tick_params(axis='both',direction='out',top=False,right=False,left=True,bottom=True)
 omegas, log10_power = power(klim_prime,wlim_prime,wmax,kmax,wnorm,norm_omega=r'$\Omega_D$',quantity='Magnetic_Field_Bz',plot=True,read=False,outp=True)
 dw = (omegas[-1]-omegas[0])/len(omegas)
@@ -42,8 +44,8 @@ ax[1].tick_params(axis='both',direction='out',top=False,right=False,left=True,bo
 
 #ax[1].set_ylabel(r'$\omega/\Omega_D$',fontsize=18)
 
-fig.savefig('/storage/space2/phrmsf/paper/remake/Cold_FT2d_PSD.png',bbox_inches='tight')
-#fig.savefig('/storage/space2/phrmsf/paper/remake/Cold_FT2d_PSD.eps',bbox_inches='tight')
-#plt.show()
+fig.savefig('/storage/space2/phrmsf/paper/Cold_FT2d_PSD.png',bbox_inches='tight')
+fig.savefig('/storage/space2/phrmsf/paper/Cold_FT2d_PSD.eps',bbox_inches='tight')
+plt.show()
 
 

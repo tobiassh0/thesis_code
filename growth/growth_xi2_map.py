@@ -1,7 +1,5 @@
-from list_new import *
-import my_constants as const
 
-kwargs={'interpolation':'nearest','origin':'lower','aspect':'auto'}
+from func_load import *
 
 
 def coldplasma_eff(wci,wpi,wce,wpe,omegas,theta=None):

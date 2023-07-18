@@ -1,7 +1,6 @@
-import numpy as np
-import matplotlib.pyplot as plt
-from list_new import *
-import my_constants as const
+
+from func_load import *
+
 
 sim_loc = getSimulation('/storage/space2/phrmsf/traceT_highres_0_01')
 ind = list_sdf(sim_loc)

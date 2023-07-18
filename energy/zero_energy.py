@@ -1,4 +1,4 @@
-from lib.list_new import *
+from func_load import *
 
 fig,ax = plt.subplots(figsize=(8,5))
 sims = ['0_00']#,'D_99_T_01','D_95_T_05','D_89_T_11','D_82_T_18','D_70_T_30','0_50']

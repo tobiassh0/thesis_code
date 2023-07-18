@@ -1,5 +1,4 @@
-import numpy as np
-import matplotlib.pyplot as plt
+from func_load import *
 from matplotlib.gridspec import GridSpec
 
 #def shared_area(sig1,sig2):

@@ -1,5 +1,11 @@
-import numpy as np
+''' 
+	Still need to import the functions here too otherwise list_new doesn't work.
+	Could try and fix this, could create a package out of this whole directory. Haven't
+	done it yet, may get around to it.
+'''
+
 import os, sys
+import numpy as np
 import sdf
 import pickle
 import matplotlib.pyplot as plt
@@ -8,6 +14,7 @@ from scipy import stats, signal
 from scipy.optimize import curve_fit
 from matplotlib.path import Path
 import multiprocessing as mp ## parallelisation
+
 ## OLD PACKAGES USED
 #import scipy.fftpack
 #from itertools import cycle
@@ -24,9 +31,13 @@ import my_constants as const
 #plt.rcParams['text.latex.unicode'] = True
 plt.style.use('classic')
 plt.tight_layout()
-kwargs={'interpolation':'nearest','origin':'lower','aspect':'auto'}
-tnrfont = {'fontsize':20,'fontname':'Times New Roman'}
 
+def formatting():
+	kwargs ={'interpolation':'nearest','origin':'lower','aspect':'auto'}
+	tnrfont = {'fontsize':20,'fontname':'Times New Roman'}
+	return kwargs, tnrfont
+
+kwargs, tnrfont = formatting()
 #---------------------------------------------------------------------------------------#
 #---------------------------------------------------------------------------------------#
 
@@ -37,17 +48,11 @@ def getSimulation(loc=''):
 		sim_file = input('Input Simulation Directory:\n!>>')
 	else:
 		sim_file = loc
-#	check = True
-#	while check:
 	try:
 		os.chdir(sim_file)
-#		check = False
 	except:
 		print('# ERROR # : Simulation file does not exist.')
-#			sim_file = input('Please input the path of the Simulation :: ')
-#		check = True
 		raise SystemExit
-	# if os.path.isdir(sim_file) == False:
 	return os.path.join(cwd,sim_file)
 
 ## returns all of the ion species in a simulation from looking at file0, could also do a function where user inputs each 
@@ -2299,9 +2304,6 @@ def majIons_edens_ratio(sims,species=['Tritons','Deuterons'],time_norm=r'$\tau_{
 	plt.xlabel(r'$(\xi_1/\xi_2)(m_2/m_1)(q_1/q_2)^2$',**tnrfont)
 	plt.show()
 
-#sims = ['/storage/space2/phrmsf/lowres_D_He3/0_22_p_90','/storage/space2/phrmsf/lowres_D_He3/0_15_p_90']
-#species = ['He3','Deuterons']
-#majIons_edens_ratio(sims,species)
 
 def shared_area(sig1,sig2,fitgauss=False):
 	lx = len(sig1)

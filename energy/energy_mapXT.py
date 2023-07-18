@@ -1,8 +1,4 @@
-from list_new import *
-import my_constants as const
-from mpl_toolkits.axes_grid1.inset_locator import mark_inset, inset_axes
-
-kwargs = {'interpolation':'nearest','origin':'lower','aspect':'auto'}
+from func_load import *
 
 def paraVelocity(INDEX):
 	index, minority, mMin = INDEX

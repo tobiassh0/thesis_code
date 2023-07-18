@@ -1,7 +1,5 @@
-import numpy as np
-import matplotlib.pyplot as plt 
-import my_constants as const
-from list_new import *
+
+from func_load import *
 
 
 ###################

@@ -1,5 +1,7 @@
-from lib.list_new import *
+from func_load import *
 
-
-sim_loc = getSimulation('/storage/space2/phrmsf/traceT_0_00')
+matrix = np.zeros((10,10))
+matrix[3,5] = 3
+plt.imshow(matrix,**kwargs)
+plt.show()
 

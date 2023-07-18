@@ -1,10 +1,6 @@
-from list_new import *
-#from scipy import signal
-#import my_constants as const
-#import matplotlib.pyplot as plt
-#from scipy.optimize import curve_fit
 
-kwargs = {'interpolation':'nearest','origin':'lower','aspect':'auto'}
+from func_load import *
+
 
 #def extractPeaks(data,Nperwcd=1,prominence=0.3):
 #	return signal.find_peaks(data,distance=Nperwcd,prominence=prominence)[0] # tune till Nperwcd encapsulates all peaks (visually)

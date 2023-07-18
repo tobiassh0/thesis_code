@@ -1,12 +1,4 @@
-import numpy as np
-from scipy import signal
-from scipy.fft import fftshift
-from scipy import stats
-import matplotlib
-import matplotlib.pyplot as plt
-
-from list_new import *
-import my_constants as const
+from func_load import *
 
 #x = np.linspace(0,50,200)
 #b = 100

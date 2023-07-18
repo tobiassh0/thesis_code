@@ -1,4 +1,15 @@
-from lib.list_new import *
+'''
+	Example script to highlight usage of functions for EPOCH analysis.
+	
+	Here we load the packages through func_load, get the simulation location 
+	as a path and change to that dir. Then we list all sdf files as a t_files
+	array. The quantity E_x electric field is then loaded linearly through time 
+	and space into the array Exfield. This is then plotted as an un-normalised
+	heat-map (norm=1 default) and returned to this script so it can be saved. 
+'''
+
+from func_load import *
+# loads all functions you might need
 
 # get simulation location
 simLocation = getSimulation('/sim/file/location') # so that the dir can read each .sdf file

@@ -1,4 +1,4 @@
-from list_new import *
+from func_load import *
 
 def phaseCorrelation(sig,fft_sig0,dw,wnorm,wmax=35):
 	fft_sig = np.fft.fft(sig)

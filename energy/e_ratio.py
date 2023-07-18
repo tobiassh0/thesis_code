@@ -1,6 +1,6 @@
 #import matplotlib.pyplot as plt 
-import lib.my_constants as const
-from lib.list_new import *
+from func_load import *
+
 
 ## loop through simulations and species (num of panels)
 figpart, axpart = plt.subplots(nrows=3,figsize=(6,10),sharex=True) # assume 3 ion species
