@@ -1,6 +1,6 @@
-import numpy as np
-import matplotlib.pyplot as plt
-kwargs = {'interpolation':'nearest','origin':'lower','aspect':'auto'}
+
+from func_load import *
+
 
 
 fig, axs = plt.subplots(nrows=1,ncols=3,figsize=(9,3),sharey=True)

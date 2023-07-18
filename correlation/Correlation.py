@@ -1,7 +1,6 @@
-from list_new import *
-from scipy import signal
-import statsmodels.api as sm
-import matplotlib.patches as mpatches
+
+from func_load import *
+
 
 def signedCurv(fx,dx):
 	### take the absolute for defined "curvature" or the square integral to get the total curvature of fx 
@@ -245,8 +244,6 @@ std_methods = np.std(tfreqoff.reshape(-1,4),axis=1)
 #ax.scatter(xi2,mean_methods/wcD,color='k')
 ax.errorbar(xi2,mean_methods/wcD,yerr=std_methods/wcD,fmt='s',color='k')
 methods = ['Cross-correlation','Peak trend','Shared area','Phase-correlation']
-#patches = mpatches.Patch(color=tcolors,label=methods)
-#ax.legend(handles=patches)
 ax.legend(methods,loc='best',frameon=True,shadow=True)
 ax.set_ylabel(r'$\omega_{off}/\Omega_D$',fontsize=18)
 ax.set_xlabel(r'$\xi_T$',fontsize=18)

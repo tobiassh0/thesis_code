@@ -1,8 +1,6 @@
-import numpy as np
-import matplotlib.pyplot as plt 
-import my_constants as const
-from list_new import *
-import os, sys
+
+from func_load import *
+
 
 #sim_lst = ['traceT_0_00','traceT_D_99_T_01','traceT_D_89_T_11','traceT_0_50']
 sim_lst = ['D_He3_0_10_min_p_0_9']

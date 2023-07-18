@@ -1,12 +1,6 @@
-import numpy as np
-import my_constants as const
-from list_new import *
-from scipy import signal
-from scipy.fft import fftshift
-from scipy import stats
-import matplotlib
-import matplotlib.pyplot as plt 
-from mpl_toolkits.mplot3d import Axes3D
+
+from func_load import *
+
 
 def plotSpectroPower(file0,fieldmatrix,times,nx,nt,fs,filefreq=1000,nfft=None,noverlap=None,clim=(None,None),cbar=False):
 ### In:

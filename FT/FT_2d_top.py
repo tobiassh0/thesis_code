@@ -1,5 +1,6 @@
-from list_new import *
-import my_constants as const
+
+from func_load import *
+
 
 sim_lst = ['traceT_0_00','traceT_D_99_T_01','traceT_D_89_T_11','traceT_0_50']
 MuArr = [0,0.01,0.11,0.5]

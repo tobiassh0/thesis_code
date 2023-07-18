@@ -1,8 +1,5 @@
-import numpy as np
-import matplotlib.pyplot as plt 
-import my_constants as const
-from list_new import *
-from matplotlib.ticker import MaxNLocator
+
+from func_load import *
 
 sim_lst = ['traceT_0_00','traceT_D_99_T_01','traceT_D_89_T_11','traceT_0_50']
 MuArr = [0,0.01,0.11,0.5]

@@ -1,4 +1,6 @@
-from list_new import *
+
+from func_load import *
+
 
 kwargs={'interpolation':'nearest','origin':'lower','aspect':'auto'}
 

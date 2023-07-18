@@ -1,4 +1,5 @@
-from list_new import *
+
+from func_load import *
 from matplotlib.pyplot import cm
 
 def coldpd(wc1,wp1,wc2,wp2,wce,wpe,omegas,theta=None): 

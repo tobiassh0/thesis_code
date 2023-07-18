@@ -1,8 +1,6 @@
-import numpy as np
-from list_new import *
-import my_constants as const
-import os, sys
-from scipy.signal import find_peaks
+
+from func_load import *
+
 
 def power(klim_prime,wlim_prime,wmax,kmax,norm_omega=r'$\Omega_D$',quant='Magnetic_Field_Bz',plot=False,read=True,outp=True):
 

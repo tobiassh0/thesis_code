@@ -1,7 +1,6 @@
-import numpy as np
-import matplotlib.pyplot as plt 
-import my_constants as const
-from list_new import *
+#import matplotlib.pyplot as plt 
+from func_load import *
+
 
 ## loop through simulations and species (num of panels)
 figpart, axpart = plt.subplots(nrows=3,figsize=(6,10),sharex=True) # assume 3 ion species
@@ -46,6 +45,7 @@ for sim in sim_lst:
 	Nparts = np.zeros(len(species))
 	## field & species energies
 	for i in range(0,3):
+		# fields
 		Energyfield = read_pkl(fieldnames[i])
 		if fieldnames[i] == 'Bzenergy':
 			meanEnergyfield = np.mean(Energyfield[:mean_to])
@@ -91,13 +91,15 @@ for sim in sim_lst:
 		g,off = popt
 		growth.append([sim,fieldnames[i],g,off])
 
+		# particles
 		try:
 			pw = getQuantity1d(d0,'Particles_Weight_'+species[i])
 			Nparts[i] = len(pw)*np.mean(pw) # real No. particles = np. simulated * weight per particle
 		except:
 			continue # should be 0 for species that arent present
-		Energypart = read_pkl(species[i]+'_KE')/(1000*const.qe)
+		Energypart = read_pkl(species[i]+'_KE')/(1000*const.qe) # energy density 
 		meanEnergypart = np.mean(Energypart[:mean_to])
+		print(Energypart,meanEnergypart)
 		Energypart = np.convolve(Energypart,np.ones(N)/N,mode='valid')
 		timespart = np.linspace(0,max(times),len(Energypart))
 		thresh = timespart/tcD < 6.1

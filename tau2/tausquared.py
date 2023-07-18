@@ -1,7 +1,8 @@
-from list_new import *
-from scipy import signal
+
+from func_load import *
 from sklearn.neighbors import KernelDensity
-from scipy.optimize import curve_fit
+
+
 
 def loadJETdata():
 	print('loading JET data')

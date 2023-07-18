@@ -1,5 +1,11 @@
-import numpy as np
+''' 
+	Still need to import the functions here too otherwise list_new doesn't work.
+	Could try and fix this, could create a package out of this whole directory. Haven't
+	done it yet, may get around to it.
+'''
+
 import os, sys
+import numpy as np
 import sdf
 import pickle
 import matplotlib.pyplot as plt
@@ -8,6 +14,7 @@ from scipy import stats, signal
 from scipy.optimize import curve_fit
 from matplotlib.path import Path
 import multiprocessing as mp ## parallelisation
+
 ## OLD PACKAGES USED
 #import scipy.fftpack
 #from itertools import cycle
@@ -24,27 +31,15 @@ import my_constants as const
 #plt.rcParams['text.latex.unicode'] = True
 plt.style.use('classic')
 plt.tight_layout()
-kwargs={'interpolation':'nearest','origin':'lower','aspect':'auto'}
-tnrfont = {'fontsize':20,'fontname':'Times New Roman'}
 
+def formatting():
+	kwargs ={'interpolation':'nearest','origin':'lower','aspect':'auto'}
+	tnrfont = {'fontsize':20,'fontname':'Times New Roman'}
+	return kwargs, tnrfont
 
-# ===============  CONSTANTS  =============== # 
-#PI=np.pi
-#e0=8.85E-12 			# F m^-1
-#mu0=1.25666E-6			# N A^-2
-#me=9.10938356E-31 		# kg // make this more precise
-#mp=1.6726E-27 			# kg // proper mass ratio 
-#qe=1.60217662E-19		# C
-#kb=1.3806E-23			# J K^-1
-#c=3E8					# m s^-1
-#me_to_mp = 1836.2		# Ratio
-#me_to_alpha = 7294.3	# ""
-#me_to_He3 = 5497.885	# ""
-#me_to_D2 = 3671.5		# ""
-## home_path = '/mnt/c/Users/twsh2/Documents/PHD/newnew/' #chnage this to wherever you want to save your plots etc.
-#home_path = ''
-# =========================================== #
-
+kwargs, tnrfont = formatting()
+#---------------------------------------------------------------------------------------#
+#---------------------------------------------------------------------------------------#
 
 # Returns the file name/loc of the simulation being analysed
 def getSimulation(loc=''):
@@ -53,17 +48,11 @@ def getSimulation(loc=''):
 		sim_file = input('Input Simulation Directory:\n!>>')
 	else:
 		sim_file = loc
-#	check = True
-#	while check:
 	try:
 		os.chdir(sim_file)
-#		check = False
 	except:
 		print('# ERROR # : Simulation file does not exist.')
-#			sim_file = input('Please input the path of the Simulation :: ')
-#		check = True
 		raise SystemExit
-	# if os.path.isdir(sim_file) == False:
 	return os.path.join(cwd,sim_file)
 
 ## returns all of the ion species in a simulation from looking at file0, could also do a function where user inputs each 
@@ -804,36 +793,34 @@ def plotAveEX(files,species):
 	fig.savefig(home_path+'EXmean_t.jpeg',bbox_inches='tight')
 
 # Plots any general quantity that covers time and space then plots a normalised heat map of this value (if norm='on') and saves it accordingly.
-def plotNormHeatmap(files,quantity,species,norm='on'):
-	print('PLOTTING NORMALISED HEATMAP')
-	quanMatrix = getfieldmatrix(files,quantity)
-	w_pe = getPlasmaFreq(files[0])
-	LambdaD = getDebyeLength(files[0],species)  # assumes this to be electrons but can be generalised e.g. 'Left' and 'Right' for two stream case
-	dx = getdxyz(files[0])
-	quan_norm=np.ndarray(shape=quanMatrix.shape)
-	for t in range(len(files)):
-		# quan_hold = -1*quanMatrix[t][0:]*dx 		# used for phi (electrostatic potential) rather than purely Ex
-		quan_hold = quanMatrix[t][0:]
-		if norm == 'on': 
-			max_quan = max(abs(np.array(quan_hold)))
-		else: 
-			max_quan = 1.
-		quan_norm[t][0:] = np.array(quan_hold)/max_quan
-		del quan_hold
+def plotNormHeatmap(matrix,xlabel='x',ylabel='y',cbar_label='',extent=[None,None],xylim=((None,None),(None,None)),norm=1,cbar=True,cmap='jet'):
+	# normalise
+	matrix = matrix/norm
 	
+	# check limits
+	if extent.count(None) != 0:
+		extent = matrix.shape # matrix shape is extent of plot
+	
+	if xylim.count(None) != 0:
+		xylim=((0,matrix.shape[0]),(0,matrix.shape[1]))
+
+	# plot
 	fig,ax=plt.subplots(figsize=(8,6))
-	x = files[0].__dict__[quantity].grid.data[0]/LambdaD
-	extent = [0,(getTimes(files)[-1]*(w_pe/(2*const.PI))),0,max(x)]
+	im = plt.imshow(matrix,**kwargs,extent=extent,cmap=cmap)
 
-	quan_norm = quan_norm[1:][:] # removes empty column in time domain
-	im = plt.imshow(quan_norm.transpose(),**kwargs,extent=extent,cmap='jet')
-	cbar = plt.colorbar(label=r'$\hat{\phi}$')
-	for t in cbar.ax.get_yticklabels():
-		t.set_fontsize(12)
-	ax.set_xlabel(r'$t\omega_p/2\pi$',fontsize=18)
-	ax.set_ylabel(r'$x/\lambda_D$',fontsize=18)
+	# limits and labels
+	if cbar:
+		tcbar = plt.colorbar(label=cbar_label)
+		for y in tcbar.ax.get_yticklabels():
+			y.set_fontsize(12)
+	ax.set_xlim(xylim[0][0],xylim[0][1])
+	ax.set_ylim(xylim[1][0],xylim[1][1])
+	ax.set_xlabel(xlabel,**tnrfont)
+	ax.set_ylabel(ylabel,**tnrfont)
 
-	fig.savefig(home_path+'heatmap_{}.jpeg'.format(quantity),bbox_inches='tight')
+	return fig,ax
+
+
 
 # =================================================
 # =================================================
@@ -2317,9 +2304,6 @@ def majIons_edens_ratio(sims,species=['Tritons','Deuterons'],time_norm=r'$\tau_{
 	plt.xlabel(r'$(\xi_1/\xi_2)(m_2/m_1)(q_1/q_2)^2$',**tnrfont)
 	plt.show()
 
-#sims = ['/storage/space2/phrmsf/lowres_D_He3/0_22_p_90','/storage/space2/phrmsf/lowres_D_He3/0_15_p_90']
-#species = ['He3','Deuterons']
-#majIons_edens_ratio(sims,species)
 
 def shared_area(sig1,sig2,fitgauss=False):
 	lx = len(sig1)

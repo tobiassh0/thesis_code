@@ -1,5 +1,4 @@
-from list_new import *
-import my_constants as const
+from func_load import *
 
 kwargs={'interpolation':'nearest','origin':'lower','aspect':'auto'}
 
