@@ -1,6 +1,8 @@
 import os, sys
 # un-comment if PYTHONPATH variable isn't appended
-#sys.path.append('/home/space/phrmsf/Documents/thesis_code/lib')
+path = '/home/space/phrmsf/Documents/thesis_code/lib'
+sys.path.append(path)
+
 from list_new import *
 from bispectral_analysis import *
 import my_constants as const
@@ -28,6 +30,7 @@ print('Additional modules imported.')
 
 
 '''
-	Should be able now to load functions without calling list_new.func, make arrays using np. and plot using plt.
+	Should be able now to make arrays using np.XXXX, plot using plt.XXXX and load 
+	functions _without_ calling list_new.func .
 	This needs to be called to each script used for analysing EPOCH.
 '''

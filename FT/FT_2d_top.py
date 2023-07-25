@@ -3,7 +3,7 @@ from func_load import *
 
 
 sim_lst = ['traceT_0_00','traceT_D_99_T_01','traceT_D_89_T_11','traceT_0_50']
-MuArr = [0,0.01,0.11,0.5]
+Xi2 = [0,0.01,0.11,0.5]
 Lambda = 2e-3
 
 fig, axs = plt.subplots(figsize=(15,5),nrows=1,ncols=len(sim_lst),sharex='row',sharey='row')
@@ -37,7 +37,7 @@ for sim in (sim_lst):
 	wpe	 = getPlasmaFreq(sdfread(0),species='Electrons')
 	wpi  = getPlasmaFreq(sdfread(0),species='Deuterons')
 #	## LH
-#	Mu = MuArr[i]
+#	xi2 = Xi2[i]
 #	WLH = LowerHybridMassEffective(sdfread(0),wpe,wce,getMeanquantity(sdfread(0),'Derived_Number_Density_Electrons'))
 #	axs[i].axhline(WLH/wnorm,linestyle='--',color='k',alpha=1.)
 #	## W2
