@@ -33,7 +33,7 @@ def ignorey(lax):
     for ax in lax:
         ax.tick_params(labelleft=False)
 
-def getFT2d_and_Power(sim):
+def getFT2d_and_Power(sim,kmax=30,wmax=20):
 	simLoc = getSimulation('/storage/space2/phrmsf/'+sim)
 	FT_2d = read_pkl('FT_2d_Magnetic_Field_Bz')
 	times = read_pkl('times')
@@ -51,7 +51,6 @@ def getFT2d_and_Power(sim):
 	knorm = wcyc/vA#1/LDe
 	klim_prime = klim/knorm
 	wlim_prime = wlim/wnorm
-	kmax = 30; wmax = 25
 	(nw,nk) = FT_2d.shape
 	print('kmax : {} , wmax :{}'.format(kmax,wmax))
 
@@ -67,9 +66,10 @@ def getFT2d_and_Power(sim):
 
 
 
+width_FT2d = 3
 
 sim_lst = ['traceT_0_00','traceT_D_99_T_01','traceT_D_89_T_11','traceT_0_50']
-kmax = 30; wmax = 25
+kmax = 50; wmax = 30
 
 fig = plt.figure(figsize=(10,6))
 #fig.suptitle("Spatiotemporal Fourier transforms and power spectra")
@@ -78,27 +78,27 @@ fig = plt.figure(figsize=(10,6))
 gs1 = GridSpec(2, 5, left=0.05, right=0.49, wspace=0., hspace=0.05)# right spacing creates space for gs2 
 # 0%
 #FT2d
-FT2d,power0,omegas,wcyc = getFT2d_and_Power(sim_lst[0])
-ax1 = fig.add_subplot(gs1[0, :3])
+FT2d,power0,omegas,wcyc = getFT2d_and_Power(sim_lst[0],kmax=kmax,wmax=wmax)
+ax1 = fig.add_subplot(gs1[0, :width_FT2d])
 im0=ax1.imshow(np.log10(FT2d),**kwargs,cmap='magma',extent=[0,kmax,0,wmax],vmin=-2,vmax=6)
 #power
-ax2 = fig.add_subplot(gs1[0, 3:],sharey=ax1)
+ax2 = fig.add_subplot(gs1[0, width_FT2d:],sharey=ax1)
 ax2.plot(power0,omegas/wcyc)
 ax2.set_ylim(0,wmax)
 ax2.set_xscale('log')
-ax2.text(10**4.5,2.5,r'$0\%$') # data coordinates
+ax2.text(10**4.2,2.5,r'$0\%$',**tnrfont) # data coordinates
 
 # 11%
 #FT2d 
-FT2d,power,omegas,wcyc = getFT2d_and_Power(sim_lst[1])
-ax3 = fig.add_subplot(gs1[1, :3],sharey=ax1)
+FT2d,power,omegas,wcyc = getFT2d_and_Power(sim_lst[1],kmax=kmax,wmax=wmax)
+ax3 = fig.add_subplot(gs1[1, :width_FT2d],sharey=ax1)
 im11=ax3.imshow(np.log10(FT2d),**kwargs,cmap='magma',extent=[0,kmax,0,wmax],vmin=-2,vmax=6)
 #power
-ax4 = fig.add_subplot(gs1[1, 3:],sharex=ax2,sharey=ax1)
+ax4 = fig.add_subplot(gs1[1, width_FT2d:],sharex=ax2,sharey=ax1)
 ax4.plot(power,omegas/wcyc)
 ax4.set_ylim(0,wmax)
 ax4.set_xscale('log')
-ax4.text(10**4.5,2.5,r'$11\%$') # data coordinates
+ax4.text(10**4.2,2.5,r'$11\%$',**tnrfont) # data coordinates
 
 #===================================#
 
@@ -106,27 +106,27 @@ ax4.text(10**4.5,2.5,r'$11\%$') # data coordinates
 gs2 = GridSpec(2, 5, left=0.51, right=0.98, wspace=0., hspace=0.05)
 # 1%
 #FT2d
-FT2d,power,omegas,wcyc = getFT2d_and_Power(sim_lst[2])
-ax5 = fig.add_subplot(gs2[0, :3],sharey=ax1)
+FT2d,power,omegas,wcyc = getFT2d_and_Power(sim_lst[2],kmax=kmax,wmax=wmax)
+ax5 = fig.add_subplot(gs2[0, :width_FT2d],sharey=ax1)
 im1=ax5.imshow(np.log10(FT2d),**kwargs,cmap='magma',extent=[0,kmax,0,wmax],vmin=-2,vmax=6)
 #power
-ax6 = fig.add_subplot(gs2[0, 3:],sharex=ax2,sharey=ax1)
+ax6 = fig.add_subplot(gs2[0, width_FT2d:],sharex=ax2,sharey=ax1)
 ax6.plot(power,omegas/wcyc)
 ax6.set_ylim(0,wmax)
 ax6.set_xscale('log')
-ax6.text(10**4.5,2.5,r'$1\%$') # data coordinates
+ax6.text(10**4.2,2.5,r'$1\%$',**tnrfont) # data coordinates
 
 # 50%
 #FT2d
-FT2d,power,omegas,wcyc = getFT2d_and_Power(sim_lst[3])
-ax7 = fig.add_subplot(gs2[1, :3],sharey=ax1)
+FT2d,power,omegas,wcyc = getFT2d_and_Power(sim_lst[3],kmax=kmax,wmax=wmax)
+ax7 = fig.add_subplot(gs2[1, :width_FT2d],sharey=ax1)
 im50=ax7.imshow(np.log10(FT2d),**kwargs,cmap='magma',extent=[0,kmax,0,wmax],vmin=-2,vmax=6)
 #power
-ax8 = fig.add_subplot(gs2[1, 3:],sharex=ax2,sharey=ax1)
+ax8 = fig.add_subplot(gs2[1, width_FT2d:],sharex=ax2,sharey=ax1)
 ax8.plot(power,omegas/wcyc)
 ax8.set_ylim(0,wmax)
 ax8.set_xscale('log')
-ax8.text(10**4.5,2.5,r'$50\%$') # data coordinates
+ax8.text(10**4.2,2.5,r'$50\%$',**tnrfont) # data coordinates
 
 
 #===================================#
@@ -143,15 +143,16 @@ labels_power=[r'$10^1$',r'$10^2$',r'$10^3$',r'$10^4$',r'$10^5$']
 print(labels_power)
 #ax2.set_xticklabels(vals_power)
 ax4.set_xticks(vals_power)
-ax4.set_xticklabels(labels_power)
+ax4.set_xticklabels(labels_power,fontsize=14)
 #ax6.set_xticklabels(vals_power)
 ax8.set_xticks(vals_power)
-ax8.set_xticklabels(labels_power)
+ax8.set_xticklabels(labels_power,fontsize=14)
 
 ax1.set_xticklabels([])
 ax5.set_xticklabels([])
-ax3.set_xticklabels([0,5,10,15,20,25,30])
-ax7.set_xticklabels([0,5,10,15,20,25,30])
+karr = np.arange(0,kmax+10,10)
+ax3.set_xticklabels(karr)
+ax7.set_xticklabels(karr)
 
 ax1.set_ylabel(r'$\omega/\Omega_D$',**tnrfont)
 ax3.set_ylabel(r'$\omega/\Omega_D$',**tnrfont)
@@ -160,5 +161,6 @@ ax7.set_xlabel(r'$kv_A/\Omega_D$',**tnrfont)
 ax4.set_xlabel(r'PSD',**tnrfont)
 ax8.set_xlabel(r'PSD',**tnrfont)
 
+plt.show()
 os.chdir('/storage/space2/phrmsf/paper/')
 fig.savefig('FT_2d_and_power.png',bbox_inches='tight')

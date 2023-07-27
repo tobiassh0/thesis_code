@@ -7,7 +7,7 @@ xi2 = [0,0.01,0.05,0.11,0.18,0.3,0.5]
 mean_to = 10
 for i in range(len(sims)):
 	# plot setup
-	fig,ax = plt.subplots(figsize=(10,6),nrows=2,sharex=True)
+	fig,ax = plt.subplots(figsize=(10,6),nrows=1,sharex=True)
 	fig.subplots_adjust(hspace=0.15)
 	
 	sim_loc = getSimulation('/storage/space2/phrmsf/traceT_'+sims[i])
@@ -18,30 +18,19 @@ for i in range(len(sims)):
 	ENERGYQUANT, labels, fieldmult, fieldquant = getEnergyLabels(sdfread(0),species)
 	print(labels)
 	for i in range(len(ENERGYQUANT)):
-		Energyfield = read_pkl(ENERGYQUANT[i])/(1000*const.qe)
-		if ENERGYQUANT[i] in ['Deuterons_KE','Alphas_KE']:
-			tspecies = ENERGYQUANT[i][:-3] # remove '_KE' from name
-			pw = getQuantity1d(d0,'Particles_Weight_'+tspecies)
-			Nparts = len(pw)*np.mean(pw) # real No. particles = np. simulated * weight per particle
-		else:
-			Nparts = 1
-		meanEnergyfield = np.mean(Energyfield[:mean_to])/Nparts
-		Energyfield = ((Energyfield/Nparts-meanEnergyfield)*fieldmult[i])
-		if ENERGYQUANT[i] not in ['Deuterons_KE','Alphas_KE']:
-			ax[0].plot(times/tcD,Energyfield)
-		else:
-			print(Energyfield/meanEnergyfield)
-			ax[1].plot(times/tcD,Energyfield/meanEnergyfield)
+		Energyfield = read_pkl(ENERGYQUANT[i])
+		meanEnergyfield = np.mean(Energyfield[:mean_to])
+		Energyfield = (Energyfield-meanEnergyfield)*fieldmult[i]
+		ax.plot(times/tcD,Energyfield)
+
 ## normal 
-ax[0].legend(labels,loc='best')
-ax[0].set_ylabel(r'$\Delta u$'+'  '+'['+r'$keV/m^3$'+']',fontsize=20)
-ax[0].set_yscale('log')
-ax[0].set_ylim(1e12,1e19)
-ax[1].legend(labels[3:],loc='best')
-ax[1].set_ylabel(r'$\Delta u_\sigma/N_\sigma u_{0\sigma}$',fontsize=20) # +'  '+'['+r'$J/m^3$'+']'
-ax[1].set_xlabel(r'$t/\tau_{cD}$',fontsize=20)
-ax[1].set_xlim(0,6.1)
-fig.savefig('/storage/space2/phrmsf/paper/zero-edens.png')
+ax.legend(labels,loc='best')
+ax.set_ylabel(r'$\Delta u$'+'  '+'['+r'$J/m^3$'+']',fontsize=20)
+ax.set_ylim(-850,500)
+ax.set_xlabel(r'$t/\tau_{cD}$',fontsize=20)
+ax.set_xlim(0,6.1)
+fig.savefig('/storage/space2/phrmsf/paper/zero_edens.eps')
+fig.savefig('/storage/space2/phrmsf/paper/zero_edens.png')
 
 ### EPS 4-page
 #ax.legend(labels,loc='best',frameon=False)

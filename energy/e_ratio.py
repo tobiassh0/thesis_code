@@ -3,14 +3,15 @@ from func_load import *
 
 
 ## loop through simulations and species (num of panels)
-figpart, axpart = plt.subplots(nrows=3,figsize=(6,10),sharex=True) # assume 3 ion species
+figpart, axpart = plt.subplots(nrows=3,figsize=(8,6),sharex=True) # assume 3 ion species # (6,10)
 figpart.subplots_adjust(hspace=0.17)
 ## fields
 figfield, axfield = plt.subplots(nrows=1,ncols=3,figsize=(10,6)) # assume 3 ion species # nrows=2,ncols=3figsize=(18,8)
 figfield.subplots_adjust(wspace=0.,hspace=0.1)
 
 mean_to = 10
-sim_lst = ['traceT_0_50','traceT_D_70_T_30','traceT_D_82_T_18','traceT_D_89_T_11','traceT_D_95_T_05','traceT_D_99_T_01','traceT_0_00']
+#sim_lst = ['traceT_0_50','traceT_D_70_T_30','traceT_D_82_T_18','traceT_D_89_T_11','traceT_D_95_T_05','traceT_D_99_T_01','traceT_0_00']
+sim_lst = ['traceT_0_50','traceT_D_89_T_11','traceT_D_99_T_01','traceT_0_00']
 fields = ['Electric_Field_Ex','Magnetic_Field_By','Magnetic_Field_Bz']
 fieldnames = [] ; fieldmult = [] ; labels = []
 for field in fields:
@@ -19,11 +20,9 @@ for field in fields:
 	labels.append(b)
 	fieldmult.append(c)
 
-#fieldnames.append('Alphas_KE')
-#labels.append(r'$\alpha$')
-#fieldmult.append(-1)
+#colors = ['blue','pink','orange','g','k','r','cyan']
+colors = ['blue','g','r','cyan']
 
-colors = ['blue','pink','orange','g','k','r','cyan']
 c = 0
 N = 300
 #alphas = [0.1,0.33,0.66,0.99]
@@ -94,10 +93,12 @@ for sim in sim_lst:
 		# particles
 		try:
 			pw = getQuantity1d(d0,'Particles_Weight_'+species[i])
-			Nparts[i] = len(pw)*np.mean(pw) # real No. particles = np. simulated * weight per particle
+			Nparts[i] = 1#len(pw)*np.mean(pw) # real No. particles = np. simulated * weight per particle
+			nspec = getMeanquantity(d0,'Derived_Number_Density_'+species[i])
 		except:
+			nspec = 1
 			continue # should be 0 for species that arent present
-		Energypart = read_pkl(species[i]+'_KE')/(1000*const.qe) # energy density 
+		Energypart = read_pkl(species[i]+'_KE')/(nspec*1000*const.qe) # energy density 
 		meanEnergypart = np.mean(Energypart[:mean_to])
 		print(Energypart,meanEnergypart)
 		Energypart = np.convolve(Energypart,np.ones(N)/N,mode='valid')
@@ -107,9 +108,9 @@ for sim in sim_lst:
 		axpart[i].plot(timespart[thresh]/tcD,(Energypart[thresh]-meanEnergypart)/Nparts[i],color=colors[c])#alpha=alphas[c]) #
 		axpart[i].set_xlim(0,6.1)
 		if species[i] in ['Deuterons', 'Tritons']: 
-			axpart[i].set_ylim(-0.01,0.1)
+			axpart[i].set_ylim(-0.02,0.3)
 		else:
-			axpart[i].set_ylim(-100,0)
+			axpart[i].set_ylim(-300,10)
 	c+=1
 
 
@@ -126,16 +127,17 @@ for sim in sim_lst:
 #print('meangrowth [wcD] :: ',2*const.PI*meangrowth/wcD)
 
 labels = [r'$50\%$',r'$30\%$',r'$18\%$',r'$11\%$',r'$5\%$',r'$1\%$',r'$0\%$']
+labels = [r'$50\%$',r'$11\%$',r'$1\%$',r'$0\%$']
 axfield[1].legend(labels,loc='best',frameon=False)
-axpart[2].legend(labels,loc='best',frameon=False)
-labels = [r'$e_D$',r'$e_{T}$',r'$e_\alpha$']
+axpart[2].legend(labels,loc='best')#,frameon=False)
 labels = [r'Deuterons',r'Tritons',r'Alphas']
+labels = [r'$\Delta E_D$',r'$\Delta E_{T}$',r'$\Delta E_\alpha$']
 
 for i in range(len(axfield)):
 	axfield[i].set_xlabel(r'$t/\tau_{cD}$',fontsize=20)
 #	axfield[i].set_xlabel(r'Time $t$'+'  '+r'$[\tau_{cD}]$',**tnrfont)
 for j in range(len(axpart)): 
-	axpart[j].set_ylabel(labels[j]+' '+'['+r'$keV$'+' '+r'$m^{-3}$'+']',**tnrfont)
+	axpart[j].set_ylabel(labels[j]+' '+'['+r'$keV$'+']',**tnrfont)
 #	axpart[j].annotate(labels[j],xy=(0.75,0.8),xytext=None,xycoords='axes fraction',ha='left',**tnrfont)
 
 
@@ -148,9 +150,10 @@ for j in range(len(axpart)):
 ## normal
 axpart[-1].set_xlabel(r'$t/\tau_{cD}$',fontsize=20)
 #figfield.savefig('/storage/space2/phrmsf/paper/fieldEnergies.eps',bbox_inches='tight')
-#figpart.savefig('/storage/space2/phrmsf/paper/Energy_Dens_pp_v2.eps')
+figpart.savefig('/storage/space2/phrmsf/paper/Energy_Dens_pp_v2.eps')
+figpart.savefig('/storage/space2/phrmsf/paper/Energy_Dens_pp_v2.png')
 
-plt.show()
+#plt.show()
 
 
 
