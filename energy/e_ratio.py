@@ -98,19 +98,23 @@ for sim in sim_lst:
 		except:
 			nspec = 1
 			continue # should be 0 for species that arent present
-		Energypart = read_pkl(species[i]+'_KE')/(nspec*1000*const.qe) # energy density 
+		Energypart = read_pkl(species[i]+'_KE')/(nspec) # energy density 
 		meanEnergypart = np.mean(Energypart[:mean_to])
 		print(Energypart,meanEnergypart)
 		Energypart = np.convolve(Energypart,np.ones(N)/N,mode='valid')
 		timespart = np.linspace(0,max(times),len(Energypart))
 		thresh = timespart/tcD < 6.1
+		if species[i] == 'Alphas':
+			eV_power = 1e6
+		else:
+			eV_power = 1e3
 		print(species[i],Nparts[i])
-		axpart[i].plot(timespart[thresh]/tcD,(Energypart[thresh]-meanEnergypart)/Nparts[i],color=colors[c])#alpha=alphas[c]) #
+		axpart[i].plot(timespart[thresh]/tcD,(Energypart[thresh]-meanEnergypart)/(eV_power*const.qe),color=colors[c])#alpha=alphas[c]) #
 		axpart[i].set_xlim(0,6.1)
 		if species[i] in ['Deuterons', 'Tritons']: 
 			axpart[i].set_ylim(-0.02,0.3)
 		else:
-			axpart[i].set_ylim(-300,10)
+			axpart[i].set_ylim(-0.3,0.01)
 	c+=1
 
 
@@ -131,13 +135,13 @@ labels = [r'$50\%$',r'$11\%$',r'$1\%$',r'$0\%$']
 axfield[1].legend(labels,loc='best',frameon=False)
 axpart[2].legend(labels,loc='best')#,frameon=False)
 labels = [r'Deuterons',r'Tritons',r'Alphas']
-labels = [r'$\Delta E_D$',r'$\Delta E_{T}$',r'$\Delta E_\alpha$']
+labels = [r'$\Delta E_D$'+' '+'['+r'$keV$'+']',r'$\Delta E_{T}$'+' '+'['+r'$keV$'+']',r'$\Delta E_\alpha$'+' '+'['+r'$MeV$'+']']
 
 for i in range(len(axfield)):
 	axfield[i].set_xlabel(r'$t/\tau_{cD}$',fontsize=20)
 #	axfield[i].set_xlabel(r'Time $t$'+'  '+r'$[\tau_{cD}]$',**tnrfont)
 for j in range(len(axpart)): 
-	axpart[j].set_ylabel(labels[j]+' '+'['+r'$keV$'+']',**tnrfont)
+	axpart[j].set_ylabel(labels[j],**tnrfont) # +' '+'['+r'$keV$'+']'
 #	axpart[j].annotate(labels[j],xy=(0.75,0.8),xytext=None,xycoords='axes fraction',ha='left',**tnrfont)
 
 
@@ -150,8 +154,8 @@ for j in range(len(axpart)):
 ## normal
 axpart[-1].set_xlabel(r'$t/\tau_{cD}$',fontsize=20)
 #figfield.savefig('/storage/space2/phrmsf/paper/fieldEnergies.eps',bbox_inches='tight')
-figpart.savefig('/storage/space2/phrmsf/paper/Energy_Dens_pp_v2.eps')
-figpart.savefig('/storage/space2/phrmsf/paper/Energy_Dens_pp_v2.png')
+figpart.savefig('/storage/space2/phrmsf/paper/Energy_v_time.eps')
+figpart.savefig('/storage/space2/phrmsf/paper/Energy_v_time.png')
 
 #plt.show()
 
