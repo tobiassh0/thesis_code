@@ -90,7 +90,7 @@ ax2.text(10**4.2,2.5,r'$0\%$',**tnrfont) # data coordinates
 
 # 11%
 #FT2d 
-FT2d,power,omegas,wcyc = getFT2d_and_Power(sim_lst[1],kmax=kmax,wmax=wmax)
+FT2d,power,omegas,wcyc = getFT2d_and_Power(sim_lst[2],kmax=kmax,wmax=wmax)
 ax3 = fig.add_subplot(gs1[1, :width_FT2d],sharey=ax1)
 im11=ax3.imshow(np.log10(FT2d),**kwargs,cmap='magma',extent=[0,kmax,0,wmax],vmin=-2,vmax=6)
 #power
@@ -106,7 +106,7 @@ ax4.text(10**4.2,2.5,r'$11\%$',**tnrfont) # data coordinates
 gs2 = GridSpec(2, 5, left=0.51, right=0.98, wspace=0., hspace=0.05)
 # 1%
 #FT2d
-FT2d,power,omegas,wcyc = getFT2d_and_Power(sim_lst[2],kmax=kmax,wmax=wmax)
+FT2d,power,omegas,wcyc = getFT2d_and_Power(sim_lst[1],kmax=kmax,wmax=wmax)
 ax5 = fig.add_subplot(gs2[0, :width_FT2d],sharey=ax1)
 im1=ax5.imshow(np.log10(FT2d),**kwargs,cmap='magma',extent=[0,kmax,0,wmax],vmin=-2,vmax=6)
 #power
