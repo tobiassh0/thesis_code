@@ -1427,7 +1427,7 @@ def Chi0Calc(file0,v0,kall,omegaall,species='Deuterons',wci=None,theta=90):
 
 
 ## Find the growth rates of the MCI in its linear phase based off of drift and spread velocities
-def growth_rate_man(minions, majions, theta, b, u, vd, vr, kall, omegaall):
+def growth_rate_man(minions, majions, theta, file0, u, vd, vr, karr, omegarr):
 	# vr is para drift
 	# vd is perp drift
 	# emin is beam energy in eV
@@ -1437,61 +1437,65 @@ def growth_rate_man(minions, majions, theta, b, u, vd, vr, kall, omegaall):
 	
 	Zmin = getChargeNum(minions)
 	Zmaj = getChargeNum(majions)
-	wcycb = getCyclotronFreq(b,minions) # cyc freq for beam ions
-	wcyci = getCyclotronFreq(b,majions) # cyc freq for bulk ions
+	wcycmin = getCyclotronFreq(file0,minions) # cyc freq for beam ions (minority)
+	wcyci = getCyclotronFreq(file0,majions) # cyc freq for bulk ions
 
-	wpb = getPlasmaFreq(b, minions) #square of beam ion plasma frequency, z=1 for tritons
-	wpi = getPlasmaFreq(b, majions) #square of bulk ion plasma frequency, z=1 for deuterons
-	va = getAlfvenVel(b)
+	wpmin = getPlasmaFreq(file0, minions) #square of beam ion plasma frequency, z=1 for tritons
+	wpi = getPlasmaFreq(file0, majions) #square of bulk ion plasma frequency, z=1 for deuterons
+	vA = getAlfvenVel(file0)
 
 	theta = theta*(const.PI/180.0) #radians
-	gammas = np.zeros(omegaall.shape[0]) #growth rates
+	gammas = np.zeros(omegarr.shape[0]) #growth rates
 
-	for i in range(0, omegaall.shape[0]):
-		l = round(omegaall[i]/wcycb) #l closest to the omega
-		k = kall[i]
-		kpara = kall[i]*np.cos(theta)
-		kperp = kall[i]*np.sin(theta)
+	for i in range(0, omegarr.shape[0]):
+		l = round(omegarr[i]/wcycmin) #l closest to the omega
+		k = karr[i]
+		kpara = karr[i]*np.cos(theta)
+		kperp = karr[i]*np.sin(theta)
 
-		Npara = (kpara*va)/omegaall[i]
-		Nperp = (kperp*va)/omegaall[i]
+		Npara = (kpara*vA)/omegarr[i]
+		Nperp = (kperp*vA)/omegarr[i]
 
-		eetal = (omegaall[i] - kpara*vd - l*wcycb)/(kpara*vr) # vd=0
-		za = kperp*u/wcycb
-		############## M_l ###############################################################
-		mlterm1 = 2.0*l*(omegaall[i]/wcyci)*((spec.jvp(l,za)**2) + ((1.0/za**2)*(l**2 - za**2)*spec.jv(l,za)**2))
-		mlterm2 = -2.0*((omegaall[i]**2 - wcyci**2)/wcyci**2)*((spec.jv(l,za)*spec.jvp(l,za))/za)*((l**2)*Nperp**2 - (za**2 - 2.0*(l**2))*(Npara**2))
-		mlterm3 = (2.0*spec.jv(l,za)*spec.jvp(l,za)/za)*(za**2 - 2.0*(l**2))
-		ml = mlterm1 + mlterm2 + mlterm3
+		eetal = (omegarr[i] - kpara*vd - l*wcycmin)/(kpara*vr) # vd=0
+		za = kperp*u/wcycmin
+		
+		w = omegarr[i]
+		Jl = spec.jv(l,za)
+		Jlprime = spec.jvp(l,za)
+		JlJlprime = Jl*Jlprime
+
+		############## N_l ###############################################################
+		nlterm1 = -1*2*l*(w/wcyci)*(JlJlprime/za)
+		nlterm2 = ((w**2-wcyci**2)/wcyci**2)*((Npara**2)*(((l**2 * Jl**2)/za**2)+Jlprime**2)+Nperp**2 * ((l**2 * Jl**2)/za**2))
+		nlterm3 = ((l**2 * Jl**2)/za**2) + Jlprime**2
+		nl = nlterm1 + nlterm2 + nlterm3
 		##################################################################################
 						#
-						#
-		############# N_l #################################################################
-		nlterm1 = -2.0*l*(omegaall[i]/wcyci)*(spec.jv(l,za)*spec.jvp(l,za)/za)
-		nlterm2pre = (omegaall[i]**2 - wcyci**2)/wcyci**2
-		nlterm2 = (Npara**2)*((l*spec.jv(l,za)/za)**2 + spec.jvp(l,za)**2) + (Nperp*l*spec.jv(l,za)/za)**2
-		nlterm3 = (l*spec.jv(l,za)/za)**2 + spec.jvp(l,za)**2
-		nl = nlterm1 + nlterm2pre*nlterm2 + nlterm3
+		############# M_l #################################################################
+		mlterm1 = 2*l*(w/wcyci)*(Jlprime**2 + (Jl**2/za**2)*(l**2 - za**2))
+		mlterm2 = -1*2*((w**2-wcyci**2)/wcyci**2)*(JlJlprime/za)*(l**2 * Nperp**2 - (za**2 - 2*l**2)*Npara**2)
+		mlterm3 = 2*(JlJlprime/za)*(za**2 - 2*l**2)
+		ml = mlterm1 + mlterm2 + mlterm3
 		#################################################################################		
 						#
-						#
 		########## Gamma ################################################################
-		pre = (((wpb*(wcyci**2))/wpi)**2)*((const.PI**0.5)/(2.0*omegaall[i]))*np.exp(-(eetal**2))
-		term1 = 1.0/((wcyci + (omegaall[i] - wcyci)*(Npara**2))*(wcyci - (omegaall[i] + wcyci)*(Npara**2)))
-		term2 = ((l*wcycb*ml)/(kpara*vr)) - (2.0*eetal*nl)*((u/vr)**2)
-		gammas[i] = pre*term1*term2
-		#print gammas[i]
+		gterm1 = (wpmin**2/wpi**2)*(wcyci**4/((wcyci+(w-wcyci)*Npara**2)*(wcyci-(w+wcyci)*Npara**2)))
+		gterm2 = ((l*wcycmin/(kpara*vr))*ml-((2*u**2)/(vr**2)*eetal*nl))
+		gterm3 = np.sqrt(const.PI)/(2*w)*np.exp(-1*eetal**2)
+		gammas[i] = gterm1*gterm2*gterm3
+		#################################################################################		
 	
 	####### Want gamma > 1 only ###########
 	posomega = [] ; posgamma = []	
 
 	for i in range(0,gammas.shape[0]):
 		if (gammas[i] >= 0):
-			posomega.append(omegaall[i])
+			posomega.append(omegarr[i])
 			posgamma.append(gammas[i])
 
 	return np.array(posomega,dtype='float'), np.array(posgamma,dtype='float')
-
+	
+	
 ## Find and plot the distribution function of the species specified
 def dist_fn(index_list,xyz,species):
 	# Returns the distribution function plotted as a KDE from the binned data of the particles momenta, converted to velocity then normalised in units of the species thermal velocity
