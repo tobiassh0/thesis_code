@@ -13,26 +13,6 @@ from matplotlib.gridspec import GridSpec
 '''
 
 
-#def outside_ticks(fig):
-#	for i, ax in enumerate(fig.axes):
-#		ax.tick_params(axis='both',direction='out',top=False,right=False,left=True,bottom=True)
-
-def boutside_ticks(lax):
-	for ax in lax:
-		ax.tick_params(axis='both',direction='out',top=False,right=False,left=True,bottom=True)
-	
-def xoutside_ticks(lax):
-	for ax in lax:
-		ax.tick_params(axis='x',direction='out',top=False,right=False,left=False,bottom=True)
-
-def ignorex(lax):
-    for ax in lax:
-        ax.tick_params(labelbottom=False)
-
-def ignorey(lax):
-    for ax in lax:
-        ax.tick_params(labelleft=False)
-
 def getFT2d_and_Power(sim,kmax=30,wmax=20):
 	simLoc = getSimulation('/storage/space2/phrmsf/'+sim)
 	FT_2d = read_pkl('FT_2d_Magnetic_Field_Bz')

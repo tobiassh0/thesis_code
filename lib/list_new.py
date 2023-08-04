@@ -905,7 +905,7 @@ def get1dTransform(fieldmatrix, window=False, start=0):
 
 # Plot the 1d FT of field data (using the above get1d function) and plots it with time on the y-axis
 def plot1dTransform(FT_matrix,klim,tlim,klabel=r'$v_A/\Omega_D$',wlabel=r'$\Omega_i$',cbar=False,cmap='seismic',clim=(-3,4.5)): # Plots t vs k as a heat map of a field quantity
-	# Pass it the matrix from "get1dTranform". Also pass it klim and tlim from "PlottingLimits()"
+	# Pass it the matrix from "get1dTransform". Also pass it klim and tlim from "PlottingLimits()"
 	trFT = np.log10(FT_matrix[:][1:])
 	extent=[0, klim, 0, tlim]
 	fig, ax = plt.subplots(figsize=(8,8))
@@ -2330,3 +2330,24 @@ def shared_area(sig1,sig2,fitgauss=False):
 		peak = popt[1] # a,b,c 
 		return sharea, peak
 	return sharea
+	
+#def outside_ticks(fig):
+#	for i, ax in enumerate(fig.axes):
+#		ax.tick_params(axis='both',direction='out',top=False,right=False,left=True,bottom=True)
+
+def boutside_ticks(lax):
+	for ax in lax:
+		ax.tick_params(axis='both',direction='out',top=False,right=False,left=True,bottom=True)
+	
+def xoutside_ticks(lax):
+	for ax in lax:
+		ax.tick_params(axis='x',direction='out',top=False,right=False,left=False,bottom=True)
+
+def ignorex(lax):
+    for ax in lax:
+        ax.tick_params(labelbottom=False)
+
+def ignorey(lax):
+    for ax in lax:
+        ax.tick_params(labelleft=False)
+        
