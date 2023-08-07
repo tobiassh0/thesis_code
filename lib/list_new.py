@@ -84,6 +84,18 @@ def getIonSpecies(file0):
 		print('# ERROR # : More than three ion species in sim.')
 		raise SystemExit
 
+def getAllSpecies(file0):
+	keys = getKeys(file0) # file0.__dict__.keys() # returns all the names of quantities in the simulation sdf file
+	# check something which is always dumped like derived charge dens
+	names = []
+	for k in keys:
+		if 'Derived_Number_Density_' in k:
+			names.append(k)
+		else:
+			continue
+	names = [s.replace('Derived_Number_Density_','') for s in names]
+	return names #all species in sim, in order of how they appear in EPOCH output (usually electrons, maj1, maj2, min)
+
 # Scans and returns a list of files as objs, readable in the form "files[0], files[1] , ..." 
 def filelist(lim):
 	# creates array of sdf read objects (files) either for 0000.sdf or 00000.sdf file labelling
@@ -293,6 +305,7 @@ def getMeanField3D(d,quantity): #include all of the header apart from last charc
 # Gets the mass (m) of a species defined by a dictionary
 def getMass(species):
 	masses = {'Electrons': const.me,
+	'FElectrons': const.me,
 	'Left_Electrons': const.me,
 	'Electron': const.me,
 	'Right_Electrons': const.me, 
@@ -326,6 +339,7 @@ def getMass(species):
 # Gets the charge number (Z) of a species defined by a dictionary
 def getChargeNum(species):
 	charges = {'Electrons': 1,
+	'FElectrons': 1,
 	'Left_Electrons': 1,
 	'Right_Electrons': 1, 
 	'Protons': 1, 
@@ -355,6 +369,7 @@ def getChargeNum(species):
 
 def getIonlabel(species):
 	labels = {'Electrons': r'$e$',
+	'FElectrons': r'$e$', # fast electrons
 	'Left_Electrons': r'$e$',
 	'Right_Electrons': r'$e$', 
 	'Protons': r'$p$', 
@@ -385,6 +400,7 @@ def getIonlabel(species):
 	
 def getOmegaLabel(species):
 	labels = {'Electrons': r'$\Omega_e$',
+	'FElectrons': r'$\Omega_e$', # fast electrons
 	'Left_Electrons': r'$\Omega_e$',
 	'Right_Electrons': r'$\Omega_e$', 
 	'Protons': r'$\Omega_p$', 
@@ -1008,7 +1024,7 @@ def batchlims(n,batch_size,index_list,remainder):
 	return batch_ini, batch_fin
 
 		
-def get_batch_fieldmatrix(index_list,quantities=[],quantity='',load=True,para=False):
+def get_batch_fieldmatrix(index_list,quantities=[],quantity='Magnetic_Field_Bz',load=True,para=False):
 	batch_size, StartStop = BatchStartStop(index_list)
 	times = np.zeros(len(index_list))
 	meanBz = 0
@@ -1060,6 +1076,7 @@ def load_batch_fieldmatrix(index_list=[],quantity='Magnetic_Field_Bz',para=False
 	## find number of batch_files, if None then load normally
 	batch_lst = np.array([i for i in os.listdir() if 'batch_' in i and 'fieldmatrix_'+quantity in i])	
 	batch_lst = [i for i in range(len(batch_lst))]
+	print('batch_lst :: ',batch_lst)
 	if len(batch_lst) !=0 : # dumped in batches
 		print('batch size :: {}'.format(int(len(index_list)/len(batch_lst))))
 		batch_size = int(len(index_list)/len(batch_lst))
@@ -1867,6 +1884,9 @@ def energies(sim_loc,frac=1,plot=False,leg=True,integ=False,linfit=False,electro
 	
 	species = getIonSpecies(sdfread(0))
 	maj_species, maj2_species, min_species = species
+	if min_species == '':
+		min_species = getAllSpecies(sdfread(0))[-1] # check if minority exists as negative ion
+
 	if electrons: species = np.append(species,'Electrons')
 
 	energy_quant, names, Energy_mult, fieldquant = getEnergyLabels(sdfread(0),species)
