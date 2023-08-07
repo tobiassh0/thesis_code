@@ -84,6 +84,18 @@ def getIonSpecies(file0):
 		print('# ERROR # : More than three ion species in sim.')
 		raise SystemExit
 
+def getAllSpecies(file0):
+	keys = getKeys(file0) # file0.__dict__.keys() # returns all the names of quantities in the simulation sdf file
+	# check something which is always dumped like derived charge dens
+	names = []
+	for k in keys:
+		if 'Derived_Number_Density_' in k:
+			names.append(k)
+		else:
+			continue
+	names = [s.replace('Derived_Number_Density_','') for s in names]
+	return names #all species in sim, in order of how they appear in EPOCH output (usually electrons, maj1, maj2, min)
+
 # Scans and returns a list of files as objs, readable in the form "files[0], files[1] , ..." 
 def filelist(lim):
 	# creates array of sdf read objects (files) either for 0000.sdf or 00000.sdf file labelling
@@ -293,6 +305,7 @@ def getMeanField3D(d,quantity): #include all of the header apart from last charc
 # Gets the mass (m) of a species defined by a dictionary
 def getMass(species):
 	masses = {'Electrons': const.me,
+	'FElectrons': const.me,
 	'Left_Electrons': const.me,
 	'Electron': const.me,
 	'Right_Electrons': const.me, 
@@ -326,6 +339,7 @@ def getMass(species):
 # Gets the charge number (Z) of a species defined by a dictionary
 def getChargeNum(species):
 	charges = {'Electrons': 1,
+	'FElectrons': 1,
 	'Left_Electrons': 1,
 	'Right_Electrons': 1, 
 	'Protons': 1, 
@@ -355,6 +369,7 @@ def getChargeNum(species):
 
 def getIonlabel(species):
 	labels = {'Electrons': r'$e$',
+	'FElectrons': r'$e$', # fast electrons
 	'Left_Electrons': r'$e$',
 	'Right_Electrons': r'$e$', 
 	'Protons': r'$p$', 
@@ -385,6 +400,7 @@ def getIonlabel(species):
 	
 def getOmegaLabel(species):
 	labels = {'Electrons': r'$\Omega_e$',
+	'FElectrons': r'$\Omega_e$', # fast electrons
 	'Left_Electrons': r'$\Omega_e$',
 	'Right_Electrons': r'$\Omega_e$', 
 	'Protons': r'$\Omega_p$', 
@@ -905,7 +921,7 @@ def get1dTransform(fieldmatrix, window=False, start=0):
 
 # Plot the 1d FT of field data (using the above get1d function) and plots it with time on the y-axis
 def plot1dTransform(FT_matrix,klim,tlim,klabel=r'$v_A/\Omega_D$',wlabel=r'$\Omega_i$',cbar=False,cmap='seismic',clim=(-3,4.5)): # Plots t vs k as a heat map of a field quantity
-	# Pass it the matrix from "get1dTranform". Also pass it klim and tlim from "PlottingLimits()"
+	# Pass it the matrix from "get1dTransform". Also pass it klim and tlim from "PlottingLimits()"
 	trFT = np.log10(FT_matrix[:][1:])
 	extent=[0, klim, 0, tlim]
 	fig, ax = plt.subplots(figsize=(8,8))
@@ -1008,7 +1024,7 @@ def batchlims(n,batch_size,index_list,remainder):
 	return batch_ini, batch_fin
 
 		
-def get_batch_fieldmatrix(index_list,quantities=[],quantity='',load=True,para=False):
+def get_batch_fieldmatrix(index_list,quantities=[],quantity='Magnetic_Field_Bz',load=True,para=False):
 	batch_size, StartStop = BatchStartStop(index_list)
 	times = np.zeros(len(index_list))
 	meanBz = 0
@@ -1060,6 +1076,7 @@ def load_batch_fieldmatrix(index_list=[],quantity='Magnetic_Field_Bz',para=False
 	## find number of batch_files, if None then load normally
 	batch_lst = np.array([i for i in os.listdir() if 'batch_' in i and 'fieldmatrix_'+quantity in i])	
 	batch_lst = [i for i in range(len(batch_lst))]
+	print('batch_lst :: ',batch_lst)
 	if len(batch_lst) !=0 : # dumped in batches
 		print('batch size :: {}'.format(int(len(index_list)/len(batch_lst))))
 		batch_size = int(len(index_list)/len(batch_lst))
@@ -1427,7 +1444,7 @@ def Chi0Calc(file0,v0,kall,omegaall,species='Deuterons',wci=None,theta=90):
 
 
 ## Find the growth rates of the MCI in its linear phase based off of drift and spread velocities
-def growth_rate_man(minions, majions, theta, b, u, vd, vr, kall, omegaall):
+def growth_rate_man(minions, majions, theta, file0, u, vd, vr, karr, omegarr):
 	# vr is para drift
 	# vd is perp drift
 	# emin is beam energy in eV
@@ -1437,61 +1454,65 @@ def growth_rate_man(minions, majions, theta, b, u, vd, vr, kall, omegaall):
 	
 	Zmin = getChargeNum(minions)
 	Zmaj = getChargeNum(majions)
-	wcycb = getCyclotronFreq(b,minions) # cyc freq for beam ions
-	wcyci = getCyclotronFreq(b,majions) # cyc freq for bulk ions
+	wcycmin = getCyclotronFreq(file0,minions) # cyc freq for beam ions (minority)
+	wcyci = getCyclotronFreq(file0,majions) # cyc freq for bulk ions
 
-	wpb = getPlasmaFreq(b, minions) #square of beam ion plasma frequency, z=1 for tritons
-	wpi = getPlasmaFreq(b, majions) #square of bulk ion plasma frequency, z=1 for deuterons
-	va = getAlfvenVel(b)
+	wpmin = getPlasmaFreq(file0, minions) #square of beam ion plasma frequency, z=1 for tritons
+	wpi = getPlasmaFreq(file0, majions) #square of bulk ion plasma frequency, z=1 for deuterons
+	vA = getAlfvenVel(file0)
 
 	theta = theta*(const.PI/180.0) #radians
-	gammas = np.zeros(omegaall.shape[0]) #growth rates
+	gammas = np.zeros(omegarr.shape[0]) #growth rates
 
-	for i in range(0, omegaall.shape[0]):
-		l = round(omegaall[i]/wcycb) #l closest to the omega
-		k = kall[i]
-		kpara = kall[i]*np.cos(theta)
-		kperp = kall[i]*np.sin(theta)
+	for i in range(0, omegarr.shape[0]):
+		l = round(omegarr[i]/wcycmin) #l closest to the omega
+		k = karr[i]
+		kpara = karr[i]*np.cos(theta)
+		kperp = karr[i]*np.sin(theta)
 
-		Npara = (kpara*va)/omegaall[i]
-		Nperp = (kperp*va)/omegaall[i]
+		Npara = (kpara*vA)/omegarr[i]
+		Nperp = (kperp*vA)/omegarr[i]
 
-		eetal = (omegaall[i] - kpara*vd - l*wcycb)/(kpara*vr) # vd=0
-		za = kperp*u/wcycb
-		############## M_l ###############################################################
-		mlterm1 = 2.0*l*(omegaall[i]/wcyci)*((spec.jvp(l,za)**2) + ((1.0/za**2)*(l**2 - za**2)*spec.jv(l,za)**2))
-		mlterm2 = -2.0*((omegaall[i]**2 - wcyci**2)/wcyci**2)*((spec.jv(l,za)*spec.jvp(l,za))/za)*((l**2)*Nperp**2 - (za**2 - 2.0*(l**2))*(Npara**2))
-		mlterm3 = (2.0*spec.jv(l,za)*spec.jvp(l,za)/za)*(za**2 - 2.0*(l**2))
-		ml = mlterm1 + mlterm2 + mlterm3
+		eetal = (omegarr[i] - kpara*vd - l*wcycmin)/(kpara*vr) # vd=0
+		za = kperp*u/wcycmin
+		
+		w = omegarr[i]
+		Jl = spec.jv(l,za)
+		Jlprime = spec.jvp(l,za)
+		JlJlprime = Jl*Jlprime
+
+		############## N_l ###############################################################
+		nlterm1 = -1*2*l*(w/wcyci)*(JlJlprime/za)
+		nlterm2 = ((w**2-wcyci**2)/wcyci**2)*((Npara**2)*(((l**2 * Jl**2)/za**2)+Jlprime**2)+Nperp**2 * ((l**2 * Jl**2)/za**2))
+		nlterm3 = ((l**2 * Jl**2)/za**2) + Jlprime**2
+		nl = nlterm1 + nlterm2 + nlterm3
 		##################################################################################
 						#
-						#
-		############# N_l #################################################################
-		nlterm1 = -2.0*l*(omegaall[i]/wcyci)*(spec.jv(l,za)*spec.jvp(l,za)/za)
-		nlterm2pre = (omegaall[i]**2 - wcyci**2)/wcyci**2
-		nlterm2 = (Npara**2)*((l*spec.jv(l,za)/za)**2 + spec.jvp(l,za)**2) + (Nperp*l*spec.jv(l,za)/za)**2
-		nlterm3 = (l*spec.jv(l,za)/za)**2 + spec.jvp(l,za)**2
-		nl = nlterm1 + nlterm2pre*nlterm2 + nlterm3
+		############# M_l #################################################################
+		mlterm1 = 2*l*(w/wcyci)*(Jlprime**2 + (Jl**2/za**2)*(l**2 - za**2))
+		mlterm2 = -1*2*((w**2-wcyci**2)/wcyci**2)*(JlJlprime/za)*(l**2 * Nperp**2 - (za**2 - 2*l**2)*Npara**2)
+		mlterm3 = 2*(JlJlprime/za)*(za**2 - 2*l**2)
+		ml = mlterm1 + mlterm2 + mlterm3
 		#################################################################################		
 						#
-						#
 		########## Gamma ################################################################
-		pre = (((wpb*(wcyci**2))/wpi)**2)*((const.PI**0.5)/(2.0*omegaall[i]))*np.exp(-(eetal**2))
-		term1 = 1.0/((wcyci + (omegaall[i] - wcyci)*(Npara**2))*(wcyci - (omegaall[i] + wcyci)*(Npara**2)))
-		term2 = ((l*wcycb*ml)/(kpara*vr)) - (2.0*eetal*nl)*((u/vr)**2)
-		gammas[i] = pre*term1*term2
-		#print gammas[i]
+		gterm1 = (wpmin**2/wpi**2)*(wcyci**4/((wcyci+(w-wcyci)*Npara**2)*(wcyci-(w+wcyci)*Npara**2)))
+		gterm2 = ((l*wcycmin/(kpara*vr))*ml-((2*u**2)/(vr**2)*eetal*nl))
+		gterm3 = np.sqrt(const.PI)/(2*w)*np.exp(-1*eetal**2)
+		gammas[i] = gterm1*gterm2*gterm3
+		#################################################################################		
 	
 	####### Want gamma > 1 only ###########
 	posomega = [] ; posgamma = []	
 
 	for i in range(0,gammas.shape[0]):
 		if (gammas[i] >= 0):
-			posomega.append(omegaall[i])
+			posomega.append(omegarr[i])
 			posgamma.append(gammas[i])
 
 	return np.array(posomega,dtype='float'), np.array(posgamma,dtype='float')
-
+	
+	
 ## Find and plot the distribution function of the species specified
 def dist_fn(index_list,xyz,species):
 	# Returns the distribution function plotted as a KDE from the binned data of the particles momenta, converted to velocity then normalised in units of the species thermal velocity
@@ -1863,6 +1884,9 @@ def energies(sim_loc,frac=1,plot=False,leg=True,integ=False,linfit=False,electro
 	
 	species = getIonSpecies(sdfread(0))
 	maj_species, maj2_species, min_species = species
+	if min_species == '':
+		min_species = getAllSpecies(sdfread(0))[-1] # check if minority exists as negative ion
+
 	if electrons: species = np.append(species,'Electrons')
 
 	energy_quant, names, Energy_mult, fieldquant = getEnergyLabels(sdfread(0),species)
@@ -2326,3 +2350,24 @@ def shared_area(sig1,sig2,fitgauss=False):
 		peak = popt[1] # a,b,c 
 		return sharea, peak
 	return sharea
+	
+#def outside_ticks(fig):
+#	for i, ax in enumerate(fig.axes):
+#		ax.tick_params(axis='both',direction='out',top=False,right=False,left=True,bottom=True)
+
+def boutside_ticks(lax):
+	for ax in lax:
+		ax.tick_params(axis='both',direction='out',top=False,right=False,left=True,bottom=True)
+	
+def xoutside_ticks(lax):
+	for ax in lax:
+		ax.tick_params(axis='x',direction='out',top=False,right=False,left=False,bottom=True)
+
+def ignorex(lax):
+    for ax in lax:
+        ax.tick_params(labelbottom=False)
+
+def ignorey(lax):
+    for ax in lax:
+        ax.tick_params(labelleft=False)
+        

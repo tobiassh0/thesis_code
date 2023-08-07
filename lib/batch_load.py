@@ -7,7 +7,7 @@ class Simulation():
 		
 #		self.sim_file_loc = getSimulation('') # allows user to input the file destination in the dir where batch is run
 #		self.sim_file_loc = getSimulation('/home/space/phrmsf/Documents/EPOCH/5_devel/epoch1d/L_5rL')
-		self.sim_file_loc = getSimulation('/storage/space2/phrmsf/lowres_D_He3/0_15_p_90')
+		self.sim_file_loc = getSimulation('/storage/space2/phrmsf/ECRH_JT60U')
 #		self.sim_file_loc = getSimulation('traceT_D_99_T_01')
 		self.quantity = 'Magnetic_Field_Bz'
 #		self.quantity = 'Derived_Number_Density_Deuterons'
@@ -91,6 +91,7 @@ class Simulation():
 		spec_names = getIonSpecies(self.file0) # get a list of species names from scanning the 0th file's keys for an always returned value "Number_Density_" + species
 		print('# Ions :: ',len(spec_names), ' :: ', spec_names)
 		maj_species, maj2_species, min_species = spec_names
+		min_species = getAllSpecies(sdfread(0))[-1]
 		Zmaj = getChargeNum(maj_species)
 		Zmin = getChargeNum(min_species)
 
@@ -127,7 +128,7 @@ class Simulation():
 #		energy_int = 0
 
 	### PLOT CIGARETTE PLOTS ###
-		_ = fv_vA(self.sim_file_loc,species_lst=spec_names,para=False)
+		_ = fv_vA(self.sim_file_loc,species_lst=getAllSpecies(self.file0),para=False)
 
 	### FOURIER TRANSFORMS ###
 		self.klim = 0.5*2*const.PI*self.Nx/self.L
@@ -198,6 +199,7 @@ class Simulation():
 			dumpfiles(self.FT_1d,'FT_1d_'+self.quantity)
 			## Limits the size of the loaded array to our inputted limits so that it normalises properly ##
 			k_lim, t_lim = self.FT_1d.shape[1]*(in_klimprime/self.klim_prime), self.FT_1d.shape[0]*(in_tlimprime/self.tlim_prime)
+			print(k_lim,t_lim,self.FT_1d.shape)
 			print('k_file_lim ',k_lim,'t_file_lim ', t_lim)
 			self.FT_1d = self.FT_1d[:int(t_lim),:int(k_lim)]
 		fig_1, ax_1 = plot1dTransform(self.FT_1d,klim=in_klimprime,tlim=in_tlimprime,wlabel=getOmegaLabel(min_species))

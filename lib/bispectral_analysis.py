@@ -1,7 +1,9 @@
-#from functions import *
+#from func_load import *
+from list_new import *
 import numpy as np
+import matplotlib.pyplot as plt
 from scipy.ndimage.filters import gaussian_filter
-import sys
+#import sys
 
 #### NOTE: ALL THESE ROUTINES CALCULATE AND WORK WITH b^2, NOT b. ####
 
