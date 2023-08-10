@@ -2090,7 +2090,7 @@ def paraVelocity(INDEX):
 	return np.sqrt(2*getQuantity1d(sdfread(index),'Derived_Average_Particle_Energy_'+species)/mSpec)
 
 # quote "cigarette plots", which show the distribution of velocity/energy normalised to the  
-def fv_vA(sim_loc,species_lst=['Deuterons','Alphas'],nval=10000,para=True,eload=True,vload=False):
+def ciggies(sim_loc,species_lst=['Deuterons','Alphas'],nval=10000,para=False,eload=True,vload=False):
 	if eload:
 		vload = False
 	if vload:
@@ -2124,7 +2124,7 @@ def fv_vA(sim_loc,species_lst=['Deuterons','Alphas'],nval=10000,para=True,eload=
 				tind_lst = np.zeros((len(ind_lst),3),dtype='object')
 				for i in range(len(ind_lst)):
 					tind_lst[i,:] = [ind_lst[i], species, mSpecies]
-				if para:
+				if para: # parallel calculation, just for velocities ## TODO: change this to be more general
 					pool = mp.Pool(mp.cpu_count()//2)
 					matSpecies = np.vstack(np.array(pool.map_async(paraVelocity,tind_lst).get(99999)))
 					pool.close()
@@ -2168,10 +2168,10 @@ def fv_vA(sim_loc,species_lst=['Deuterons','Alphas'],nval=10000,para=True,eload=
 		if not fload: # calculate distribution if can't load it already
 			# initialise distribution matrix
 			fSpecies = np.zeros((Nt,nval))
-			for t in range(fSpecies.shape[0]):
+			for t in range(fSpecies.shape[0]): # loop through time
 				xarr = np.linspace(0,L,Nx)
 				yarr = matSpecies[t,:]
-				fSpecies[t,:],_,_ = np.histogram2d(xarr,yarr,range=[[0,L],[vmin,vmax]],bins=(1,nval),density=True)
+				fSpecies[t,:],_,_ = np.histogram2d(xarr,yarr,range=[[0,L],[matmin,matmax]],bins=(1,nval),density=True)
 			# dump distribution matrix
 			dumpfiles(fSpecies,figname+species)
 

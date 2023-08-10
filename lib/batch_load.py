@@ -126,7 +126,7 @@ class Simulation():
 #		energy_int = 0
 
 	### PLOT CIGARETTE PLOTS ###
-		fv_vA(self.sim_file_loc,species_lst=getAllSpecies(self.file0),para=False) # doesnt return anything
+		ciggies(self.sim_file_loc,species_lst=getAllSpecies(self.file0),para=False) # doesnt return anything
 
 	### FOURIER TRANSFORMS ###
 		self.klim = 0.5*2*const.PI*self.Nx/self.L

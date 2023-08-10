@@ -98,12 +98,12 @@ ax=axs.ravel()
 
 plasma_freq = getPlasmaFreq(sdfread(0),'Left_Electrons')
 plasma_prd  = 2*const.PI/plasma_freq
-tend = 6*plasma_prd
 ttimes = np.array([1,2,3,4,5,6])
 ftimes = [int(len(times)*(ttimes[i]/(tend/plasma_prd))) for i in range(len(ttimes))]
 ftimes[-1] = 100
 frac = 1
-v_the = np.sqrt(2*const.kb*273/const.me)
+temp = 273 ; dens = 10
+v_the = np.sqrt(2*const.kb*temp/const.me)
 
 for i in range(len(ax)):
 	label = r'$t^\prime=$'+str(np.around(ttimes[i],1))
