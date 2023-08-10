@@ -115,20 +115,25 @@ def list_sdf(sim_file_loc):
 	return index_list
 
 # Reads a given sdf file as per the index
-def sdfread(index):
+def sdfread(index,d=0):
 	try:
 		d=sdf.read(('%05d'%index)+'.sdf')
+		l5 = True ; l4 = not l5
 	except:
 		try:
 			d=sdf.read(('%04d'%index)+'.sdf')	
+			l4 = True ; l5 = not l4
 		except:
 			if index == 0:
-				index = 1
-				d=sdf.read(('%05d'%(index))+'.sdf') # load 1st file instead of 0th 
-			else:
-				print('\# ERROR \# : Can\'t load {}.sdf'.format(index))
-				d=0
-#				raise SystemExit
+				index = 1 # load 1st file instead of 0th 
+				try:
+					if l4:
+						d=sdf.read(('%04d'%index)+'.sdf')			
+					else:
+						d=sdf.read(('%05d'%(index))+'.sdf')
+				except:
+					print('\# ERROR \# : Can\'t load {}.sdf'.format(index))
+					d=0
 	return d 
 
 def getKeys(d):
@@ -271,7 +276,7 @@ def getQuantity1d(d, quantity):
 	quan = d.__dict__[quantity]
 	# quan_name, quan_units = quan.name, quan.units
 	# x = quan.grid.data[0]
-	# x = np.array(x[1:])
+	# x = np.array(x)
 	quan_array = np.array(quan.data)
 	return quan_array
 
@@ -305,9 +310,9 @@ def getMeanField3D(d,quantity): #include all of the header apart from last charc
 # Gets the mass (m) of a species defined by a dictionary
 def getMass(species):
 	masses = {'Electrons': const.me,
+	'Electron': const.me,
 	'FElectrons': const.me,
 	'Left_Electrons': const.me,
-	'Electron': const.me,
 	'Right_Electrons': const.me, 
 	'Protons': const.me*const.me_to_mp, 
 	'Proton': const.me*const.me_to_mp, 
@@ -1024,7 +1029,7 @@ def batchlims(n,batch_size,index_list,remainder):
 	return batch_ini, batch_fin
 
 		
-def get_batch_fieldmatrix(index_list,quantities=[],quantity='Magnetic_Field_Bz',load=True,para=False):
+def get_batch_fieldmatrix(index_list,quantities=['Magnetic_Field_Bz'],quantity='Magnetic_Field_Bz',load=True,para=False):
 	batch_size, StartStop = BatchStartStop(index_list)
 	times = np.zeros(len(index_list))
 	meanBz = 0
@@ -1849,7 +1854,7 @@ def getEnergyLabels(file0,species):
 	ionquant = [] ; ionlabels = []
 	for spec in species:
 		if spec != '':
-			ionquant.append(spec+'_KE')
+			ionquant.append(spec+'_KEdens')
 			ionlabels.append(getIonlabel(spec))
 			fieldquant.append(spec)
 	
@@ -1926,7 +1931,7 @@ def energies(sim_loc,frac=1,plot=False,leg=True,integ=False,linfit=False,electro
 	if set([i+'.pkl' for i in energy_quant]).issubset(set(os.listdir(os.getcwd()))):
 		print('All energy -pkl- files present.')		
 	else:
-		energy_data_mat, energy_data = getEnergies(energy_quant,fieldquant,n,dump=True)
+		energy_data_mat, energy_data = getEnergies(energy_quant,fieldquant,n,dump=True) # mat,_ = getEnergies()
 #		for i in range(energy_data.shape[0]):
 #			dumpfiles(energy_data[i,:],energy_quant[i])
 
@@ -2084,79 +2089,116 @@ def paraVelocity(INDEX):
 	index, species, mSpec = INDEX
 	return np.sqrt(2*getQuantity1d(sdfread(index),'Derived_Average_Particle_Energy_'+species)/mSpec)
 
-def fv_vA(sim_loc,species_lst=['Deuterons','Alphas'],nval=10000,para=True):
+# quote "cigarette plots", which show the distribution of velocity/energy normalised to the  
+def fv_vA(sim_loc,species_lst=['Deuterons','Alphas'],nval=10000,para=True,eload=True,vload=False):
+	if eload:
+		vload = False
+	if vload:
+		eload = False
+	if eload == vload:
+		print('## ERROR ## :: vload and eload are set equal') ; raise SystemExit
+
+	# initial parameters, dimensions and constants
 	ind_lst = list_sdf(sim_loc)
 	time = read_pkl('times')
-	
-	Nx = len(getGrid(sdfread(0))[0])
+	d0 = sdfread(0)
+	Nx = len(getGrid(d0)[0])
 	Nt = len(time)
-	vA = getAlfvenVel(sdfread(0))
+	vA = getAlfvenVel(d0)
 	species_lst = [i for i in species_lst if i != '']
+
+	# setup mass and velocity arrays
 	for species in species_lst:
 		mSpecies = getMass(species)
-		vSpecies = np.zeros((Nt,Nx))
-
-		## load velocity of species
-		try:
-			vSpecies = read_pkl('v_'+species)
-		except:
-			tind_lst = np.zeros((len(ind_lst),3),dtype='object')
-			for i in range(len(ind_lst)):
-				tind_lst[i,:] = [ind_lst[i], species, mSpecies]
-			if para:
-				pool = mp.Pool(mp.cpu_count()//2)
-				vSpecies = np.vstack(np.array(pool.map_async(paraVelocity,tind_lst).get(99999)))
-				pool.close()
-			else:
-				vSpecies = np.zeros((Nt,Nx))
-				for t in range(Nt):
-					if int(100*t/Nt)%5==0:print(100*t/Nt, ' %')
-					vSpecies[t,:] = np.sqrt(2*getQuantity1d(sdfread(t),'Derived_Average_Particle_Energy_'+species)/mSpecies)
-			dumpfiles(vSpecies,'v_'+species)
-
+		matSpecies = np.zeros((Nt,Nx))
+		
+		try: # try loading
+			if vload:
+				matSpecies = read_pkl('v_'+species)
+			if eload:
+				matSpecies = read_pkl(species+'_KEdensmatrix')
+		except: # didn't load, calculate instead
+			if not eload:
+				matSpecies,_ = getEnergies([species+'_KEdens'],[species],Nt,dump=True) # loads energy density matrix of species
+			if not vload:
+				tind_lst = np.zeros((len(ind_lst),3),dtype='object')
+				for i in range(len(ind_lst)):
+					tind_lst[i,:] = [ind_lst[i], species, mSpecies]
+				if para:
+					pool = mp.Pool(mp.cpu_count()//2)
+					matSpecies = np.vstack(np.array(pool.map_async(paraVelocity,tind_lst).get(99999)))
+					pool.close()
+				else:
+					for t in range(Nt):
+						if int(100*t/Nt)%5==0:print(100*t/Nt, ' %')
+						matSpecies[t,:] = np.sqrt(2*getQuantity1d(sdfread(t),'Derived_Average_Particle_Energy_'+species)/mSpecies)
+				dumpfiles(matSpecies,'v_'+species)
+		
 		L = getGridlen(sdfread(0))
 		tcSpecies = 2*const.PI/getCyclotronFreq(sdfread(0),species)
 		T = time[-1]/tcSpecies
-		vmin  = np.min(vSpecies/vA) ; vmax = np.max(vSpecies/vA) ; vmean = np.mean(vSpecies/vA)
-		try:
-			fSpecies = read_pkl('fv_'+species)
-		except:
-			vSpecies = vSpecies/vA
-			print('vmin ',vmin,'vmax ',vmax)
-	#		vMin = np.linspace(vmin,vmax,nval)
+		if vload: # velocities
+			ylabel = r'$v/v_A$'
+			cbar_label = r'$\log_{10}[f(v)]$'
+			figname = 'fv_vA_'
+			matnorm = vA
+			try:
+				fSpecies = read_pkl('fv_'+species)
+				fload = True
+			except:
+				fload = False
+		if eload: # energies
+			ylabel = r'$E$' + '  ' + '['+r'$keV$'+']'
+			cbar_label = r'$\log_{10}[f(E)]$'
+			figname = 'fE_keV_'
+			matnorm = 1000*const.qe
+			try:
+				fSpecies = read_pkl('fE_'+species)
+				fload = True
+			except:
+				fload = False
+		
+		## calculate fv/fE matrix
+		# normalise
+		matSpecies = matSpecies/matnorm
+		matmin  = np.min(matSpecies) ; matmax = np.max(matSpecies) ; matmean = np.mean(matSpecies)
+		# extents of matrix per species
+		extents = [0,T,matmin,matmax]
+		print('min val ',matmin,'max mat ',matmax)
+		if not fload: # calculate distribution if can't load it already
+			# initialise distribution matrix
 			fSpecies = np.zeros((Nt,nval))
 			for t in range(fSpecies.shape[0]):
 				xarr = np.linspace(0,L,Nx)
-				yarr = vSpecies[t,:]
+				yarr = matSpecies[t,:]
 				fSpecies[t,:],_,_ = np.histogram2d(xarr,yarr,range=[[0,L],[vmin,vmax]],bins=(1,nval),density=True)
-			#	yarr = np.linspace(vmin,vmax,nval)
-			#	plt.plot(yarr,fAlpha[t,:]) ; plt.show()
+			# dump distribution matrix
+			dumpfiles(fSpecies,figname+species)
 
-			dumpfiles(fSpecies,'fv_'+species)
-
+		# setup figure
 		fig,ax = plt.subplots(figsize=(8,8/const.g_ratio))
-		im = ax.imshow(np.log10(fSpecies.T),**kwargs,extent=[0,T,vmin,vmax],cmap='jet')
+		im = ax.imshow(np.log10(fSpecies.T),**kwargs,extent=extents,cmap='jet')
 
+		# colorbar and labels
 		cbar = plt.colorbar(im)
-		cbar.ax.set_ylabel(r'$\log_{10}[f(v)]$', rotation=90,fontsize=18)
+		cbar.ax.set_ylabel(cbar_label, rotation=90,fontsize=18)
 		ax.set_xlabel(r'$t$'+getOmegaLabel(species)+r'$/2\pi$',fontsize=16)
-		## set y-lim 
-		if (0.9*vmean) < vmin:
-			if (1.1*vmean) > vmax:
-				ax.set_ylim(vmin,vmax)
+		ax.set_ylabel(ylabel,fontsize=16)
+		
+		# set y-lim 
+		if (0.9*valmean) < valmin:
+			if (1.1*valmean) > valmax:
+				ax.set_ylim(valmin,valmax)
 			else:
-				ax.set_ylim(vmin,1.1*vmean)
+				ax.set_ylim(valmin,1.1*valmean)
 		else:
-			ax.set_ylim(0.9*vmean,1.1*vmean)		
-	#	ax.set_xlabel(r'$t/\tau_{cmin}$',fontsize=14)
-		ax.set_ylabel(r'$v/v_A$',fontsize=16)
+			ax.set_ylim(0.9*valmean,1.1*valmean)
+
 		plt.gca().ticklabel_format(useOffset=False)
-		fig.savefig('fv_vA_'+species+'.png',bbox_inches='tight')
-#	plt.show()
-#	plt.imshow((vMin/vA),**kwargs,cmap='seismic',extent=[0,L,0,T])
-#	plt.colorbar()
-#	plt.show()
-	return fSpecies
+		# savefig
+		fig.savefig(figname+species+'.png',bbox_inches='tight')
+	
+	return None
 	
 def extractPeaks(data,Nperwcd=1,prominence=0.3):
 	return signal.find_peaks(data,distance=Nperwcd,prominence=prominence)[0] # tune till Nperwcd encapsulates all peaks (visually)	
@@ -2241,7 +2283,7 @@ def grad_energydens(simloc,normspecies='Deuterons',quant='Magnetic_Field_Bz',mea
 	try:
 		pklname,label,mult = Endict(quant)
 	except: # particle 
-		pklname = quant+'_KE'
+		pklname = quant+'_KEdens'
 		label = getIonlabel(quant)
 		mult = 1
 	Energyfield = read_pkl(pklname)
@@ -2273,20 +2315,21 @@ def phaseCorrelation(sig,fft_sig0,dw,wnorm,wmax=35):
 
 # Plots and shows the experiment vs theory plot for the ratio between two species change in energy density
 # Also has the ability to plot du per-particle ratio (per species) through time for each simulation (nrows) -- will need to un-comment these lines
-def majIons_edens_ratio(sims,species=['Tritons','Deuterons'],time_norm=r'$\tau_{cD}$',labels=[1,11,50],lim=2.):
+def majIons_edens_ratio(sims,species=['Deuterons','Tritons'],time_norm=r'$\tau_{cD}$',labels=[1,11,50],lim=2.):
 	mean_to = 10
 	N=50
 	c=0
 #	fig, ax = plt.subplots(figsize=(10,len(sims)*3-1),nrows=len(sims),sharex=True)
 #	fig.subplots_adjust(hspace=0.15)#hspace=0.
 	plt.plot([0,lim],[0,lim],color='darkgray',linestyle='--') # 1:1 line
+	home = os.getcwd()
 	for sim in sims:
 		sim_loc = getSimulation(sim)
 		times = read_pkl('times')
 		d0 = sdfread(0)
 		nx = len(getQuantity1d(d0,'Derived_Number_Density'))
 		n0 = getQuantity1d(d0,'Derived_Number_Density_Electrons')
-		wc1 = getCyclotronFreq(d0,'Deuterons')
+		wc1 = getCyclotronFreq(d0,species[0])
 		tc1 = 2*const.PI/wc1
 		dt = (times[-1]-times[0])/len(times)
 		dt_p = dt/tc1
@@ -2299,7 +2342,7 @@ def majIons_edens_ratio(sims,species=['Tritons','Deuterons'],time_norm=r'$\tau_{
 		marr = [getMass(species[0]),getMass(species[1])]
 		qarr = [getChargeNum(species[0]),getChargeNum(species[1])]
 		for i in range(len(species)):
-			Energypart = read_pkl(species[i]+'_KE')/(1000*const.qe) # keV/m^3
+			Energypart = read_pkl(species[i]+'_KEdens')/(1000*const.qe) # keV/m^3
 			meanEnergypart = np.mean(Energypart[:mean_to])
 			Energypart = np.convolve(Energypart,np.ones(N)/N,mode='valid')
 			timespart = np.linspace(0,max(times),len(Energypart))
@@ -2315,6 +2358,7 @@ def majIons_edens_ratio(sims,species=['Tritons','Deuterons'],time_norm=r'$\tau_{
 #		ax[c].set_ylim(1e-3,1e3)
 #		ax[c].axhline(marr[0]/marr[1],linestyle='--',color='k')
 #		ax[c].set_yscale('log')
+		os.chdir(home)
 		c+=1
 #	ax[0].set_yticks([1e-2,1e-1,1e0,1e1,1e2,1e3])
 #	ax[1].set_yticks([1e-2,1e-1,1e0,1e1,1e2,1e3])
@@ -2324,6 +2368,7 @@ def majIons_edens_ratio(sims,species=['Tritons','Deuterons'],time_norm=r'$\tau_{
 #	ax[int(midax)].set_ylabel(r'$\left(\frac{\xi_1}{\xi_2}\right)\left|\frac{\Delta u_1(t)}{\Delta u_2(t)}\right|$',fontsize=24)
 #	ax[-1].set_xlabel(r'Time,  '+time_norm,**tnrfont)
 #	fig.savefig('/storage/space2/phrmsf/dump/du_ratio_vs_time_primary.png')
+	print()
 	plt.ylabel(r'$[\Delta u_1/\Delta u_2]_{max}$',**tnrfont)
 	plt.xlabel(r'$(\xi_1/\xi_2)(m_2/m_1)(q_1/q_2)^2$',**tnrfont)
 	plt.show()

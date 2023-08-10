@@ -74,7 +74,7 @@ colors=['g','r','cyan']#'b',
 colors = ['b','r','k']
 shapes = ['o','o','o']
 labels = [r'$11\%$',r'$1\%$',r'$0\%$'] #r'$50\%$',
-fig,axs=plt.subplots(figsize=(8,10/(const.g_ratio)),nrows=3,sharex=True)
+fig,axs=plt.subplots(figsize=(8,6),nrows=3,sharex=True)
 fig.subplots_adjust(hspace=0.1)
 ax = axs.ravel()
 times = [[0,0.5],[0.5,2.0]]
@@ -132,12 +132,12 @@ for ttimes in times:
 
 # time range annotations
 ax[0].set_ylabel(r'$\gamma_l/\Omega_\alpha$',**tnrfont)
-ax[1].text(1.,3.,r'$0<t/\tau_{cD}<0.5$',color='black',fontsize=16,bbox=dict(facecolor='white',edgecolor='black',boxstyle='square,pad=0.25'))
-ax[2].text(1.,3.,r'$0.5<t/\tau_{cD}<2.0$',color='black',fontsize=16,bbox=dict(facecolor='white',edgecolor='black',boxstyle='square,pad=0.25'))
+ax[1].text(1.,2.8,r'$0<t/\tau_{cD}<0.5$',color='black',fontsize=16,bbox=dict(facecolor='white',edgecolor='black',boxstyle='square,pad=0.25'))
+ax[2].text(1.,2.8,r'$0.5<t/\tau_{cD}<2.0$',color='black',fontsize=16,bbox=dict(facecolor='white',edgecolor='black',boxstyle='square,pad=0.25'))
 # x-label
 ax[2].set_xlabel(r'$\omega/\Omega_\alpha$',**tnrfont)
 #fig.savefig('/storage/space2/phrmsf/paper/Bz_kt_growth_twoTimes.png')
-#fig.savefig('/home/space/phrmsf/Documents/thesis_code/Bz_kt_growth_twoTimes.png')
+fig.savefig('/home/space/phrmsf/Documents/thesis_code/Bz_kt_growth_twoTimes.png')
 plt.show()	
 
 #---------------------------------------------------------------------#

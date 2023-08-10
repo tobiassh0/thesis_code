@@ -1,0 +1,12 @@
+
+*** These modified files were found in JOE when it aborted on Thu Aug 10 11:44:14 2023
+*** JOE was aborted by UNIX signal 1
+
+*** File '(Unnamed)'
+/home/space/phrmsf/Documents/EPOCH/epoch-4.17.16/epoch1d/Makefile
+
+*** File '* Startup Log *'
+Processing '/etc/joe/jstarrc'...
+Processing '/etc/joe/ftyperc'...
+Finished processing /etc/joe/ftyperc
+Finished processing /etc/joe/jstarrc

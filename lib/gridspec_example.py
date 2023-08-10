@@ -21,7 +21,7 @@ ax3 = fig.add_subplot(gs1[1, :3],sharex=ax1,sharey=ax1)
 ax4 = fig.add_subplot(gs1[1, 3:],sharex=ax2,sharey=ax1)
 
 # 1% & 50%
-gs2 = GridSpec(2, 5, left=0.51, right=0.98, wspace=0., hspace=0.05)
+gs2 = GridSpec(2, 5, left=0.51, right=0.98, wspace=0., hspace=0.05) # nrows, ncols, l, r, wsp, hsp
 # 1%
 ax5 = fig.add_subplot(gs2[0, :3],sharex=ax1,sharey=ax1)
 ax6 = fig.add_subplot(gs2[0, 3:],sharex=ax2,sharey=ax1)

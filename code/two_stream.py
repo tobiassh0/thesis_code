@@ -1,36 +1,43 @@
 from func_load import *
 home = os.getcwd()
-twostreamloc = '/home/space/phrmsf/Documents/EPOCH/epoch-4.17.16/epoch1d/old/old_sims/twoStream'
+#twostreamloc = '/home/space/phrmsf/Documents/EPOCH/epoch-4.17.16/epoch1d/old/old_sims/twoStream_long'
+twostreamloc = '/storage/space2/phrmsf/old/twoStream'
 simLoc = getSimulation(twostreamloc)
+
 # files and times
 d0 = sdfread(0)
 ind_lst = list_sdf(simLoc)
 #times = ind_lst[::len(ind_lst)//4]
 times = ind_lst
+
 # physical parameters
 LDe = getDebyeLength(d0,'Left_Electrons')
 dend = sdfread(times[-1])
 tau_pe = 2*const.PI/getPlasmaFreq(d0,'Left_Electrons')
 tend = dend.__dict__['Header']['time']
 v0 = getQuantity1d(d0,'Particles_Vx_Right_Electrons')
+
 # histograms, bins and setup
 bins = 5000
 Emin, Emax = (np.min(0.5*const.me*v0**2), np.max(0.5*const.me*v0**2))
 E_left=np.zeros((len(times),len(v0))) ; E_right=np.zeros((len(times),len(v0))) ; E_ions=np.zeros((len(times),2*len(v0))) # twice as many protons
 E_lhist=np.zeros((len(times),bins)) ; E_rhist=np.zeros((len(times),bins)) ; E_ihist=np.zeros((len(times),bins))
 Erange = (0,10*Emax)
+vx_left = np.zeros((len(times),len(v0))) ; vx_right = np.zeros((len(times),len(v0))) ; vx_ions = np.zeros((len(times),2*len(v0)))
 
+# ------------------------------------------------------- #
+## Energy matrices through time (cigarette plots)
 #fig,ax=plt.subplots(nrows=len(times),figsize=(8,int(1.5*len(times)))) ## uncomment for a nrow plot of histograms
 for t, c in zip(times,np.arange(0,len(times),1)):
 #	print(t,c)
 	# load particle velocities
-	vx_left = getQuantity1d(sdfread(t),'Particles_Vx_Left_Electrons')
-	vx_right= getQuantity1d(sdfread(t),'Particles_Vx_Right_Electrons')
-	vx_ions = getQuantity1d(sdfread(t),'Particles_Vx_Protons')
+	vx_left[t,:]  = getQuantity1d(sdfread(t),'Particles_Vx_Left_Electrons')
+	vx_right[t,:] = getQuantity1d(sdfread(t),'Particles_Vx_Right_Electrons')
+	vx_ions[t,:]  = getQuantity1d(sdfread(t),'Particles_Vx_Protons')
 	# convert to energy
-	E_left[t,:] = 0.5*const.me*vx_left**2
-	E_right[t,:]= 0.5*const.me*vx_right**2
-	E_ions[t,:] = 0.5*const.mp*vx_ions**2
+	E_left[t,:] = 0.5*const.me*vx_left[t,:]**2
+	E_right[t,:]= 0.5*const.me*vx_right[t,:]**2
+	E_ions[t,:] = 0.5*const.mp*vx_ions[t,:]**2
 	# calculate histograms
 	elh, lbin_diff = np.histogram(E_left[t,:],bins=bins,range=Erange,density=True)
 	erh, rbin_diff = np.histogram(E_right[t,:],bins=bins,range=Erange,density=True)	
@@ -72,6 +79,7 @@ print('Normalised such that the sum of histogram in a given time bin (Y-axis) eq
 #plt.savefig(home+'/twoStream_Energy_hist.png')
 plt.show()
 
+# ------------------------------------------------------- #
 ## Fourier transform (in freq) to find freq of oscillation
 #plt.clf()
 #FT1d = get1dTransform(E_lhist.T)
@@ -80,3 +88,42 @@ plt.show()
 #wlim = 0.5*2*const.PI/dt
 #wpe = getPlasmaFreq(d0,'Left_Electrons')
 #plt.imshow(np.log10(FT1d),extent=[0,FT1d.shape[1],0,wlim/wpe],**kwargs) ; plt.show()
+
+# ------------------------------------------------------- #
+## Phase space plots
+plt.clf()
+fig,axs=plt.subplots(nrows=2,ncols=3,figsize=(14,8),sharex=True,sharey=True)
+fig.subplots_adjust(hspace=0.075,wspace=0.075)
+ax=axs.ravel()
+
+plasma_freq = getPlasmaFreq(sdfread(0),'Left_Electrons')
+plasma_prd  = 2*const.PI/plasma_freq
+tend = 6*plasma_prd
+ttimes = np.array([1,2,3,4,5,6])
+ftimes = [int(len(times)*(ttimes[i]/(tend/plasma_prd))) for i in range(len(ttimes))]
+ftimes[-1] = 100
+frac = 1
+v_the = np.sqrt(2*const.kb*273/const.me)
+
+for i in range(len(ax)):
+	label = r'$t^\prime=$'+str(np.around(ttimes[i],1))
+	vxL = vx_left[ftimes[i],:]
+	vxR = vx_right[ftimes[i],:]
+	vxi = vx_ions[ftimes[i],:]
+	xe = np.linspace(0,L,len(vxL))
+	xi = np.linspace(0,L,len(vxi))
+	ax[i].scatter(xe[::frac],vxR[::frac]/v_the,color='r',s=4)
+	ax[i].scatter(xe[::frac],vxL[::frac]/v_the,color='b',s=4)
+	ax[i].scatter(xi[::frac],vxi[::frac]/v_the,color='g',s=1)
+	ax[i].text(100.,110.,label,color='black',fontsize=16,bbox=dict(facecolor='white',edgecolor='black',boxstyle='square,pad=0.25'))
+	ax[i].set_xlim(0,1400)
+	ax[i].set_ylim(-150,150)
+	if i > 2:
+		ax[i].set_xticks([0,350,700,1050,1400])
+		ax[i].set_xlabel(r'$x/\lambda_{De}$',fontsize=20)
+
+ax[0].set_ylabel(r'$v_x/v_{e,th}$',fontsize=20)
+ax[3].set_ylabel(r'$v_x/v_{e,th}$',fontsize=20)
+
+plt.show()
+

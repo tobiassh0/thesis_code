@@ -6,9 +6,7 @@ class Simulation():
 	def __init__(self):
 		
 #		self.sim_file_loc = getSimulation('') # allows user to input the file destination in the dir where batch is run
-#		self.sim_file_loc = getSimulation('/home/space/phrmsf/Documents/EPOCH/5_devel/epoch1d/L_5rL')
-		self.sim_file_loc = getSimulation('/storage/space2/phrmsf/ECRH_JT60U')
-#		self.sim_file_loc = getSimulation('traceT_D_99_T_01')
+		self.sim_file_loc = getSimulation('/storage/space2/phrmsf/lowres_D_He3/0_25_p_90')
 		self.quantity = 'Magnetic_Field_Bz'
 #		self.quantity = 'Derived_Number_Density_Deuterons'
 		self.index_list = list_sdf(self.sim_file_loc)
@@ -48,7 +46,7 @@ class Simulation():
 		if len(pkl_list) == 0: # dont have pkl files # should be on first running
 			self.quantities = getFields()
 			self.times, self.fieldmatrix = get_batch_fieldmatrix(self.index_list,self.quantities,load=True)
-			if 'times.pkl' not in os.listdir() or not self.times:
+			if 'times.pkl' not in os.listdir() or self.times==None:
 				dumpfiles(self.times, 'times')
 #			for quant in self.quantities:
 #				print('Calculating '+quant+' ...')
@@ -128,7 +126,7 @@ class Simulation():
 #		energy_int = 0
 
 	### PLOT CIGARETTE PLOTS ###
-		_ = fv_vA(self.sim_file_loc,species_lst=getAllSpecies(self.file0),para=False)
+		fv_vA(self.sim_file_loc,species_lst=getAllSpecies(self.file0),para=False) # doesnt return anything
 
 	### FOURIER TRANSFORMS ###
 		self.klim = 0.5*2*const.PI*self.Nx/self.L
