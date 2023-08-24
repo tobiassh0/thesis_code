@@ -1030,7 +1030,7 @@ def batchlims(n,batch_size,index_list,remainder):
 
 		
 def get_batch_fieldmatrix(index_list,quantities=['Magnetic_Field_Bz'],quantity='Magnetic_Field_Bz',load=True,para=False):
-	batch_size, StartStop = BatchStartStop(index_list)
+	batch_size, StartStop = BatchStartStop(index_list,default=900) # dealing with large number of files
 	times = np.zeros(len(index_list))
 	meanBz = 0
 	for i in range(StartStop.shape[0]):
@@ -2185,14 +2185,15 @@ def ciggies(sim_loc,species_lst=['Deuterons','Alphas'],nval=10000,para=False,elo
 		ax.set_xlabel(r'$t$'+getOmegaLabel(species)+r'$/2\pi$',fontsize=16)
 		ax.set_ylabel(ylabel,fontsize=16)
 		
-		# set y-lim 
-		if (0.9*valmean) < valmin:
-			if (1.1*valmean) > valmax:
-				ax.set_ylim(valmin,valmax)
+		# set y-lim
+		
+		if (0.9*matmean) < matmin:
+			if (1.1*matmean) > matmax:
+				ax.set_ylim(matmin,matmax)
 			else:
-				ax.set_ylim(valmin,1.1*valmean)
+				ax.set_ylim(matmin,1.1*matmean)
 		else:
-			ax.set_ylim(0.9*valmean,1.1*valmean)
+			ax.set_ylim(0.9*matmean,1.1*matmean)
 
 		plt.gca().ticklabel_format(useOffset=False)
 		# savefig
@@ -2315,7 +2316,8 @@ def phaseCorrelation(sig,fft_sig0,dw,wnorm,wmax=35):
 
 # Plots and shows the experiment vs theory plot for the ratio between two species change in energy density
 # Also has the ability to plot du per-particle ratio (per species) through time for each simulation (nrows) -- will need to un-comment these lines
-def majIons_edens_ratio(sims,species=['Deuterons','Tritons'],time_norm=r'$\tau_{cD}$',labels=[1,11,50],lim=2.):
+def majIons_edens_ratio(sims,species=['Deuterons','Tritons'],time_norm=r'$\tau_{cD}$',\
+						xlabel=r'$[\Delta u_1/\Delta u_2]_{max}$',ylabel=r'$(\xi_1/\xi_2)(m_2/m_1)(q_1/q_2)^2$',labels=[1,11,50],lim=2.,lims=((0,1),(0,1))):
 	mean_to = 10
 	N=50
 	c=0
@@ -2368,9 +2370,9 @@ def majIons_edens_ratio(sims,species=['Deuterons','Tritons'],time_norm=r'$\tau_{
 #	ax[int(midax)].set_ylabel(r'$\left(\frac{\xi_1}{\xi_2}\right)\left|\frac{\Delta u_1(t)}{\Delta u_2(t)}\right|$',fontsize=24)
 #	ax[-1].set_xlabel(r'Time,  '+time_norm,**tnrfont)
 #	fig.savefig('/storage/space2/phrmsf/dump/du_ratio_vs_time_primary.png')
-	print()
-	plt.ylabel(r'$[\Delta u_1/\Delta u_2]_{max}$',**tnrfont)
-	plt.xlabel(r'$(\xi_1/\xi_2)(m_2/m_1)(q_1/q_2)^2$',**tnrfont)
+	plt.ylabel(xlabel,**tnrfont) ; plt.xlabel(ylabel,**tnrfont)
+	plt.xlim(lims[0]) ; plt.ylim(lims[1])
+	plt.savefig('du_peak_vs_theory.png',bbox_inches='tight')
 	plt.show()
 
 

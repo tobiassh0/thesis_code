@@ -3,7 +3,7 @@ from func_load import *
 
 #sim_loc = getSimulation('/home/space/phrmsf/Documents/EPOCH/epoch-4.17.16/epoch1d/old/old_sims/twoStream')
 #sim_loc = getSimulation('/storage/space2/phrmsf/old/twoStream')
-sim_loc = getSimulation('/home/space/phrmsf/Documents/EPOCH/epoch_older/epoch/epoch1d/tests/twostream')
+sim_loc = getSimulation('/home/space/phrmsf/Documents/EPOCH/epoch_older/epoch/epoch1d/TWOSTREAM')
 #for k in getKeys(sdfread(0)):print(k)
 #raise SystemExit
 
@@ -43,6 +43,7 @@ for t in tprime:
 	plt.scatter(xLeft,vxLeft/vthE,color='r',s=1)
 	plt.scatter(xRight,vxRight/vthE,color='b',s=1)
 #	plt.scatter(xProtons,vProtons/vthE,color='g',s=1)
+
 	plt.savefig('{}_vx.png'.format(t))
 #	plt.show()
 	plt.clf()
