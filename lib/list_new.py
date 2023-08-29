@@ -1321,6 +1321,12 @@ def LowerHybridMassEffective(file0,wpe,wce,n_e):
 #	W_LH = (((w_PI2)+(w_CI2))/(1+((wpe**2)/(wce**2))))**.5	
 	return W_LH # not normalised
 
+def getUpperHybrid(wce,wpe):
+	return np.sqrt(wce**2+wpe**2)
+
+def getLowerHybrid(wpi,wci,wpe,wce):
+	return np.sqrt(((wpi**2)+(wci**2))/(1+((wpe**2)/(wce**2))))
+
 ## Calculates the cold wave modes for a given plasma (LH, UH, Omode, Xmode, Light, Cyclotron harmonics, CA) # doesnt actually calculate FAW, this is done separately
 def ColdWaveModes(ax,omega_lst,va,wnorm,OMODE=False,UH=False,LH=False,CA=False,CYC=False,LGHT=False,Lcut=False,Rcut=False,LHact=False,W1=False,W2=False):
 	wpi, wpe, wci, wce = omega_lst
@@ -1332,11 +1338,11 @@ def ColdWaveModes(ax,omega_lst,va,wnorm,OMODE=False,UH=False,LH=False,CA=False,C
 		plt.plot(k*va/wnorm,wom/wnorm,color='k',linestyle='--')#,label='O-mode')
 	## Upper-hybrid
 	if UH:
-		wuh = np.sqrt(wce**2+wpe**2)
+		wuh = getUpperHybrid(wce,wpe)
 		plt.axhline(wuh/wnorm,color='k',linestyle='-.')#,label='UH')
 	## Lower-hybrid ; full description, typically use LHact
 	if LH:
-		wlh = np.sqrt(((wpi**2)+(wci**2))/(1+((wpe**2)/(wce**2))))
+		wlh = getLowerHybrid(wpe,wci,wpe,wce)
 		plt.axhline(wlh/wnorm,color='k',linestyle='--')#,label='LH') ## handled in the FAW calculation
 	## Above is also LH but full version, this is the simplified version	
 	if LHact:
@@ -2417,4 +2423,59 @@ def ignorex(lax):
 def ignorey(lax):
     for ax in lax:
         ax.tick_params(labelleft=False)
-        
+
+## Sobel and Scharr kernel on an image which will return the gradient array
+def Kernel(img,kernel='scharr'):
+	if kernel == 'scharr':
+		Gx=np.array([[3,0,-3],[10,0,-10],[3,0,-3]])
+		Gy=np.array([[3,10,3],[0,0,0],[-3,-10,-3]])
+	if kernel == 'sobel':
+		Gx=np.array([[-1,0,1],[-2,0,2],[-1,0,1]])
+		Gy=np.array([[-1,-2,-1],[0,0,0],[1,2,1]])
+	# magnitude and angle arrays
+	kGmag = np.zeros(img.shape)
+	kGangle = np.zeros(img.shape)
+	# position relative to centre cell
+	for i in range(img.shape[0]-1):
+		for j in range(img.shape[1]-1):
+			NORTH = SOUTH = WEST = EAST = True
+			# four conditions on square image
+			if i+1 > img.shape[0]: # reached end of img EAST
+				EAST = False
+			if i-1 < 0: # reached end of img WEST
+				WEST = False
+			if j+1 > img.shape[1]: # reached end of img NORTH
+				NORTH = False
+			if j-1 < 0: # reached end of img SOUTH
+				SOUTH = False
+			##
+			if NORTH: N = img[i,j+1]
+			else: N = 0
+			#
+			if SOUTH: S = img[i,j-1]
+			else: S = 0
+			#
+			if WEST: W = img[i-1,j]
+			else: W = 0
+			#
+			if EAST: E = img[i+1,j]
+			else: E = 0
+			#
+			if NORTH and WEST: NW = img[i-1,j+1]
+			else: NW = 0
+			#
+			if NORTH and EAST: NE = img[i+1,j+1]
+			else: NE = 0
+			#
+			if SOUTH and WEST: SW = img[i-1,j-1]
+			else: SW = 0
+			#
+			if SOUTH and EAST: SE = img[i+1,j-1]
+			else: SE = 0
+			## 
+			timg = np.array([[NW,N,NE],[W,img[i,j],E],[SW,S,SE]])
+			kG = np.array([np.sum(Gx*timg),np.sum(Gy*timg)])
+			kGmag[i,j] = np.sqrt(kG[0]**2 + kG[1]**2)
+			kGangle[i,j]= np.arctan(kG[1]/kG[0])
+	return kGmag, kGangle
+	
