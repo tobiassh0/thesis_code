@@ -2404,9 +2404,9 @@ def shared_area(sig1,sig2,fitgauss=False):
 		return sharea, peak
 	return sharea
 	
-#def outside_ticks(fig):
-#	for i, ax in enumerate(fig.axes):
-#		ax.tick_params(axis='both',direction='out',top=False,right=False,left=True,bottom=True)
+def outside_ticks(fig):
+	for i, ax in enumerate(fig.axes):
+		ax.tick_params(axis='both',direction='out',top=False,right=False,left=True,bottom=True)
 
 def boutside_ticks(lax):
 	for ax in lax:
@@ -2430,8 +2430,8 @@ def Kernel(img,kernel='scharr'):
 		Gx=np.array([[3,0,-3],[10,0,-10],[3,0,-3]])
 		Gy=np.array([[3,10,3],[0,0,0],[-3,-10,-3]])
 	if kernel == 'sobel':
-		Gx=np.array([[-1,0,1],[-2,0,2],[-1,0,1]])
-		Gy=np.array([[-1,-2,-1],[0,0,0],[1,2,1]])
+		Gx=np.array([[1,0,-1],[2,0,-2],[1,0,-1]])
+		Gy=np.array([[1,2,1],[0,0,0],[-1,-2,-1]])
 	# magnitude and angle arrays
 	kGmag = np.zeros(img.shape)
 	kGangle = np.zeros(img.shape)
@@ -2476,6 +2476,8 @@ def Kernel(img,kernel='scharr'):
 			timg = np.array([[NW,N,NE],[W,img[i,j],E],[SW,S,SE]])
 			kG = np.array([np.sum(Gx*timg),np.sum(Gy*timg)])
 			kGmag[i,j] = np.sqrt(kG[0]**2 + kG[1]**2)
-			kGangle[i,j]= np.arctan(kG[1]/kG[0])
+			kGangle[i,j]= np.arctan2(kG[1],kG[0]) # radians between +- pi
+	kGangle = np.nan_to_num(kGangle,posinf=np.nan,neginf=np.nan) # change +-inf vals to nan
+	kGmag = np.nan_to_num(kGmag,posinf=np.nan,neginf=np.nan) 	 # change +-inf vals to nan
 	return kGmag, kGangle
 	

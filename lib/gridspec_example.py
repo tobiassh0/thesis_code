@@ -1,14 +1,13 @@
+from list_new import *
+
+from matplotlib.gridspec import GridSpec
+
 def annotate_axes(fig):
     for i, ax in enumerate(fig.axes):
         ax.text(0.5, 0.5, "ax%d" % (i+1), va="center", ha="center")
         ax.tick_params(labelbottom=False, labelleft=False)
 
-def outside_ticks(fig):
-	for i, ax in enumerate(fig.axes):
-		ax.tick_params(axis='both',direction='out',top=False,right=False,left=True,bottom=True)
-
 fig = plt.figure()
-
 fig.suptitle("GirdSpec w/ different subplotpars")
 
 ## 0% & 11%
@@ -32,4 +31,10 @@ ax8 = fig.add_subplot(gs2[1, 3:],sharex=ax2,sharey=ax1)
 
 annotate_axes(fig)
 outside_ticks(fig)
+#boutside_ticks(lax)	
+#xoutside_ticks(lax)
+#ignorex(lax)
+#ignorey(lax)
+
 plt.savefig('gridspec.png')
+

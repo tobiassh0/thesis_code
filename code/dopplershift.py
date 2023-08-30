@@ -40,19 +40,22 @@ for i in range(nw):
 			continue
 #plt.imshow(FT2d,**kwargs,extent=[0,kmax/knorm,0,wmax/wnorm],clim=(-2,2)) ; plt.show() ; sys.exit()
 # Scharr gradient map
-_,kGangle = Kernel(FT2d,kernel='sobel') # scharr or sobel
+_,kGangle = Kernel(FT2d,kernel='scharr') # scharr or sobel
 # gradients as angles
 dw_dk = np.nan_to_num(1/(np.tan(kGangle)),posinf=np.nan,neginf=np.nan) # remove inf and -inf values
+dw_dk = dw_dk.flatten()
+dw_dk = dw_dk[~np.isnan(dw_dk)]
+dw_dk = dw_dk[dw_dk!=0]
 #plt.imshow(np.log10(dw_dk),**kwargs,extent=[0,kmax/knorm,0,wmax/wnorm])
 #cbar = plt.colorbar()
-dw_dk = dw_dk.flatten()
-print('Sobel kernel :: ',np.nanmean(dw_dk.astype('float64')))
-#plt.hist(np.log10(dw_dk),bins=1000,range=(-2,2),density=True)
-#plt.yscale('symlog')
-#plt.ylabel('Normalised count',**tnrfont)
-#plt.xlabel(r'$\log(d\omega/dk)$',**tnrfont)
-#plt.savefig('dw_dk_Scharr_grad.png')
-#plt.show()
+print('Scharr kernel mean :: ',np.mean(dw_dk))
+print('Scharr kernel medi :: ',np.median(dw_dk))
+plt.hist(dw_dk,bins=1000,range=(0,6),density=True) # np.log10
+plt.yscale('symlog')
+plt.ylabel('Normalised count',**tnrfont)
+plt.xlabel(r'$d\omega/dk$',**tnrfont)
+plt.savefig('dw_dk_Scharr_grad.png')
+plt.show()
 sys.exit()
 
 
