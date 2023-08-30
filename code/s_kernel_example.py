@@ -38,7 +38,7 @@ gs1 = gridspec.GridSpec(rows, width//columns, left=0.05, right=0.40, wspace=0., 
 gs2 = gridspec.GridSpec(rows, 2*width//columns, left=0.53, right=0.98, wspace=0., hspace=0.) # nrows, ncols, l, r, wsp, hsp
 
 # Z plots
-zlabels = [r'$-90^\circ$',r'$-45^\circ$',r'$\sin(x+y)$']
+zlabels = [r'$90^\circ$',r'$-45^\circ$',r'$\sin(x+y)$']
 axZ = []
 for i in range(0,rows):
 	axi = fig.add_subplot(gs1[i,int(0.3*width//columns):]) # [row number, :3]

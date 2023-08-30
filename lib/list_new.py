@@ -2426,6 +2426,8 @@ def ignorey(lax):
 
 ## Sobel and Scharr kernel on an image which will return the gradient array
 def Kernel(img,kernel='scharr'):
+	# convert img to 0-255 color
+	img = 255*img/np.nanmax(img)
 	if kernel == 'scharr':
 		Gx=np.array([[3,0,-3],[10,0,-10],[3,0,-3]])
 		Gy=np.array([[3,10,3],[0,0,0],[-3,-10,-3]])

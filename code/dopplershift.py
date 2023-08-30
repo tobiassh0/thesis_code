@@ -17,12 +17,16 @@ d0 = sdfread(0)
 times = read_pkl('times')
 vA = getAlfvenVel(d0)
 print(vA)
+Ep = 14.68*1e6*const.qe
+vp = (2*Ep/getMass('Protons'))**0.5 # proton velocity
 klim = 0.5*2*const.PI/getdxyz(d0)
 wlim = 0.5*2*const.PI/getdt(times)
 wcp = getCyclotronFreq(d0,'Protons')
 wcD = getCyclotronFreq(d0,'Deuterons')
 wnorm = wcp
 knorm = wnorm/vA
+dk = 5*2*const.PI/getGridlen(d0)
+dw = 0.5*2*const.PI/times[-1]
 
 ## calc gradients in image
 # cut FT2d into size needed
@@ -38,23 +42,38 @@ for i in range(nw):
 			FT2d[i,j] = 0
 		else:
 			continue
+
 #plt.imshow(FT2d,**kwargs,extent=[0,kmax/knorm,0,wmax/wnorm],clim=(-2,2)) ; plt.show() ; sys.exit()
 # Scharr gradient map
 _,kGangle = Kernel(FT2d,kernel='scharr') # scharr or sobel
 # gradients as angles
-dw_dk = np.nan_to_num(1/(np.tan(kGangle)),posinf=np.nan,neginf=np.nan) # remove inf and -inf values
-dw_dk = dw_dk.flatten()
-dw_dk = dw_dk[~np.isnan(dw_dk)]
-dw_dk = dw_dk[dw_dk!=0]
+kGangle = kGangle[1:-1,1:-1]# remove abberations around edge
+kGangle = kGangle.flatten()
+kGangle = kGangle*180/const.PI
+plt.hist(kGangle,bins=1000,range=(-180,180),density=True) # np.log10
+plt.ylabel('Normalised count',**tnrfont)
+plt.xlabel(r'$\theta$'+'  '+r'$[deg]$',**tnrfont)
+plt.yscale('log')
+plt.xlim(-180,180)
+plt.savefig('kGangle_Scharr.png')
+sys.exit()
+
+for i in range(len(kGangle)):
+	if kGangle[i] > 0:
+		kGangle[i]-=const.PI #rad
+dwdk = np.nan_to_num(np.tan(kGangle),posinf=np.nan,neginf=np.nan) # remove inf and -inf values
+dwdk = dwdk[~np.isnan(dwdk)]
+dwdk = dwdk[dwdk!=0]
+dw_dk = dwdk * (dw/dk)/vA
 #plt.imshow(np.log10(dw_dk),**kwargs,extent=[0,kmax/knorm,0,wmax/wnorm])
 #cbar = plt.colorbar()
-print('Scharr kernel mean :: ',np.mean(dw_dk))
-print('Scharr kernel medi :: ',np.median(dw_dk))
-plt.hist(dw_dk,bins=1000,range=(0,6),density=True) # np.log10
-plt.yscale('symlog')
+print('Sobel kernel mean :: ',np.mean(dw_dk))
+print('Sobel kernel medi :: ',np.median(dw_dk))
+plt.hist(dw_dk,bins=1000,range=(-1,1),density=True) # np.log10
+#plt.yscale('symlog')
 plt.ylabel('Normalised count',**tnrfont)
-plt.xlabel(r'$d\omega/dk$',**tnrfont)
-plt.savefig('dw_dk_Scharr_grad.png')
+plt.xlabel(r'$d\omega/dk$'+'  '+r'$[v_A]$',**tnrfont)
+plt.savefig('dw_dk_Sobel_grad.png')
 plt.show()
 sys.exit()
 
