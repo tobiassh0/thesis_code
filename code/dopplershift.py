@@ -42,42 +42,32 @@ for i in range(nw):
 			FT2d[i,j] = 0
 		else:
 			continue
-
-#plt.imshow(FT2d,**kwargs,extent=[0,kmax/knorm,0,wmax/wnorm],clim=(-2,2)) ; plt.show() ; sys.exit()
 # Scharr gradient map
 _,kGangle = Kernel(FT2d,kernel='scharr') # scharr or sobel
 # gradients as angles
 kGangle = kGangle[1:-1,1:-1]# remove abberations around edge
 kGangle = kGangle.flatten()
-kGangle = kGangle*180/const.PI
-plt.hist(kGangle,bins=1000,range=(-180,180),density=True) # np.log10
-plt.ylabel('Normalised count',**tnrfont)
-plt.xlabel(r'$\theta$'+'  '+r'$[deg]$',**tnrfont)
-plt.yscale('log')
-plt.xlim(-180,180)
-plt.savefig('kGangle_Scharr.png')
-sys.exit()
-
+# convert to all negative angles (easier to calc real gradient)
 for i in range(len(kGangle)):
 	if kGangle[i] > 0:
 		kGangle[i]-=const.PI #rad
+# remove inf values
 dwdk = np.nan_to_num(np.tan(kGangle),posinf=np.nan,neginf=np.nan) # remove inf and -inf values
 dwdk = dwdk[~np.isnan(dwdk)]
+# remove zero values (dont want to plot them in hist)
 dwdk = dwdk[dwdk!=0]
-dw_dk = dwdk * (dw/dk)/vA
-#plt.imshow(np.log10(dw_dk),**kwargs,extent=[0,kmax/knorm,0,wmax/wnorm])
-#cbar = plt.colorbar()
+dw_dk = dwdk * (dw/dk)/vA # normalise
 print('Sobel kernel mean :: ',np.mean(dw_dk))
 print('Sobel kernel medi :: ',np.median(dw_dk))
+# plot hist
 plt.hist(dw_dk,bins=1000,range=(-1,1),density=True) # np.log10
-#plt.yscale('symlog')
 plt.ylabel('Normalised count',**tnrfont)
 plt.xlabel(r'$d\omega/dk$'+'  '+r'$[v_A]$',**tnrfont)
 plt.savefig('dw_dk_Sobel_grad.png')
 plt.show()
 sys.exit()
 
-
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
 # calculate velocities and est. dopp shift
 E0 = 14.57*1e6*const.qe # MeV to Joules
 vp = np.sqrt(2*E0/getMass('Protons'))
