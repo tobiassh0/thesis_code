@@ -43,7 +43,7 @@ for i in range(nw):
 		else:
 			continue
 # Scharr gradient map
-_,kGangle = Kernel(FT2d,kernel='scharr') # scharr or sobel
+_,kGangle = Kernel(FT2d,kernel='sobel') # scharr or sobel
 # gradients as angles
 kGangle = kGangle[1:-1,1:-1]# remove abberations around edge
 kGangle = kGangle.flatten()
@@ -57,13 +57,16 @@ dwdk = dwdk[~np.isnan(dwdk)]
 # remove zero values (dont want to plot them in hist)
 dwdk = dwdk[dwdk!=0]
 dw_dk = dwdk * (dw/dk)/vA # normalise
-print('Sobel kernel mean :: ',np.mean(dw_dk))
-print('Sobel kernel medi :: ',np.median(dw_dk))
+thresh = (np.abs(dw_dk) < 10)
+dw_dk = dw_dk[thresh]
+print('Scharr kernel mean :: ',np.mean(dw_dk))
+print('Scharr kernel medi :: ',np.median(dw_dk))
 # plot hist
-plt.hist(dw_dk,bins=1000,range=(-1,1),density=True) # np.log10
+counts,bins,_=plt.hist(dw_dk,bins=10000,range=(-1,1),density=True) # np.log10
+print('Scharr kernel max :: ', bins[np.argmax(counts)])
 plt.ylabel('Normalised count',**tnrfont)
 plt.xlabel(r'$d\omega/dk$'+'  '+r'$[v_A]$',**tnrfont)
-plt.savefig('dw_dk_Sobel_grad.png')
+#plt.savefig('dw_dk_Sobel_grad.png')
 plt.show()
 sys.exit()
 
