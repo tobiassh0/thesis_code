@@ -2,37 +2,28 @@ from func_load import *
 from matplotlib.gridspec import GridSpec
 
 
-sim_lst = ['traceT_0_00']
+sim_lst = ['lowres_D_He3/0_25_p_90']
+quant = 'Magnetic_Field_Bz'
 
 for sim in sim_lst:
-	loc = getSimulation('/storage/space2/phrmsf/traceT_0_00')
+	loc = getSimulation('/storage/space2/phrmsf/'+sim)
 	L = getGridlen(sdfread(0))
-	FT1d = read_pkl('FT_1d_Magnetic_Field_Bz')
-#	field = load_batch_fieldmatrix('Magnetic_Field_Bz')
-#	field = field - np.mean(field[0:10,:])
-	FT_1d = read_pkl('FT_1d_test') # get1dTransform(field)
-#	dumpfiles(FT_1d,'FT_1d_test')
-	print(FT1d, FT_1d)
+	FT2d = read_pkl('FT_2d_'+quant)
 	vA = getAlfvenVel(sdfread(0))
 	times = read_pkl('times')
-	T = times[-1]
 	dx = getdxyz(sdfread(0))
-	dt = T/len(times)
-	wcD = getCyclotronFreq(sdfread(0),'Deuterons')
-	tcD = 2*const.PI/wcD
-
-klim = 0.5*2*const.PI/dx ; tlim = T
-extent = [0,klim/(wcD/vA),0,tlim/tcD]
-print(extent)
-fig = plt.figure()
-fig.add_subplot(211)
-plt.imshow(np.log10(FT1d),extent=extent,clim=(-2.5,4.0),**kwargs,cmap='seismic')
-plt.title('loaded')
-plt.xlim(0,40) ; plt.ylim(0,7)
-fig.add_subplot(212)
-plt.imshow(np.log10(FT_1d),extent=extent,clim=(-2.5,4.0),**kwargs,cmap='seismic')
-plt.xlim(0,40) ; plt.ylim(0,7)
-plt.title('calc dBz')
-plt.savefig('FT_1d_comparison.png')
-
+	dt = getdt(times)
+	wcp = getCyclotronFreq(sdfread(0),'Protons')
+	tcp = 2*const.PI/wcp
+	wlim = 0.5*2*const.PI/dt
+	klim = 0.5*2*const.PI/dx
+	(nw,nk) = FT2d.shape
+	wmax = 25*wcp ; kmax = 50*wcp/vA
+	FT2d = FT2d[:int(nw*wmax/wlim),:int(nk*kmax/klim)]
+	# plot
+	fig, ax = plt.subplots(figsize=(8,4)) #(8,4)
+	ax.imshow(np.log10(FT2d),**kwargs,extent=[0,kmax*vA/wcp,0,wmax/wcp],cmap='magma',clim=(-4,6))
+	ax.set_xlabel(r'$kv_A/\Omega_p$',**tnrfont)
+	ax.set_ylabel(r'$\omega/\Omega_p$',**tnrfont)
+	fig.savefig('FT_2d_'+quant+'.png',bbox_inches='tight')
 

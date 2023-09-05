@@ -953,7 +953,7 @@ def get2dTransform(fieldmatrix,window=True):
 	return shiftchopped
 
 # Plot the 2d FT of field data using the above get2d function
-def plot2dTransform(FFT_matrix,klim,wlim,klabel=r'$v_A/\Omega_D$',wlabel=r'$\Omega_i$',cbar=False,clim=(None,None),cmap='magma'):
+def plot2dTransform(FFT_matrix,klim,wlim,klabel=r'$v_A/\Omega_D$',wlabel=r'$\Omega_i$',cbar=False,clim=(-4,6),cmap='magma'):
 	# In:
 	#	FFT_matrix , 2d FFT matrix of a field quantity e.g. Magnetic_Field_Bz
 	#	klim , the extent to want to plot and show the heatmap # normalised
