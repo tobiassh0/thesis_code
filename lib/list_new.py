@@ -1134,53 +1134,60 @@ def getMagneticAngle(d0):
 	return phi_x, phi_y # will return 90 degrees for phi_y most of the time
 
 # Plots the cold plasma dispersion for ionic species 1 and 2 (two maj or maj and min)
-def coldplasmadispersion(file0, species1, species2, omegas,theta=None): 
+def coldplasmadispersion(file0,omegas,theta=None): 
 	# Assumes one of the species is always electrons (harcoded)
-	# Reads in two ionic species, user can specify whether this is (maj, maj) or (maj, min)
-	# TODO; Should change this to not read in any species, and just get them from file0, /
-	#	could then do loop over wp_spec and wc_spec to use later
+	# angle between B & x-hat
 	if not theta: 
 		theta, _ = getMagneticAngle(file0) # assuming B directed in z-x plane
 	else:
 		theta = theta*const.PI/180
 	sin = np.sin(theta) ; cos = np.cos(theta)
 	print(theta, sin, cos)
-	
-	if species2 == '': # check if two or three ions
-		wc2 = 0
-		wp2 = 0
-	else:
-		wc2 = getCyclotronFreq(file0,species2,getChargeNum(species2))
-		wp2 = getPlasmaFreq(file0,species2)
-
-	wc1 = getCyclotronFreq(file0,species1,getChargeNum(species1))
-	wp1 = getPlasmaFreq(file0,species1)
+	# setup electron plasma and cyc freq
 	wpe = getPlasmaFreq(file0,'Electrons')
 	wce = getCyclotronFreq(file0,'Electrons',getChargeNum('Electrons'))
-	wpf = [wpe, wp1, wp2]
-	wcf = [wce , wc1, wc2]
-
+	wpf = [wpe]
+	wcf = [wce]
+	# loop over all ion species
+	species_lst = getIonSpecies(file0)
+	for species in species_lst:
+		if species == '':
+			wps = 0
+			wcs = 0
+		else:
+			wcs = getCyclotronFreq(file0,species2,getChargeNum(species2))
+			wps = getPlasmaFreq(file0,species2)
+		wpf.append(wps)
+		wcf.append(wcs)
+	# convert to numpy arrays
+	wpf=np.array(wpf)
+	wcf=np.array(wcf)
+	# setup components	
 	l = len(omegas)
-	R = np.ones(l) ; P = np.ones(l) ; L = np.ones(l) ; S = np.zeros(l) ; D = np.zeros(l) 
-	B = np.zeros(l) ; F = np.zeros(l) ; A = np.zeros(l) ; C = np.zeros(l) 
-	
-	R = R - ((wpf[0]**2)/(omegas*(omegas + wcf[0]))) - ((wpf[1]**2)/(omegas*(omegas + wcf[1]))) - ((wpf[2]**2)/(omegas*(omegas + wcf[2])))
-	L = L - ((wpf[0]**2)/(omegas*(omegas - wcf[0]))) - ((wpf[1]**2)/(omegas*(omegas - wcf[1]))) - ((wpf[2]**2)/(omegas*(omegas - wcf[2])))
-	P = P -  ((wpf[0]**2)/omegas**2) -  ((wpf[1]**2)/omegas**2) - ((wpf[2]**2)/omegas**2)
+	R=np.ones(l); P=np.ones(l); L=np.ones(l); S=np.zeros(l); D=np.zeros(l) 
+	B=np.zeros(l); F=np.zeros(l); A=np.zeros(l); C=np.zeros(l) 
+	r=0; l=0; p=0
+	# calculate components
+	for i in range(len(wpf)):
+		r += (wpf[i]**2)/(omegas*(omegas + wcf[i]))
+		l += (wpf[i]**2)/(omegas*(omegas - wcf[i]))
+		p += (wpf[i]**2)/(omegas**2)
+	R = R - r
+	L = L - l
+	P = P - p
 
 	S = 0.5*(R+L) ; D = 0.5*(R-L)
 	C = P*R*L
 	B = R*L*(sin**2) + P*S*(1.0 +cos**2)
 	F = (((R*L - P*S)**2)*(sin**4) + 4.0*(P**2)*(D**2)*(cos**2))**0.5
 	A = S*(sin**2) + P*(cos**2)
-	n1 = np.zeros(l, dtype=complex) ; n2 = np.zeros(l, dtype=complex) ; n3 = np.zeros(l, dtype=complex) ; n4 = np.zeros(l, dtype=complex) 
+	n1 = np.zeros(l, dtype=complex); n2=np.zeros(l, dtype=complex); n3=np.zeros(l, dtype=complex); n4=np.zeros(l, dtype=complex) 
 	n3 = np.lib.scimath.sqrt((R*L)/S)
 	n1 =  np.lib.scimath.sqrt((B+F)/(2.0*A))
 	n2 = np.lib.scimath.sqrt((B-F)/(2.0*A))
 	n3 = -np.lib.scimath.sqrt((B+F)/(2.0*A))
 	n4 = -np.lib.scimath.sqrt((B-F)/(2.0*A))
 	del R, P, L, S, D, B, F, A
-#	return n1*omegas/const.c, n2*omegas/const.c, n3*omegas/const.c, n4*omegas/const.c
 	return (np.real(n1)*omegas)/const.c , (np.real(n2)*omegas)/const.c , np.real((n3*omegas)/const.c) #, (n4*omegas)/c, omegas
 	
 # Plots the power spectrum of a signal from a 2d FFT (trans) matrix
