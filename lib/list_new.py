@@ -433,6 +433,10 @@ def getOmegaLabel(species):
 	else: 
 		return labels.get(species)
 
+def getWavenumberLabel(species):
+	return r'$v_A/$'+getOmegaLabel(species)
+
+	
 def getEffectiveMass(d):
 	ions = list(filter(None,getIonSpecies(d))) # remove empty elements
 	narr = np.zeros(len(ions)) ; marr = np.zeros(len(ions))
@@ -993,7 +997,7 @@ def plotting(fig,ax,name,default='.png'):
 	return None
 
 def plotDispersion(transmatrix, klimlow, klimup, wlimlow, wlimup, cbar=False, clim = (None,None),  labels=False): 
-	tr = np.log10(transmatrix)[1:,1:] # "[1:,1:]" gets rid of the first row and coloumn. change to [0:,0:] and you'll see why this should be done
+	tr = np.log10(transmatrix)[1:,1:] # "[1:,1:]" gets rid of the first row and coloumn
 	# often want to chop to get better colour contrast. So pass in the extent. Usually this will be [0, klim, 0, wlim] where klim and wlim come from "plotting_vals"
 	extent=[klimlow,klimup,wlimlow,wlimup]
 	# experiment with clim, "(None, None)" means it will choose it for you, usually what you want. Sometimes I alter it to get better contrast
@@ -1028,9 +1032,9 @@ def batchlims(n,batch_size,index_list,remainder):
 			print('Handled.')
 	return batch_ini, batch_fin
 
-		
+# returns the batched fieldmatrix files for a range of field quantities. Also loads one of them if "load" parameter is true
 def get_batch_fieldmatrix(index_list,quantities=['Magnetic_Field_Bz'],quantity='Magnetic_Field_Bz',load=True,para=False):
-	batch_size, StartStop = BatchStartStop(index_list,default=900) # dealing with large number of files
+	batch_size, StartStop = BatchStartStop(index_list) # dealing with large number of files
 	times = np.zeros(len(index_list))
 	meanBz = 0
 	for i in range(StartStop.shape[0]):
@@ -1074,7 +1078,7 @@ def getFm(arr):
 		vals.append(getQuantity1d(nfile, quantities[q]))
 	return vals
 
-
+# batch loads the fieldmatrix of a given quantity
 def load_batch_fieldmatrix(index_list=[],quantity='Magnetic_Field_Bz',para=False):
 	os.chdir(os.getcwd()) ## refresh directory in case new files have been made
 	quantities = getFields()
@@ -1113,7 +1117,7 @@ def load_batch_fieldmatrix(index_list=[],quantity='Magnetic_Field_Bz',para=False
 	print('Fieldmatrix fully loaded')
 	return fieldmatrix
 
-	
+# returns the angle of the magnetic field wrt x and y
 def getMagneticAngle(d0):
 	# get the angle the magnetic field makes to the x and y directions
 	# returns the angle (1d if in z-x plane or 2d if in z-x-y volume)
@@ -1875,7 +1879,7 @@ def getEnergyLabels(file0,species):
 def getFields():
 	## check if field values in normal dump 
 	try:
-		d = sdfread(1) # hardcoded for now, will default if cant load
+		d = sdfread(1) # hardcoded for now, will default if cant load # TODO
 		keys = getKeys(d)
 		fieldquant = []
 		for key in keys:
@@ -2044,7 +2048,7 @@ def power(klim_prime,wlim_prime,wmax,kmax,wnorm,norm_omega=r'$\Omega_D$',quantit
 		del omegas; del log10_power ; return None
 
 
-def BatchStartStop(ind_lst,default=500):
+def BatchStartStop(ind_lst,default=700):
 	if len(ind_lst) < default: # choose
 		batch_size = len(ind_lst)
 	else:
