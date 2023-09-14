@@ -217,7 +217,7 @@ class Simulation():
 			w_lim, k_lim = self.FT_2d.shape[0]*(in_wlimprime/self.wlim_prime), self.FT_2d.shape[1]*(in_klimprime/self.klim_prime)
 			self.FT_2d = self.FT_2d[:int(w_lim),:int(k_lim)]
 		print('plotting shape: ',np.shape(self.FT_2d))
-		fig, ax = plot2dTransform(self.FT_2d,klim=in_klimprime,wlim=in_wlimprime,klabel=r'$v_A/\Omega_e$',wlabel=getOmegaLabel(min_species),cmap='magma')
+		fig, ax = plot2dTransform(self.FT_2d,klim=in_klimprime,wlim=in_wlimprime,klabel=getWavenumberLabel(min_species),wlabel=getOmegaLabel(min_species))
 
 	### COLD PLASMA DISPERSION ###
 #		Te = getTemperature('Electrons') ; Ti = getTemperature('Deuterons') 

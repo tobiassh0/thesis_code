@@ -433,6 +433,10 @@ def getOmegaLabel(species):
 	else: 
 		return labels.get(species)
 
+def getWavenumberLabel(species):
+	return r'$v_A/$'+getOmegaLabel(species)
+
+	
 def getEffectiveMass(d):
 	ions = list(filter(None,getIonSpecies(d))) # remove empty elements
 	narr = np.zeros(len(ions)) ; marr = np.zeros(len(ions))
@@ -953,7 +957,7 @@ def get2dTransform(fieldmatrix,window=True):
 	return shiftchopped
 
 # Plot the 2d FT of field data using the above get2d function
-def plot2dTransform(FFT_matrix,klim,wlim,klabel=r'$v_A/\Omega_D$',wlabel=r'$\Omega_i$',cbar=False,clim=(None,None),cmap='magma'):
+def plot2dTransform(FFT_matrix,klim,wlim,klabel=r'$v_A/\Omega_D$',wlabel=r'$\Omega_i$',cbar=False,clim=(-4,6),cmap='magma'):
 	# In:
 	#	FFT_matrix , 2d FFT matrix of a field quantity e.g. Magnetic_Field_Bz
 	#	klim , the extent to want to plot and show the heatmap # normalised
@@ -993,7 +997,7 @@ def plotting(fig,ax,name,default='.png'):
 	return None
 
 def plotDispersion(transmatrix, klimlow, klimup, wlimlow, wlimup, cbar=False, clim = (None,None),  labels=False): 
-	tr = np.log10(transmatrix)[1:,1:] # "[1:,1:]" gets rid of the first row and coloumn. change to [0:,0:] and you'll see why this should be done
+	tr = np.log10(transmatrix)[1:,1:] # "[1:,1:]" gets rid of the first row and coloumn
 	# often want to chop to get better colour contrast. So pass in the extent. Usually this will be [0, klim, 0, wlim] where klim and wlim come from "plotting_vals"
 	extent=[klimlow,klimup,wlimlow,wlimup]
 	# experiment with clim, "(None, None)" means it will choose it for you, usually what you want. Sometimes I alter it to get better contrast
@@ -1028,9 +1032,9 @@ def batchlims(n,batch_size,index_list,remainder):
 			print('Handled.')
 	return batch_ini, batch_fin
 
-		
+# returns the batched fieldmatrix files for a range of field quantities. Also loads one of them if "load" parameter is true
 def get_batch_fieldmatrix(index_list,quantities=['Magnetic_Field_Bz'],quantity='Magnetic_Field_Bz',load=True,para=False):
-	batch_size, StartStop = BatchStartStop(index_list,default=900) # dealing with large number of files
+	batch_size, StartStop = BatchStartStop(index_list) # dealing with large number of files
 	times = np.zeros(len(index_list))
 	meanBz = 0
 	for i in range(StartStop.shape[0]):
@@ -1074,7 +1078,7 @@ def getFm(arr):
 		vals.append(getQuantity1d(nfile, quantities[q]))
 	return vals
 
-
+# batch loads the fieldmatrix of a given quantity
 def load_batch_fieldmatrix(index_list=[],quantity='Magnetic_Field_Bz',para=False):
 	os.chdir(os.getcwd()) ## refresh directory in case new files have been made
 	quantities = getFields()
@@ -1113,7 +1117,7 @@ def load_batch_fieldmatrix(index_list=[],quantity='Magnetic_Field_Bz',para=False
 	print('Fieldmatrix fully loaded')
 	return fieldmatrix
 
-	
+# returns the angle of the magnetic field wrt x and y
 def getMagneticAngle(d0):
 	# get the angle the magnetic field makes to the x and y directions
 	# returns the angle (1d if in z-x plane or 2d if in z-x-y volume)
@@ -1321,6 +1325,12 @@ def LowerHybridMassEffective(file0,wpe,wce,n_e):
 #	W_LH = (((w_PI2)+(w_CI2))/(1+((wpe**2)/(wce**2))))**.5	
 	return W_LH # not normalised
 
+def getUpperHybrid(wce,wpe):
+	return np.sqrt(wce**2+wpe**2)
+
+def getLowerHybrid(wpi,wci,wpe,wce):
+	return np.sqrt(((wpi**2)+(wci**2))/(1+((wpe**2)/(wce**2))))
+
 ## Calculates the cold wave modes for a given plasma (LH, UH, Omode, Xmode, Light, Cyclotron harmonics, CA) # doesnt actually calculate FAW, this is done separately
 def ColdWaveModes(ax,omega_lst,va,wnorm,OMODE=False,UH=False,LH=False,CA=False,CYC=False,LGHT=False,Lcut=False,Rcut=False,LHact=False,W1=False,W2=False):
 	wpi, wpe, wci, wce = omega_lst
@@ -1332,11 +1342,11 @@ def ColdWaveModes(ax,omega_lst,va,wnorm,OMODE=False,UH=False,LH=False,CA=False,C
 		plt.plot(k*va/wnorm,wom/wnorm,color='k',linestyle='--')#,label='O-mode')
 	## Upper-hybrid
 	if UH:
-		wuh = np.sqrt(wce**2+wpe**2)
+		wuh = getUpperHybrid(wce,wpe)
 		plt.axhline(wuh/wnorm,color='k',linestyle='-.')#,label='UH')
 	## Lower-hybrid ; full description, typically use LHact
 	if LH:
-		wlh = np.sqrt(((wpi**2)+(wci**2))/(1+((wpe**2)/(wce**2))))
+		wlh = getLowerHybrid(wpe,wci,wpe,wce)
 		plt.axhline(wlh/wnorm,color='k',linestyle='--')#,label='LH') ## handled in the FAW calculation
 	## Above is also LH but full version, this is the simplified version	
 	if LHact:
@@ -1869,7 +1879,7 @@ def getEnergyLabels(file0,species):
 def getFields():
 	## check if field values in normal dump 
 	try:
-		d = sdfread(1) # hardcoded for now, will default if cant load
+		d = sdfread(1) # hardcoded for now, will default if cant load # TODO
 		keys = getKeys(d)
 		fieldquant = []
 		for key in keys:
@@ -2038,7 +2048,7 @@ def power(klim_prime,wlim_prime,wmax,kmax,wnorm,norm_omega=r'$\Omega_D$',quantit
 		del omegas; del log10_power ; return None
 
 
-def BatchStartStop(ind_lst,default=500):
+def BatchStartStop(ind_lst,default=700):
 	if len(ind_lst) < default: # choose
 		batch_size = len(ind_lst)
 	else:
@@ -2398,9 +2408,9 @@ def shared_area(sig1,sig2,fitgauss=False):
 		return sharea, peak
 	return sharea
 	
-#def outside_ticks(fig):
-#	for i, ax in enumerate(fig.axes):
-#		ax.tick_params(axis='both',direction='out',top=False,right=False,left=True,bottom=True)
+def outside_ticks(fig):
+	for i, ax in enumerate(fig.axes):
+		ax.tick_params(axis='both',direction='out',top=False,right=False,left=True,bottom=True)
 
 def boutside_ticks(lax):
 	for ax in lax:
@@ -2417,4 +2427,63 @@ def ignorex(lax):
 def ignorey(lax):
     for ax in lax:
         ax.tick_params(labelleft=False)
-        
+
+## Sobel and Scharr kernel on an image which will return the gradient array
+def Kernel(img,kernel='scharr'):
+	# convert img to 0-255 color
+	img = 255*img/np.nanmax(img)
+	if kernel == 'scharr':
+		Gx=np.array([[3,0,-3],[10,0,-10],[3,0,-3]])
+		Gy=np.array([[3,10,3],[0,0,0],[-3,-10,-3]])
+	if kernel == 'sobel':
+		Gx=np.array([[1,0,-1],[2,0,-2],[1,0,-1]])
+		Gy=np.array([[1,2,1],[0,0,0],[-1,-2,-1]])
+	# magnitude and angle arrays
+	kGmag = np.zeros(img.shape)
+	kGangle = np.zeros(img.shape)
+	# position relative to centre cell
+	for i in range(img.shape[0]-1):
+		for j in range(img.shape[1]-1):
+			NORTH = SOUTH = WEST = EAST = True
+			# four conditions on square image
+			if i+1 > img.shape[0]: # reached end of img EAST
+				EAST = False
+			if i-1 < 0: # reached end of img WEST
+				WEST = False
+			if j+1 > img.shape[1]: # reached end of img NORTH
+				NORTH = False
+			if j-1 < 0: # reached end of img SOUTH
+				SOUTH = False
+			##
+			if NORTH: N = img[i,j+1]
+			else: N = 0
+			#
+			if SOUTH: S = img[i,j-1]
+			else: S = 0
+			#
+			if WEST: W = img[i-1,j]
+			else: W = 0
+			#
+			if EAST: E = img[i+1,j]
+			else: E = 0
+			#
+			if NORTH and WEST: NW = img[i-1,j+1]
+			else: NW = 0
+			#
+			if NORTH and EAST: NE = img[i+1,j+1]
+			else: NE = 0
+			#
+			if SOUTH and WEST: SW = img[i-1,j-1]
+			else: SW = 0
+			#
+			if SOUTH and EAST: SE = img[i+1,j-1]
+			else: SE = 0
+			## 
+			timg = np.array([[NW,N,NE],[W,img[i,j],E],[SW,S,SE]])
+			kG = np.array([np.sum(Gx*timg),np.sum(Gy*timg)])
+			kGmag[i,j] = np.sqrt(kG[0]**2 + kG[1]**2)
+			kGangle[i,j]= np.arctan2(kG[1],kG[0]) # radians between +- pi
+	kGangle = np.nan_to_num(kGangle,posinf=np.nan,neginf=np.nan) # change +-inf vals to nan
+	kGmag = np.nan_to_num(kGmag,posinf=np.nan,neginf=np.nan) 	 # change +-inf vals to nan
+	return kGmag, kGangle
+	
