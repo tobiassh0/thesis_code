@@ -10,3 +10,27 @@ Processing '/etc/joe/jstarrc'...
 Processing '/etc/joe/ftyperc'...
 Finished processing /etc/joe/ftyperc
 Finished processing /etc/joe/jstarrc
+
+*** These modified files were found in JOE when it aborted on Thu Sep 14 10:57:36 2023
+*** JOE was aborted by UNIX signal 1
+
+*** File '(Unnamed)'
+/home/space/phrmsf/Documents/EPOCH/epoch_older/epoch/epoch1d/Makefile
+
+*** File '* Startup Log *'
+Processing '/etc/joe/jstarrc'...
+Processing '/etc/joe/ftyperc'...
+Finished processing /etc/joe/ftyperc
+Finished processing /etc/joe/jstarrc
+
+*** These modified files were found in JOE when it aborted on Thu Sep 14 10:57:36 2023
+*** JOE was aborted by UNIX signal 1
+
+*** File '(Unnamed)'
+/home/space/phrmsf/Documents/EPOCH/epoch_older/epoch/epoch1d/Makefile
+
+*** File '* Startup Log *'
+Processing '/etc/joe/jstarrc'...
+Processing '/etc/joe/ftyperc'...
+Finished processing /etc/joe/ftyperc
+Finished processing /etc/joe/jstarrc

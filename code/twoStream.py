@@ -25,33 +25,15 @@ L = 5e5/LDe
 #fig.subplots_adjust(hspace=0.,wspace=0.)
 
 c=0
-tprime = [1,2,3,4,5,6]
 tprime = ind_lst
+tfile = []
 for t in tprime:
 	tind = int(len(ind_lst)*(t*tpe)/tend)
-	tfile = sdfread(int(t)) #sdfread(ind_lst[tind])
-#	vxLeft = getQuantity1d(tfile,'Particles_Vx_Left_Electrons')
-#	vxRight = getQuantity1d(tfile,'Particles_Vx_Right_Electrons')	
-#	vxProtons = getQuantity1d(tfile,'Particles_Vx_Protons')
-	vxLeft = getQuantity1d(tfile,'Particles_Px_Left_Electrons')
-	vxRight = getQuantity1d(tfile,'Particles_Px_Right_Electrons')	
-	
-	xLeft = np.linspace(0,L,len(vxLeft))
-	xRight = np.linspace(0,L,len(vxRight))
-#	xProtons = np.linspace(0,L,len(vxProtons))
+	tfile.append(sdfread(int(t))) #sdfread(ind_lst[tind])
 
-#	axs[c].scatter(xLeft,vxLeft/vthE,color='r',s=1)
-#	axs[c].scatter(xRight,vxRight/vthE,color='b',s=1)
-#	axs[c].scatter(xProtons,vxProtons/vthE,color='g',s=1)
-#	c+=1
+files = tfile
+plotPhaseSpace(files,['Left_Electrons','Right_Electrons'])
+#makevideo(video_name='vx_x')
 
-	plt.scatter(xLeft,vxLeft/vthE,color='r',s=1)
-	plt.scatter(xRight,vxRight/vthE,color='b',s=1)
-#	plt.scatter(xProtons,vProtons/vthE,color='g',s=1)
-
-#	plt.ylim(-0.5,6)
-	plt.savefig('{}_vx.png'.format(t))
-#	plt.show()
-	plt.clf()
 
 

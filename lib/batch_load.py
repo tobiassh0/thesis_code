@@ -6,7 +6,7 @@ class Simulation():
 	def __init__(self):
 		
 #		self.sim_file_loc = getSimulation('') # allows user to input the file destination in the dir where batch is run
-		self.sim_file_loc = getSimulation('/storage/space2/phrmsf/ECRH/ECRH_JT60U_3')
+		self.sim_file_loc = getSimulation('/storage/space2/phrmsf/ECRH/ECRH_JT60U_5')
 		self.quantity = 'Magnetic_Field_Bz'
 #		self.quantity = 'Derived_Number_Density_Deuterons'
 		self.index_list = list_sdf(self.sim_file_loc)
@@ -117,8 +117,9 @@ class Simulation():
 		self.rL_maj = getLarmorRadius(self.file0,maj_species)
 		self.dx = getdxyz(self.file0)
 		print('### RATIO rLe/dx :: {} \n rLmaj/dx :: {}'.format(self.rLe/self.dx,self.rL_maj/self.dx))
-		self.tnorm = self.tc_min#aj
-		self.wnorm = self.wc_min#aj
+		self.tnorm = self.tc_maj#in
+		self.wnorm = self.wc_maj#in
+		self.knorm = self.wnorm/self.va #maj  #1/self.lambdaDe
 		print('normalisation w: ', self.wnorm, ' [Hz]')
 		
 	### PLOT ENERGY DENSITIES OF FIELD COMPONENTS ### 
@@ -126,15 +127,13 @@ class Simulation():
 #		energy_int = 0
 
 	### PLOT CIGARETTE PLOTS ###
-		ciggies(self.sim_file_loc,species_lst=getAllSpecies(self.file0),para=False) # doesnt return anything
+#		ciggies(self.sim_file_loc,species_lst=getAllSpecies(self.file0),para=False) # doesnt return anything
 
 	### FOURIER TRANSFORMS ###
 		self.klim = 0.5*2*const.PI*self.Nx/self.L
 		self.wlim = 0.5*2*const.PI*self.Nt/self.T
-		knorm = self.wc_min/self.va #maj  #1/self.lambdaDe
-		wnorm = self.wc_min
-		self.klim_prime = self.klim/knorm
-		self.wlim_prime = self.wlim/wnorm
+		self.klim_prime = self.klim/self.knorm
+		self.wlim_prime = self.wlim/self.wnorm
 		self.tlim_prime = self.T/self.tnorm
 #		self.klim, self.wlim = batch_getDispersionlimits((self.index_list,self.file0,self.filelast,self.times)) # non-normalised units
 #		DISP_DATA = self.index_list, self.file0, self.filelast, self.times, self.klim, self.wlim, self.wc_maj, self.wce, self.va, self.lambdaDe, self.wpe, self.wpi, self.wnorm
@@ -217,14 +216,14 @@ class Simulation():
 			w_lim, k_lim = self.FT_2d.shape[0]*(in_wlimprime/self.wlim_prime), self.FT_2d.shape[1]*(in_klimprime/self.klim_prime)
 			self.FT_2d = self.FT_2d[:int(w_lim),:int(k_lim)]
 		print('plotting shape: ',np.shape(self.FT_2d))
-		fig, ax = plot2dTransform(self.FT_2d,klim=in_klimprime,wlim=in_wlimprime,klabel=getWavenumberLabel(min_species),wlabel=getOmegaLabel(min_species))
+		fig, ax = plot2dTransform(self.FT_2d,klim=in_klimprime,wlim=in_wlimprime,klabel=getWavenumberLabel(maj_species),wlabel=getOmegaLabel(maj_species))#min_species
 
 	### COLD PLASMA DISPERSION ###
 #		Te = getTemperature('Electrons') ; Ti = getTemperature('Deuterons') 
 #		k, omegas, w_LH = calcNewColdDisp(in_klimprime=100,Te=Te,Ti=Ti)
 		omegas = self.wnorm*np.linspace(0,in_wlimprime,10000) # TODO: find out why doesn't go through 0 (Im and Re components)
-		k1,k2,k3=coldplasmadispersion(self.file0,maj_species,maj2_species,omegas=omegas) # two solutions to the cold plasma dispersion
-		k1,k2,k3 = k1/knorm, k2/knorm, k3/knorm # can plot all three but not needed, k2 is main real branch
+		k1,k2,k3=coldplasmadispersion(self.file0,omegas=omegas) # two solutions to the cold plasma dispersion
+		k1,k2,k3 = k1/self.knorm, k2/self.knorm, k3/self.knorm # can plot all three but not needed, k2 is main real branch
 		ax = ColdWaveModes(ax,[self.wpi, self.wpe, self.wc_maj, self.wce],self.va,self.wnorm,LHact=True)#,W2=True) ## check list_new to see which modes we can plot (bool)
 		## W_LH = LowerHybridMassEffective(self.file0,self.wpe,self.wce,n_e)
 		thresh = k2 > 0 # threshold the array so it only plots the FAW and not the horizontal line to the 0 parts of the dispersion
@@ -234,8 +233,8 @@ class Simulation():
 		plotting(fig,ax,'FT_2d_'+self.quantity)
 
 	### POWER SPECTRUM ###
-		_,_ = power(klim_prime=self.klim_prime,wlim_prime=self.wlim_prime,wmax=35,kmax=in_klimprime,wnorm=wnorm,\
-			norm_omega=getOmegaLabel(min_species),quantity=self.quantity,plot=True)
+		_,_ = power(klim_prime=self.klim_prime,wlim_prime=self.wlim_prime,wmax=35,kmax=in_klimprime,wnorm=self.wnorm,\
+			norm_omega=getOmegaLabel(maj_species),quantity=self.quantity,plot=True)
 	
 #	### Poynting ###
 #		FTSmag = Poynting2dFT(self.times,self.Nt,self.Nx,in_klimprime=in_klimprime,plot=True)
@@ -247,7 +246,7 @@ class Simulation():
 		noverlap = nfft//2
 		bispec=True #boolean, True as default will calculate both bicoh AND bispec
 #		klabel = r'$\lambda_{De}$'
-		klabel = r'$v_A/\Omega_D$'
+		klabel = r'$v_A/\Omega_p$'
 		try:
 			bicname = 'Bicohmat_ka_wa_{}_{}'.format(karea,warea)
 			bisname = 'Bispecmat_ka_wa_{}_{}'.format(karea,warea)
@@ -264,7 +263,7 @@ class Simulation():
 			ax.set_ylabel(r'$k_2$'+klabel,fontsize=18)
 			plotting(fig,ax,'bispectrum_karea_{}_warea_{}'.format(karea,warea))
 		except:
-			fig, ax = getBicoh(karea,warea,self.fieldmatrix,self.dt,self.T,self.L,wnorm,knorm,nfft=nfft,\
+			fig, ax = getBicoh(karea,warea,self.fieldmatrix,self.dt,self.T,self.L,self.wnorm,self.knorm,nfft=nfft,\
 				noverlap=noverlap,window=True,bispectrum=bispec,klabel=klabel)
 
 

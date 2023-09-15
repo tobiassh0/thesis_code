@@ -14,6 +14,7 @@ from scipy import stats, signal
 from scipy.optimize import curve_fit
 from matplotlib.path import Path
 import multiprocessing as mp ## parallelisation
+#from cv2 import cv2 # used to make images
 
 ## OLD PACKAGES USED
 #import scipy.fftpack
@@ -675,54 +676,45 @@ def temporal_average(index_list,quantity,points=np.linspace(-1,1,3,dtype=int)):
 
 
 # Plots the velocity vs. real-space diagram (Phase space) using the list of files found in setup(). Then saves them to home dir  
-def plotPhaseSpace(files,species):
-	# TODO: Need to make this more general so we can plot the phase space of just one beam or species
+def plotPhaseSpace(files,species=False):
 	print('PLOTTING PHASE SPACE')
-	if len(species) == 3: colors = cycle(['g','r','b'])
-	elif len(species) == 2: colors = cycle(['r','b'])
-	else: colors = cycle(['r'])
-	next(colors)
-	print(len(species))
-	times = getTimes(files)
 	d0 = files[0]
+	if not species:
+		species = getAllSpecies(d0)
+	print(len(species))
+	color = ['r','b','g']
+	times = getTimes(files)
 	LambdaD = getDebyeLength(d0,species[0])
 	print('LambdaD = ',LambdaD)
-	w_p = getPlasmaFreq(d0)
-	Omega_cp = getCyclotronFreq(d0,species,1)
-	times = (times*w_p)/(2*const.PI) # TODO finish this
+	w_p = getPlasmaFreq(d0,species[0])
+	Omega_cp = getCyclotronFreq(d0,species[0])
+	times = (times*w_p)/(2*const.PI)
 	v_th = getThermalVelocity(d0,species[0])
 	del d0
-
-	files = files[0::int(len(files)/100)]
+	# setup figure
 	fig, ax = plt.subplots(figsize=(10,5))
+	# loop through files
+	xmin = 0 ; xmax = 0
 	for i in range(len(files)):
-		for name in species:
-			print(i)
-			# pos_x_elec = getQuantity1d(d,'Grid_Particles_electron')[0]  
-			# x_left = getQuantity1d(d,'Grid_Particles_Left')[0]  
-			vx_name = files[i].__dict__['Particles_Vx_'+name]
-			# vx_2 = files[i].__dict__['Particles_Vx_'+species2]
+		print(i)
+		for j in range(len(species)):
+			vx_name = files[i].__dict__['Particles_Vx_'+species[j]]
 			x_name = vx_name.grid.data[0]/LambdaD 		# Normalises distance to units of Debye length
-			# x2 = vx_2.grid.data[0]/LambdaD
-			if i == 0: # set plot limits
-				xmax = max(x_name)
-				xmin = min(x_name)
-				# xmax = max(x1)+100
-				# xmin = min(x1)-100
-			color = next(colors)
-			ax.scatter(x_name,vx_name.data/v_th,color=color,s=1.) 		# Normalises speed to v_thermal at t=0
-		# ax.scatter(x2,vx_2.data/v_th,color='r',s=1.)	
+			ax.scatter(x_name,vx_name.data/v_th,color=color[j],s=1.) 		# Normalises speed to v_thermal at t=0
+			if np.min(x_name) < xmin:
+				xmin = np.min(x_name)
+			if np.max(x_name) > xmax:
+				xmax = np.max(x_name)
 		ax.set_xlabel(r'$x/\lambda_D$',fontsize=18)
 		ax.set_ylabel(r'$v_x/v_{th}$', fontsize=18)
-		# ax.set_yticks([-180,-135,-90,-45,0,45,90,135,180])
-		# ax.set_ylim(-180,180)
-		# ax.set_ylim(-120,120)
-		# ax.set_xlim(xmin,xmax)
-		# ax.set_xticks([0,500,1000,1500,2000,2500])
-		# ax.set_xticklabels(['0','500','1000','1500','2000','2500'])
-
+		ax.set_yticks([-180,-135,-90,-45,0,45,90,135,180])
+		ax.set_ylim(-180,180)
+		ax.set_ylim(-120,120)
+		ax.set_xlim(xmin,xmax)
+#		ax.set_xticks([0,500,1000,1500,2000,2500])
+#		ax.set_xticklabels(['0','500','1000','1500','2000','2500'])
 		ax.set_title(r'$t\omega_{pe}/2\pi = $'+str(np.around(times[i],3)), fontsize=18)
-		fig.savefig(home_path+'velocity{}.jpeg'.format(i), bbox_inches="tight")
+		fig.savefig('velocity{}.jpeg'.format(i), bbox_inches="tight")
 		ax.clear()
 
 # Plots the electric field potential in the x direction using the numpy.gradient() function so as to maintain array size.
@@ -1155,8 +1147,8 @@ def coldplasmadispersion(file0,omegas,theta=None):
 			wps = 0
 			wcs = 0
 		else:
-			wcs = getCyclotronFreq(file0,species2,getChargeNum(species2))
-			wps = getPlasmaFreq(file0,species2)
+			wcs = getCyclotronFreq(file0,species,getChargeNum(species))
+			wps = getPlasmaFreq(file0,species)
 		wpf.append(wps)
 		wcf.append(wcs)
 	# convert to numpy arrays
@@ -1166,27 +1158,27 @@ def coldplasmadispersion(file0,omegas,theta=None):
 	l = len(omegas)
 	R=np.ones(l); P=np.ones(l); L=np.ones(l); S=np.zeros(l); D=np.zeros(l) 
 	B=np.zeros(l); F=np.zeros(l); A=np.zeros(l); C=np.zeros(l) 
-	r=0; l=0; p=0
+	tr=0; tl=0; tp=0
 	# calculate components
 	for i in range(len(wpf)):
-		r += (wpf[i]**2)/(omegas*(omegas + wcf[i]))
-		l += (wpf[i]**2)/(omegas*(omegas - wcf[i]))
-		p += (wpf[i]**2)/(omegas**2)
-	R = R - r
-	L = L - l
-	P = P - p
+		tr += (wpf[i]**2)/(omegas*(omegas + wcf[i]))
+		tl += (wpf[i]**2)/(omegas*(omegas - wcf[i]))
+		tp += (wpf[i]**2)/(omegas**2)
+	R = R - tr
+	L = L - tl
+	P = P - tp
 
 	S = 0.5*(R+L) ; D = 0.5*(R-L)
 	C = P*R*L
 	B = R*L*(sin**2) + P*S*(1.0 +cos**2)
 	F = (((R*L - P*S)**2)*(sin**4) + 4.0*(P**2)*(D**2)*(cos**2))**0.5
 	A = S*(sin**2) + P*(cos**2)
-	n1 = np.zeros(l, dtype=complex); n2=np.zeros(l, dtype=complex); n3=np.zeros(l, dtype=complex); n4=np.zeros(l, dtype=complex) 
+	n1 = np.zeros(l, dtype=complex) ; n2=np.zeros(l, dtype=complex); n3=np.zeros(l, dtype=complex)#; n4=np.zeros(l, dtype=complex) 
 	n3 = np.lib.scimath.sqrt((R*L)/S)
 	n1 =  np.lib.scimath.sqrt((B+F)/(2.0*A))
 	n2 = np.lib.scimath.sqrt((B-F)/(2.0*A))
 	n3 = -np.lib.scimath.sqrt((B+F)/(2.0*A))
-	n4 = -np.lib.scimath.sqrt((B-F)/(2.0*A))
+	#n4 = -np.lib.scimath.sqrt((B-F)/(2.0*A))
 	del R, P, L, S, D, B, F, A
 	return (np.real(n1)*omegas)/const.c , (np.real(n2)*omegas)/const.c , np.real((n3*omegas)/const.c) #, (n4*omegas)/c, omegas
 	
@@ -1285,6 +1277,17 @@ def getTotalKineticEnergyDen(d,species):
 
 	return energy_density, mean_energy_density
 
+### Makes a video out of images with the image extension given
+#def makevideo(image_foler=os.getcwd(),video_name='video',image_ext='.png',video_ext='.gif'):
+#	images = [img for img in os.listdir(image_folder) if img.endswith(image_ext)]
+#	frame = cv2.imread(os.path.join(image_folder, images[0]))
+#	height, width, layers = frame.shape
+#	video = cv2.VideoWriter(video_name+video_ext, 0, 1, (width,height))
+#	for image in images:
+#		video.write(cv2.imread(os.path.join(image_folder, image)))
+#	cv2.destroyAllWindows()
+#	video.release()
+#	return None	
 
 ## Dump pkl files
 def dumpfiles(array, quant):

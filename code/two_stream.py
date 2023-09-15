@@ -1,7 +1,9 @@
+
 from func_load import *
+
 home = os.getcwd()
 #twostreamloc = '/home/space/phrmsf/Documents/EPOCH/epoch-4.17.16/epoch1d/old/old_sims/twoStream_long'
-twostreamloc = '/storage/space2/phrmsf/old/twoStream'
+twostreamloc = '/home/space/phrmsf/Documents/EPOCH/5_devel/epoch1d/2stream'
 simLoc = getSimulation(twostreamloc)
 
 # files and times
@@ -59,8 +61,8 @@ L, T = (getGridlen(d0)/LDe, tend/tau_pe)
 #ax[0].imshow(np.log10(E_left),extent=[Erange[0],Erange[1]/(1000*const.qe),0,T],**kwargs)
 #ax[1].imshow(np.log10(E_right),extent=[Erange[0],Erange[1]/(1000*const.qe),0,T],**kwargs)
 # histogram
-iml = ax[0].imshow(np.log10(E_lhist),extent=[Erange[0],Erange[1]/(1000*const.qe),0,T],**kwargs,clim=(-6,-2))
-imr = ax[1].imshow(np.log10(E_rhist),extent=[Erange[0],Erange[1]/(1000*const.qe),0,T],**kwargs,clim=(-6,-2))
+iml = ax[0].imshow(np.log10(E_lhist),extent=[Erange[0],Erange[1]/(1000*const.qe),0,T],**kwargs,clim=(-6,-2),cmap='viridis')
+imr = ax[1].imshow(np.log10(E_rhist),extent=[Erange[0],Erange[1]/(1000*const.qe),0,T],**kwargs,clim=(-6,-2),cmap='viridis')
 #imi = ax[2].imshow(np.log10(E_ihist),extent=[Erange[0],Erange[1]/(1000*const.qe),0,T],**kwargs,clim=(-6,-2))
 # outside ticks
 boutside_ticks(ax)
@@ -76,54 +78,47 @@ for i in range(len(ax)):
 	ax[i].set_title(labels[i],**tnrfont)
 	ax[i].set_xlim(0,0.12)
 print('Normalised such that the sum of histogram in a given time bin (Y-axis) equals 1.')
-#plt.savefig(home+'/twoStream_Energy_hist.png')
-plt.show()
+fig.savefig(home+'/twoStream_Energy_hist.png')
+#plt.show()
+plt.clf()
 
 # ------------------------------------------------------- #
-## Fourier transform (in freq) to find freq of oscillation
-#plt.clf()
-#FT1d = get1dTransform(E_lhist.T)
-#print(FT1d.shape)
-#dt = tend/len(times)
-#wlim = 0.5*2*const.PI/dt
-#wpe = getPlasmaFreq(d0,'Left_Electrons')
-#plt.imshow(np.log10(FT1d),extent=[0,FT1d.shape[1],0,wlim/wpe],**kwargs) ; plt.show()
+## Electrostatic potential plots
+#phi_Ex = np.zeros((len(ind_lst),))
+#for i in ind_lst:
+
+#	phi_Ex = 
 
 # ------------------------------------------------------- #
 ## Phase space plots
-plt.clf()
-fig,axs=plt.subplots(nrows=2,ncols=3,figsize=(14,8),sharex=True,sharey=True)
-fig.subplots_adjust(hspace=0.075,wspace=0.075)
+fig,axs=plt.subplots(nrows=4,ncols=1,figsize=(5,10),sharex=True,sharey=True)
+fig.subplots_adjust(hspace=0.1,wspace=0.075)
 ax=axs.ravel()
 
 plasma_freq = getPlasmaFreq(sdfread(0),'Left_Electrons')
 plasma_prd  = 2*const.PI/plasma_freq
-ttimes = np.array([1,2,3,4,5,6])
+ttimes = np.array([0,2,4,6])
 ftimes = [int(len(times)*(ttimes[i]/(tend/plasma_prd))) for i in range(len(ttimes))]
 ftimes[-1] = 100
 frac = 1
 temp = 273 ; dens = 10
 v_the = np.sqrt(2*const.kb*temp/const.me)
+color = ['r','b','g']
+species = ['Left_Electrons','Right_Electrons'] #getAllSpecies(sdfread(0))
 
 for i in range(len(ax)):
-	label = r'$t^\prime=$'+str(np.around(ttimes[i],1))
-	vxL = vx_left[ftimes[i],:]
-	vxR = vx_right[ftimes[i],:]
-	vxi = vx_ions[ftimes[i],:]
-	xe = np.linspace(0,L,len(vxL))
-	xi = np.linspace(0,L,len(vxi))
-	ax[i].scatter(xe[::frac],vxR[::frac]/v_the,color='r',s=4)
-	ax[i].scatter(xe[::frac],vxL[::frac]/v_the,color='b',s=4)
-	ax[i].scatter(xi[::frac],vxi[::frac]/v_the,color='g',s=1)
-	ax[i].text(100.,110.,label,color='black',fontsize=16,bbox=dict(facecolor='white',edgecolor='black',boxstyle='square,pad=0.25'))
+	label = r'$t\omega_{pe}/2\pi=$'+str(np.around(ttimes[i],1))
+	for j in range(len(species)):
+		vx_name = sdfread(ftimes[i]).__dict__['Particles_Vx_'+species[j]]
+		x_name = vx_name.grid.data[0]/LDe 		# Normalises distance to units of Debye length
+		ax[i].scatter(x_name,vx_name.data/v_the,color=color[j],s=1.) 		# Normalises speed to v_thermal at t=0
+	ax[i].text(100.,90.,label,color='black',fontsize=16,bbox=dict(facecolor='white',edgecolor='black',boxstyle='square,pad=0.25'))
 	ax[i].set_xlim(0,1400)
-	ax[i].set_ylim(-150,150)
-	if i > 2:
-		ax[i].set_xticks([0,350,700,1050,1400])
-		ax[i].set_xlabel(r'$x/\lambda_{De}$',fontsize=20)
-
-ax[0].set_ylabel(r'$v_x/v_{e,th}$',fontsize=20)
-ax[3].set_ylabel(r'$v_x/v_{e,th}$',fontsize=20)
-
-plt.show()
+	ax[i].set_ylim(-100,100)
+	ax[i].set_ylabel(r'$v_x/v_{e,th}$',fontsize=20)
+ax[-1].set_xticks([0,350,700,1050,1400])
+ax[-1].set_xlabel(r'$x/\lambda_{De}$',fontsize=20)
+print(home)
+fig.savefig(home+'/twoStream_phase.png',bbox_inches='tight')
+#plt.show()
 
