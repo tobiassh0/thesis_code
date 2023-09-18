@@ -1222,16 +1222,16 @@ def powerspectrum_k(trans,wlim,klim,harmonicmin,harmonicmax,kmodelow,kmodehigh):
 
 
 # Plots the change in field energy densities from their mean value
-def getEnergies(energy_quant,fieldquant,n,dump=True):
+def getEnergies(energy_quant,fieldquant,nt,dump=True):
 	F0 = np.zeros(len(energy_quant))
 	for i in range(len(energy_quant)):
 		if energy_quant[i] == 'Magnetic_Field_Bz':
 			F0[i] = getQuantity1d(sdfread(0), 'Magnetic_Field_Bz')
 
-	Energies = np.zeros((len(fieldquant),n))
-	Energies_mat = np.zeros((len(fieldquant),n,len(getGrid(sdfread(0))[0]))) # energies, time, space
-	for t in range(0,n):
-		if t%(n//20)==0: print(str(round(100*t/n))+'...%') # print every 5%
+	Energies = np.zeros((len(fieldquant),nt))
+	Energies_mat = np.zeros((len(fieldquant),nt,len(getGrid(sdfread(0))[0]))) # energies, time, space
+	for t in range(0,nt):
+		if t%(nt//20)==0: print(str(round(100*t/nt))+'...%') # print every 5%
 		d = sdfread(t)
 		for s in range(len(fieldquant)):
 			if 'Field' in fieldquant[s]:
@@ -1240,8 +1240,8 @@ def getEnergies(energy_quant,fieldquant,n,dump=True):
 			else:
 				Energies_mat[s,t,:], Energies[s,t] = getTotalKineticEnergyDen(d,fieldquant[s])
 
+	## energy_quant and fieldquant should be the same length 
 	if dump:
-		## energy_quant and fieldquant should be the same length 
 		for i in range(len(energy_quant)):
 			dumpfiles(Energies[i,:],energy_quant[i])
 			dumpfiles(Energies_mat[i],energy_quant[i]+'matrix')

@@ -6,9 +6,18 @@ sim_lst = ['lowres_D_He3/0_25_p_90']
 quant = 'Magnetic_Field_Bz'
 
 for sim in sim_lst:
-	loc = getSimulation('/home/space/phrmsf/Documents/EPOCH/epoch-4.17.16/epoch1d/old/0006qp')#/storage/space2/phrmsf/'+sim)
+	loc = getSimulation('/storage/space2/phrmsf/ECRH/ECRH_JT60U_5')#'+sim)/home/space/phrmsf/Documents/EPOCH/epoch-4.17.16/epoch1d/old/0006qp
 	d0 = sdfread(0)
-	wcD = const.qe*2.1/getMass('Deuterons')
+	times = read_pkl('times')
+	wce = getCyclotronFreq(d0,'Electrons')
+	wcp = getCyclotronFreq(d0,'Protons')
+	tce = 2*const.PI/wce
+	tcp = 2*const.PI/wcp
+	dt = (times[-1]-times[0])/len(times)
+	print(dt,dt/tce,dt/tcp)
+	print(times[-1],times[-1]/tce,times[-1]/tcp)
+	sys.exit()
+
 	omegas = wcD*np.linspace(0,25,1000)
 	k1, k2, k3 = coldplasmadispersion(d0, 'Deuterons', 'Tritons', omegas, theta=89)
 
