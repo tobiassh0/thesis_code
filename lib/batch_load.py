@@ -4,9 +4,10 @@ from list_new import *
 
 class Simulation():
 	def __init__(self):
-		
+		import ASCII_logo
+		del ASCII_logo
 #		self.sim_file_loc = getSimulation('') # allows user to input the file destination in the dir where batch is run
-		self.sim_file_loc = getSimulation('/storage/space2/phrmsf/ECRH/ECRH_JT60U_5')
+		self.sim_file_loc = getSimulation('/storage/space2/phrmsf/lowres_D_He3/0_34_p_90')
 		self.quantity = 'Magnetic_Field_Bz'
 #		self.quantity = 'Derived_Number_Density_Deuterons'
 		self.index_list = list_sdf(self.sim_file_loc)
@@ -117,8 +118,8 @@ class Simulation():
 		self.rL_maj = getLarmorRadius(self.file0,maj_species)
 		self.dx = getdxyz(self.file0)
 		print('### RATIO rLe/dx :: {} \n rLmaj/dx :: {}'.format(self.rLe/self.dx,self.rL_maj/self.dx))
-		self.tnorm = self.tc_maj#in
-		self.wnorm = self.wc_maj#in
+		self.tnorm = self.tc_min
+		self.wnorm = self.wc_min
 		self.knorm = self.wnorm/self.va #maj  #1/self.lambdaDe
 		print('normalisation w: ', self.wnorm, ' [Hz]')
 		
@@ -127,7 +128,7 @@ class Simulation():
 #		energy_int = 0
 
 	### PLOT CIGARETTE PLOTS ###
-#		ciggies(self.sim_file_loc,species_lst=getAllSpecies(self.file0),para=False) # doesnt return anything
+		ciggies(self.sim_file_loc,species_lst=getAllSpecies(self.file0),para=False) # doesnt return anything
 
 	### FOURIER TRANSFORMS ###
 		self.klim = 0.5*2*const.PI*self.Nx/self.L
@@ -216,7 +217,7 @@ class Simulation():
 			w_lim, k_lim = self.FT_2d.shape[0]*(in_wlimprime/self.wlim_prime), self.FT_2d.shape[1]*(in_klimprime/self.klim_prime)
 			self.FT_2d = self.FT_2d[:int(w_lim),:int(k_lim)]
 		print('plotting shape: ',np.shape(self.FT_2d))
-		fig, ax = plot2dTransform(self.FT_2d,klim=in_klimprime,wlim=in_wlimprime,klabel=getWavenumberLabel(maj_species),wlabel=getOmegaLabel(maj_species))#min_species
+		fig, ax = plot2dTransform(self.FT_2d,klim=in_klimprime,wlim=in_wlimprime,klabel=getWavenumberLabel(min_species),wlabel=getOmegaLabel(min_species))#min_species
 
 	### COLD PLASMA DISPERSION ###
 #		Te = getTemperature('Electrons') ; Ti = getTemperature('Deuterons') 
@@ -234,7 +235,7 @@ class Simulation():
 
 	### POWER SPECTRUM ###
 		_,_ = power(klim_prime=self.klim_prime,wlim_prime=self.wlim_prime,wmax=35,kmax=in_klimprime,wnorm=self.wnorm,\
-			norm_omega=getOmegaLabel(maj_species),quantity=self.quantity,plot=True)
+			norm_omega=getOmegaLabel(min_species),quantity=self.quantity,plot=True)
 	
 #	### Poynting ###
 #		FTSmag = Poynting2dFT(self.times,self.Nt,self.Nx,in_klimprime=in_klimprime,plot=True)

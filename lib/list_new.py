@@ -2136,30 +2136,25 @@ def ciggies(sim_loc,species_lst=['Deuterons','Alphas'],nval=10000,para=False,elo
 		L = getGridlen(d0)
 		tcSpecies = 2*const.PI/getCyclotronFreq(d0,species)
 		T = time[-1]/tcSpecies
+		dens = getMeanquantity(sdfread(0),'Derived_Number_Density_'+species)
 		# try loading f first rather than instantly making it
 		if vload: # velocities
 			ylabel = r'$v/v_A$'
 			cbar_label = r'$\log_{10}[f(v)]$'
 			figname = 'fv_vA_'
 			matnorm = vA
-			try:
-				fSpecies = read_pkl('fv_'+species)
-				fload = True
-			except:
-				fload = False
 		if eload: # energies
 			ylabel = r'$E$' + '  ' + '['+r'$keV$'+']'
 			cbar_label = r'$\log_{10}[f(E)]$'
 			figname = 'fE_keV_'
 			matnorm = 1000*const.qe
 			try:
-				fSpecies = read_pkl('fE_'+species)
+				fSpecies = read_pkl(figname+species)
 				fload = True
 			except:
 				fload = False
 		# check if fload is possible
 		if fload:
-			fSpecies = read_pkl(figname+species)
 			if vload: # should load if here, can't be here otherwise
 				matSpecies = read_pkl('v_'+species)
 			if eload:
@@ -2168,9 +2163,7 @@ def ciggies(sim_loc,species_lst=['Deuterons','Alphas'],nval=10000,para=False,elo
 			matSpecies = matSpecies/matnorm
 			matmin  = np.min(matSpecies) ; matmax = np.max(matSpecies) ; matmean = np.mean(matSpecies)
 		else: # calculate distribution if can't load it already
-			dens = getMeanquantity(sdfread(0),'Derived_Number_Density_'+species)
 			massSpecies = getMass(species)
-			matSpecies = np.zeros((Nt,Nx))
 			try: # try loading
 				if vload:
 					matSpecies = read_pkl('v_'+species)
@@ -2189,7 +2182,7 @@ def ciggies(sim_loc,species_lst=['Deuterons','Alphas'],nval=10000,para=False,elo
 						pool.close()
 					else:
 						for t in range(Nt):
-							if int(100*t/Nt)%5==0: print(str(round(100*t/nt))+'...%') # print every 5%
+							if int(100*t/Nt)%5==0:print(100*t/Nt, ' %')
 							matSpecies[t,:] = np.sqrt(2*getQuantity1d(sdfread(t),'Derived_Average_Particle_Energy_'+species)/massSpecies)		
 					dumpfiles(matSpecies,'v_'+species)
 			# normalise
@@ -2226,13 +2219,16 @@ def ciggies(sim_loc,species_lst=['Deuterons','Alphas'],nval=10000,para=False,elo
 			else:
 				ax.set_ylim(matmin,1.1*matmean)
 		else:
-			ax.set_ylim(0.9*matmean,1.1*matmean)
+			if (1.1*matmean) > matmax:
+				ax.set_ylim(0.9*matmean,matmax)
+			else:
+				ax.set_ylim(0.9*matmean,1.1*matmean)
 
 		plt.gca().ticklabel_format(useOffset=False)
 		# savefig
 		fig.savefig(figname+species+'.png',bbox_inches='tight')
 	return None
-	
+
 # extract peaks in a dataset (used for power spectra comparisons)	
 def extractPeaks(data,Nperwcd=1,prominence=0.3):
 	return signal.find_peaks(data,distance=Nperwcd,prominence=prominence)[0] # tune till Nperwcd encapsulates all peaks (visually)	
