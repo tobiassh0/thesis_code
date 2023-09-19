@@ -24,6 +24,7 @@ def ciggies_test(sim_loc,species_lst=['Deuterons','Alphas'],nval=10000,para=Fals
 		L = getGridlen(d0)
 		tcSpecies = 2*const.PI/getCyclotronFreq(d0,species)
 		T = time[-1]/tcSpecies
+		# try loading f first rather than instantly making it
 		if vload: # velocities
 			ylabel = r'$v/v_A$'
 			cbar_label = r'$\log_{10}[f(v)]$'
@@ -51,6 +52,9 @@ def ciggies_test(sim_loc,species_lst=['Deuterons','Alphas'],nval=10000,para=Fals
 				matSpecies = read_pkl('v_'+species)
 			if eload:
 				matSpecies = read_pkl(species+'_KEdensmatrix')/dens
+			# normalise
+			matSpecies = matSpecies/matnorm
+			matmin  = np.min(matSpecies) ; matmax = np.max(matSpecies) ; matmean = np.mean(matSpecies)
 		else: # calculate distribution if can't load it already
 			dens = getMeanquantity(sdfread(0),'Derived_Number_Density_'+species)
 			massSpecies = getMass(species)
@@ -76,6 +80,9 @@ def ciggies_test(sim_loc,species_lst=['Deuterons','Alphas'],nval=10000,para=Fals
 							if int(100*t/Nt)%5==0:print(100*t/Nt, ' %')
 							matSpecies[t,:] = np.sqrt(2*getQuantity1d(sdfread(t),'Derived_Average_Particle_Energy_'+species)/massSpecies)		
 					dumpfiles(matSpecies,'v_'+species)
+			# normalise
+			matSpecies = matSpecies/matnorm
+			matmin  = np.min(matSpecies) ; matmax = np.max(matSpecies) ; matmean = np.mean(matSpecies)
 			# initialise distribution matrix
 			fSpecies = np.zeros((Nt,nval))
 			# calculate fv/fE matrix
@@ -85,10 +92,6 @@ def ciggies_test(sim_loc,species_lst=['Deuterons','Alphas'],nval=10000,para=Fals
 				fSpecies[t,:],_,_ = np.histogram2d(xarr,yarr,range=[[0,L],[matmin,matmax]],bins=(1,nval),density=True)
 			# dump distribution matrix
 			dumpfiles(fSpecies,figname+species)
-
-		# normalise
-		matSpecies = matSpecies/matnorm
-		matmin  = np.min(matSpecies) ; matmax = np.max(matSpecies) ; matmean = np.mean(matSpecies)
 
 		# extents of matrix per species
 		extents = [0,T,matmin,matmax]

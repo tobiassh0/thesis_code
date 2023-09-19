@@ -1901,20 +1901,21 @@ def getFields():
 	return fieldquant
 
 # Home function which can be called, will call on getEnergies(). Generates KE_Dens and field E_Dens for species 1, 2, 3 and e-
-def energies(sim_loc,frac=1,plot=False,leg=True,integ=False,linfit=False,electrons=False):
+def energies(sim_loc,frac=1,plot=False,leg=True,integ=False,linfit=False,electrons=True):
 	width = 10
 	height = 6
 	#height = width*(1/const.g_ratio)
 	fig,ax=plt.subplots(figsize=(width,height))
 	
-	species = getIonSpecies(sdfread(0))
+	d0 = sdfread(0)
+	species = getIonSpecies(d0)
 	maj_species, maj2_species, min_species = species
 	if min_species == '':
-		min_species = getAllSpecies(sdfread(0))[-1] # check if minority exists as negative ion
+		min_species = getAllSpecies(d0)[-1] # check if minority exists as negative ion
 
 	if electrons: species = np.append(species,'Electrons')
 
-	energy_quant, names, Energy_mult, fieldquant = getEnergyLabels(sdfread(0),species)
+	energy_quant, names, Energy_mult, fieldquant = getEnergyLabels(d0,species)
 	
 	## do when no minority ring-beam
 	if maj2_species == '': 
@@ -2110,13 +2111,16 @@ def paraVelocity(INDEX):
 	return np.sqrt(2*getQuantity1d(sdfread(index),'Derived_Average_Particle_Energy_'+species)/mSpec)
 
 # quote "cigarette plots", which show the distribution of velocity/energy normalised to the  
+
 def ciggies(sim_loc,species_lst=['Deuterons','Alphas'],nval=10000,para=False,eload=True,vload=False):
 	if eload:
 		vload = False
-	if vload:
+	elif vload:
 		eload = False
-	if eload == vload:
+	elif eload == vload:
 		print('## ERROR ## :: vload and eload are set equal') ; raise SystemExit
+	else:
+		print('## ERROR ## :: no value set for eload vload') ; raise SystemExit
 
 	# initial parameters, dimensions and constants
 	ind_lst = list_sdf(sim_loc)
@@ -2125,38 +2129,14 @@ def ciggies(sim_loc,species_lst=['Deuterons','Alphas'],nval=10000,para=False,elo
 	Nx = len(getGrid(d0)[0])
 	Nt = len(time)
 	vA = getAlfvenVel(d0)
-	species_lst = [i for i in species_lst if i != '']
-
+	species_lst = [i for i in species_lst if i != ''] # remove missing species
+	
 	# setup mass and velocity arrays
 	for species in species_lst:
-		mSpecies = getMass(species)
-		matSpecies = np.zeros((Nt,Nx))
-		
-		try: # try loading
-			if vload:
-				matSpecies = read_pkl('v_'+species)
-			if eload:
-				matSpecies = read_pkl(species+'_KEdensmatrix')
-		except: # didn't load, calculate instead
-			if not eload:
-				matSpecies,_ = getEnergies([species+'_KEdens'],[species],Nt,dump=True) # loads energy density matrix of species
-			if not vload:
-				tind_lst = np.zeros((len(ind_lst),3),dtype='object')
-				for i in range(len(ind_lst)):
-					tind_lst[i,:] = [ind_lst[i], species, mSpecies]
-				if para: # parallel calculation, just for velocities ## TODO: change this to be more general
-					pool = mp.Pool(mp.cpu_count()//2)
-					matSpecies = np.vstack(np.array(pool.map_async(paraVelocity,tind_lst).get(99999)))
-					pool.close()
-				else:
-					for t in range(Nt):
-						if int(100*t/Nt)%5==0:print(100*t/Nt, ' %')
-						matSpecies[t,:] = np.sqrt(2*getQuantity1d(sdfread(t),'Derived_Average_Particle_Energy_'+species)/mSpecies)
-				dumpfiles(matSpecies,'v_'+species)
-		
-		L = getGridlen(sdfread(0))
-		tcSpecies = 2*const.PI/getCyclotronFreq(sdfread(0),species)
+		L = getGridlen(d0)
+		tcSpecies = 2*const.PI/getCyclotronFreq(d0,species)
 		T = time[-1]/tcSpecies
+		# try loading f first rather than instantly making it
 		if vload: # velocities
 			ylabel = r'$v/v_A$'
 			cbar_label = r'$\log_{10}[f(v)]$'
@@ -2177,23 +2157,57 @@ def ciggies(sim_loc,species_lst=['Deuterons','Alphas'],nval=10000,para=False,elo
 				fload = True
 			except:
 				fload = False
-		
-		## calculate fv/fE matrix
-		# normalise
-		matSpecies = matSpecies/matnorm
-		matmin  = np.min(matSpecies) ; matmax = np.max(matSpecies) ; matmean = np.mean(matSpecies)
-		# extents of matrix per species
-		extents = [0,T,matmin,matmax]
-		print('min val ',matmin,'max mat ',matmax)
-		if not fload: # calculate distribution if can't load it already
+		# check if fload is possible
+		if fload:
+			fSpecies = read_pkl(figname+species)
+			if vload: # should load if here, can't be here otherwise
+				matSpecies = read_pkl('v_'+species)
+			if eload:
+				matSpecies = read_pkl(species+'_KEdensmatrix')/dens
+			# normalise
+			matSpecies = matSpecies/matnorm
+			matmin  = np.min(matSpecies) ; matmax = np.max(matSpecies) ; matmean = np.mean(matSpecies)
+		else: # calculate distribution if can't load it already
+			dens = getMeanquantity(sdfread(0),'Derived_Number_Density_'+species)
+			massSpecies = getMass(species)
+			matSpecies = np.zeros((Nt,Nx))
+			try: # try loading
+				if vload:
+					matSpecies = read_pkl('v_'+species)
+				if eload:
+					matSpecies = read_pkl(species+'_KEdensmatrix')/dens
+			except: # didn't load, calculate instead
+				if eload:
+					matSpecies,_ = getEnergies([species+'_KEdens'],[species],Nt,dump=True)/dens # loads energy density matrix of species
+				if vload:
+					tind_lst = np.zeros((len(ind_lst),3),dtype='object')
+					for i in range(len(ind_lst)):
+						tind_lst[i,:] = [ind_lst[i], species, massSpecies]
+					if para: # parallel calculation, just for velocities ## TODO: change this to be more general
+						pool = mp.Pool(mp.cpu_count()//2)
+						matSpecies = np.vstack(np.array(pool.map_async(paraVelocity,tind_lst).get(99999)))
+						pool.close()
+					else:
+						for t in range(Nt):
+							if int(100*t/Nt)%5==0: print(str(round(100*t/nt))+'...%') # print every 5%
+							matSpecies[t,:] = np.sqrt(2*getQuantity1d(sdfread(t),'Derived_Average_Particle_Energy_'+species)/massSpecies)		
+					dumpfiles(matSpecies,'v_'+species)
+			# normalise
+			matSpecies = matSpecies/matnorm
+			matmin  = np.min(matSpecies) ; matmax = np.max(matSpecies) ; matmean = np.mean(matSpecies)
 			# initialise distribution matrix
 			fSpecies = np.zeros((Nt,nval))
+			# calculate fv/fE matrix
 			for t in range(fSpecies.shape[0]): # loop through time
 				xarr = np.linspace(0,L,Nx)
 				yarr = matSpecies[t,:]
 				fSpecies[t,:],_,_ = np.histogram2d(xarr,yarr,range=[[0,L],[matmin,matmax]],bins=(1,nval),density=True)
 			# dump distribution matrix
 			dumpfiles(fSpecies,figname+species)
+
+		# extents of matrix per species
+		extents = [0,T,matmin,matmax]
+		print('min val ',matmin,'max mat ',matmax)
 
 		# setup figure
 		fig,ax = plt.subplots(figsize=(8,8/const.g_ratio))
@@ -2206,7 +2220,6 @@ def ciggies(sim_loc,species_lst=['Deuterons','Alphas'],nval=10000,para=False,elo
 		ax.set_ylabel(ylabel,fontsize=16)
 		
 		# set y-lim
-		
 		if (0.9*matmean) < matmin:
 			if (1.1*matmean) > matmax:
 				ax.set_ylim(matmin,matmax)
@@ -2218,19 +2231,19 @@ def ciggies(sim_loc,species_lst=['Deuterons','Alphas'],nval=10000,para=False,elo
 		plt.gca().ticklabel_format(useOffset=False)
 		# savefig
 		fig.savefig(figname+species+'.png',bbox_inches='tight')
-	
 	return None
 	
+# extract peaks in a dataset (used for power spectra comparisons)	
 def extractPeaks(data,Nperwcd=1,prominence=0.3):
 	return signal.find_peaks(data,distance=Nperwcd,prominence=prominence)[0] # tune till Nperwcd encapsulates all peaks (visually)	
 
-
+# calculate the growth of k-modes for various time spacings
 def map_k_growth(sim_loc,omega_min,omega_max,domega=0.25,dt_frac=0.5,tstart_frac=0.5,tend_frac=2.0,color='k'):
 	## define sim
 	sim_loc = getSimulation(sim_loc)
 	d0 = sdfread(0)
 	## normalisation
-	wnorm = getCyclotronFreq(sdfread(0),'Deuterons')
+	wnorm = getCyclotronFreq(d0,'Deuterons')
 #	wnorm = getEffectiveCyclotronFreq(sdfread(0))
 	klim = 0.5*2*const.PI/getdxyz(d0)
 	knorm = 1/getDebyeLength(d0,'Electrons')
@@ -2239,15 +2252,12 @@ def map_k_growth(sim_loc,omega_min,omega_max,domega=0.25,dt_frac=0.5,tstart_frac
 	
 	## cold plasma disp
 	omegas = wnorm*np.arange(int(omega_min),int(omega_max),domega)
-	species = getIonSpecies(sdfread(0))	
+	species = getIonSpecies(d0)	
 	k1,k2,k3 = coldplasmadispersion(d0, species[0], species[1], omegas, theta=89) 
 	thresh = k2 > 0
 	k2 = k2[thresh] ; omegas = omegas[thresh]
 	## FT1d & extract data at karr points
 	FT1d = read_pkl('FT_1d_Magnetic_Field_Bz')
-	## TODO; check the FT1d is of oscillatory fm rather than of pure fm
-#	fm = load_batch_fieldmatrix('Magnetic_Field_Bz')
-#	fm = fm - np.mean(fm[0:10,:])
 	harmonics = FT1d.shape[1]*(k2/klim)
 	# loop through harmonics, then loop through time window to acquire multiple growth rates for a given k-mode
 	[t0,t1] = [tstart_frac*tnorm,tend_frac*tnorm]
@@ -2277,11 +2287,6 @@ def map_k_growth(sim_loc,omega_min,omega_max,domega=0.25,dt_frac=0.5,tstart_frac
 				growthRates[i,n] = 2*const.PI*b # not normalised
 			except:
 				continue
-#		print(np.mean(growthRates[i,:])/wnorm)
-#		plt.hist(growthRates[i,:]/wnorm,bins=50)
-#		plt.scatter(narr,growthRates[i,:]/wnorm)
-#		plt.ylabel('growth rates / wnorm')
-#		plt.show()
 	growthRatesMean = np.mean(growthRates,axis=1)
 	growthRatesSTD = np.std(growthRates,axis=1)
 #	plt.errorbar(omegas/wnorm,growthRatesMean/wnorm,yerr=growthRatesSTD/wnorm,fmt='o',color=color)
