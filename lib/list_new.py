@@ -2112,7 +2112,12 @@ def paraVelocity(INDEX):
 
 # quote "cigarette plots", which show the distribution of velocity/energy normalised to the  
 
-def ciggies(sim_loc,species_lst=['Deuterons','Alphas'],nval=10000,para=False,eload=True,vload=False):
+def ciggies(sim_loc,species_lst=['Deuterons','Alphas'],nval=10000,para=False,eload=True,vload=False,logo=False):
+	if logo: # print the ciggies logo # made this because I could
+		import pyfiglet
+		print(pyfiglet.figlet_format('===#  --  @@@',font='letters',justify='center',width=110))
+		del pyfiglet
+
 	if eload:
 		vload = False
 	elif vload:
@@ -2123,7 +2128,6 @@ def ciggies(sim_loc,species_lst=['Deuterons','Alphas'],nval=10000,para=False,elo
 		print('## ERROR ## :: no value set for eload vload') ; raise SystemExit
 
 	# initial parameters, dimensions and constants
-	ind_lst = list_sdf(sim_loc)
 	time = read_pkl('times')
 	d0 = sdfread(0)
 	Nx = len(getGrid(d0)[0])
@@ -2163,6 +2167,7 @@ def ciggies(sim_loc,species_lst=['Deuterons','Alphas'],nval=10000,para=False,elo
 			matSpecies = matSpecies/matnorm
 			matmin  = np.min(matSpecies) ; matmax = np.max(matSpecies) ; matmean = np.mean(matSpecies)
 		else: # calculate distribution if can't load it already
+			ind_lst = list_sdf(sim_loc)
 			massSpecies = getMass(species)
 			try: # try loading
 				if vload:
@@ -2200,7 +2205,7 @@ def ciggies(sim_loc,species_lst=['Deuterons','Alphas'],nval=10000,para=False,elo
 
 		# extents of matrix per species
 		extents = [0,T,matmin,matmax]
-		print('min val ',matmin,'max mat ',matmax)
+		print('minmat ',matmin,'maxmat ',matmax)
 
 		# setup figure
 		fig,ax = plt.subplots(figsize=(8,8/const.g_ratio))
@@ -2215,14 +2220,14 @@ def ciggies(sim_loc,species_lst=['Deuterons','Alphas'],nval=10000,para=False,elo
 		# set y-lim
 		if (0.9*matmean) < matmin:
 			if (1.1*matmean) > matmax:
-				ax.set_ylim(matmin,matmax)
+				ax.set_ylim(0.9*matmean,1.1*matmean)
 			else:
-				ax.set_ylim(matmin,1.1*matmean)
+				ax.set_ylim(0.9*matmean,maxmat)
 		else:
 			if (1.1*matmean) > matmax:
-				ax.set_ylim(0.9*matmean,matmax)
+				ax.set_ylim(matmin,1.1*matmean)
 			else:
-				ax.set_ylim(0.9*matmean,1.1*matmean)
+				ax.set_ylim(matmin,matmax)
 
 		plt.gca().ticklabel_format(useOffset=False)
 		# savefig
