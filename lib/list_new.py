@@ -2051,7 +2051,7 @@ def power(klim_prime,wlim_prime,wmax,kmax,wnorm,norm_omega=r'$\Omega_D$',quantit
 		paxmin, paxmax = min(10**log10_power[10:]), max(10**log10_power[10:])
 		ax.set_ylim(paxmin/10,10*paxmax) ## power of 10 higher and lower than min / max
 		ax.set_yscale('log')
-		plotting(fig,ax,'power')
+		plotting(fig,ax,'power_'+quantity)
 
 	if outp: 
 		return omegas, log10_power
