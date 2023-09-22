@@ -185,7 +185,7 @@ class Simulation():
 			print(k_lim,t_lim,self.FT_1d.shape)
 			print('k_file_lim ',k_lim,'t_file_lim ', t_lim)
 			self.FT_1d = self.FT_1d[:int(t_lim),:int(k_lim)]
-		fig_1, ax_1 = plot1dTransform(self.FT_1d,klim=in_klimprime,tlim=in_tlimprime,wlabel=getOmegaLabel(min_species))
+		fig_1, ax_1 = plot1dTransform(self.FT_1d,klim=in_klimprime,tlim=in_tlimprime,klabel=getWavenumberLabel(min_species),wlabel=getOmegaLabel(min_species))
 		plotting(fig_1,ax_1,'FT_1d_'+self.quantity)
 		del self.FT_1d
 
