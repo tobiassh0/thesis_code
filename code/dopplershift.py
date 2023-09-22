@@ -88,7 +88,7 @@ ax.set_ylim(0,10)
 ax.set_ylabel(r'$\omega/\Omega_p$',**tnrfont)
 ax.set_xlabel(r'$kv_A/\Omega_p$',**tnrfont)
 ax.plot([0,10],[0,10],color='white',linestyle='--') # vA line
-fig.savefig('FT_2d_doppler.png')
+fig.savefig('FT_2d_doppler.png',bbox_inches='tight')
 #plt.show()
 sys.exit()
 
