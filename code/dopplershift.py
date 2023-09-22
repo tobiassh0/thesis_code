@@ -74,19 +74,21 @@ ax.set_xlabel(r'$d\omega/dk$'+'  '+r'$[v_A]$',**tnrfont)
 fig.savefig('dw_dk_'+kernel+'_grad.png',bbox_inches='tight')
 #plt.show()
 
-plt.imshow((FT2d),**kwargs,extent=[0,kmax/knorm,0,wmax/wnorm])
+# plot FT2d
+fig,ax=plt.subplots(figsize=(8,6))
+ax.imshow((FT2d),**kwargs,extent=[0,kmax/knorm,0,wmax/wnorm])
 kx = np.linspace(0,20,100)*knorm
 # doppler shifted line 
 for i in range(0,int(wmax/wnorm),1):
 	w = wnorm*np.ones(len(kx))*i
 	ww = w + (dsv*vA)*kx
-	plt.plot(kx/knorm,ww/wnorm,color='white',linestyle='--')
-plt.xlim(0,20)
-plt.ylim(0,10)
-plt.ylabel(r'$\omega/\Omega_p$',**tnrfont)
-plt.xlabel(r'$kv_A/\Omega_p$',**tnrfont)
-plt.plot([0,10],[0,10],color='white',linestyle='--') # vA line
-plt.savefig('FT_2d_doppler.png')
+	ax.plot(kx/knorm,ww/wnorm,color='white',linestyle='--')
+ax.set_xlim(0,20)
+ax.set_ylim(0,10)
+ax.set_ylabel(r'$\omega/\Omega_p$',**tnrfont)
+ax.set_xlabel(r'$kv_A/\Omega_p$',**tnrfont)
+ax.plot([0,10],[0,10],color='white',linestyle='--') # vA line
+fig.savefig('FT_2d_doppler.png')
 #plt.show()
 sys.exit()
 
