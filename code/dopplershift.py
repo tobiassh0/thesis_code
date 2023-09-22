@@ -45,7 +45,8 @@ for i in range(nw):
 			continue
 
 # Scharr gradient map
-_,kGangle = Kernel(FT2d,kernel='sobel') # scharr or sobel
+kernel = 'scharr'
+_,kGangle = Kernel(FT2d,kernel=kernel) # scharr or sobel
 # gradients as angles
 kGangle = kGangle[1:-1,1:-1]# remove abberations around edge
 kGangle = kGangle.flatten()
@@ -61,16 +62,17 @@ dwdk = dwdk[dwdk!=0]
 dw_dk = dwdk * (dw/dk)/vA # normalise
 thresh = (np.abs(dw_dk) < 10)
 dw_dk = dw_dk[thresh]
-print('Scharr kernel mean :: ',np.mean(dw_dk))
-print('Scharr kernel medi :: ',np.median(dw_dk))
+print(kernel+' kernel mean :: ',np.mean(dw_dk))
+print(kernel+' kernel medi :: ',np.median(dw_dk))
 # plot hist
-counts,bins,_=plt.hist(dw_dk,bins=10000,range=(-1,1),density=True) # np.log10
+fig,ax = plt.subplots(figsize=(6,4))
+counts,bins,_=ax.hist(dw_dk,bins=1000,range=(-1,1),density=True) # np.log10
 dsv = bins[np.argmax(counts)] # doppler shift velocity in units of vA
-print('Scharr kernel max :: ', dsv)
-plt.ylabel('Normalised count',**tnrfont)
-plt.xlabel(r'$d\omega/dk$'+'  '+r'$[v_A]$',**tnrfont)
-#plt.savefig('dw_dk_Sobel_grad.png')
-plt.show()
+print(kernel+' kernel max :: ', dsv)
+ax.set_ylabel('Normalised count',**tnrfont)
+ax.set_xlabel(r'$d\omega/dk$'+'  '+r'$[v_A]$',**tnrfont)
+fig.savefig('dw_dk_'+kernel+'_grad.png',bbox_inches='tight')
+#plt.show()
 
 plt.imshow((FT2d),**kwargs,extent=[0,kmax/knorm,0,wmax/wnorm])
 kx = np.linspace(0,20,100)*knorm
@@ -84,7 +86,8 @@ plt.ylim(0,10)
 plt.ylabel(r'$\omega/\Omega_p$',**tnrfont)
 plt.xlabel(r'$kv_A/\Omega_p$',**tnrfont)
 plt.plot([0,10],[0,10],color='white',linestyle='--') # vA line
-plt.show()
+plt.savefig('FT_2d_doppler.png')
+#plt.show()
 sys.exit()
 
 
