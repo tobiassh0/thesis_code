@@ -25,7 +25,7 @@ for i in range(len(sims)):
 
 ## normal 
 ax.legend(labels,loc='best')
-ax.set_ylabel(r'$\Delta u$'+'  '+'['+r'$J/m^3$'+']',fontsize=20)
+ax.set_ylabel(r'$\Delta u$'+'  '+'['+r'$Jm^{-3}$'+']',fontsize=20)
 ax.set_ylim(-850,500)
 ax.set_xlabel(r'$t/\tau_{cD}$',fontsize=20)
 ax.set_xlim(0,6.1)

@@ -5,12 +5,13 @@ from func_load import *
 
 sim_lst = ['traceT_0_00','traceT_D_99_T_01','traceT_D_89_T_11','traceT_0_50']
 MuArr = [0,0.01,0.11,0.5]
+xiTlabels = [r'$0\%$',r'$1\%$',r'$11\%$',r'$50\%$']
 Lambda = 2e-3
 
 fig, axs = plt.subplots(figsize=(15,5),nrows=1,ncols=len(sim_lst),sharex='row',sharey='row')
 fig.subplots_adjust(hspace=.45,wspace=0.1)
-i=0
 
+i=0
 for sim in (sim_lst):
 	## setup
 	simLoc = getSimulation('/storage/space2/phrmsf/'+sim)
@@ -57,6 +58,7 @@ for sim in (sim_lst):
 	axs[i].set_xticklabels(labels,rotation=45)
 	axs[i].set_yticks(labels)
 	axs[i].set_yticklabels(labels)
+	axs[i].annotate(xiTlabels[i],xy=[0.1,0.75],xycoords='axes fraction',fontsize=20)#,bbox=dict(fc="white"))
 	axs[i].tick_params(axis='both',direction='out',top=False,right=False,left=True,bottom=True)
 	i+=1
 	

@@ -42,25 +42,13 @@ class Simulation():
 		pkl_list = [item for item in lst_dir if self.quantity+'.pkl' in item] # check if fieldmatrix of quantity is pickled
 		lst_FT2d = [item for item in pkl_list if 'FT_2d' in item]
 		lst_Fm = [item for item in pkl_list if 'fieldmatrix' in item]
+		self.quantities = getFields()
 		
 		## calc and load fm & FT2d
 		if len(pkl_list) == 0: # dont have pkl files # should be on first running
-			self.quantities = getFields()
 			self.times, self.fieldmatrix = get_batch_fieldmatrix(self.index_list,self.quantities,load=True)
 			if 'times.pkl' not in os.listdir() or (self.times==None).any():
 				dumpfiles(self.times, 'times')
-#			for quant in self.quantities:
-#				print('Calculating '+quant+' ...')
-#				if quant == self.quantity:
-#					load = True
-#				else:
-#					load = False
-##				self.batch_size, self.StartStop = BatchStartStop(self.index_list)
-#				self.times, self.fieldmatrix = get_batch_fieldmatrix(self.index_list,quantity=quant,load=load)
-#				print('shape Fldmat (T,X) :: {}'.format(np.shape(self.fieldmatrix)))
-#				if 'times.pkl' not in os.listdir() or not self.times:
-#					dumpfiles(self.times, 'times')
-			## calc 2d FFT laterg
 		else: # have pkl files
 			pkl_file = self.quantity
 			Nos = ['no','No','n','','N']
@@ -136,9 +124,6 @@ class Simulation():
 		self.klim_prime = self.klim/self.knorm
 		self.wlim_prime = self.wlim/self.wnorm
 		self.tlim_prime = self.T/self.tnorm
-#		self.klim, self.wlim = batch_getDispersionlimits((self.index_list,self.file0,self.filelast,self.times)) # non-normalised units
-#		DISP_DATA = self.index_list, self.file0, self.filelast, self.times, self.klim, self.wlim, self.wc_maj, self.wce, self.va, self.lambdaDe, self.wpe, self.wpi, self.wnorm
-#		self.klim_prime, self.wlim_prime, self.tlim_prime = norm_DispersionLimits(DISP_DATA)#,species=maj_species)
 
 #		in_klimprime = float(input('!>> klim_prime maximum on plot (0 for max): ')) ## in normalised units
 #		in_wlimprime = float(input('!>> wlim_prime maximum on plot (0 for max): ')) ## in normalised units
@@ -200,7 +185,7 @@ class Simulation():
 			print(k_lim,t_lim,self.FT_1d.shape)
 			print('k_file_lim ',k_lim,'t_file_lim ', t_lim)
 			self.FT_1d = self.FT_1d[:int(t_lim),:int(k_lim)]
-		fig_1, ax_1 = plot1dTransform(self.FT_1d,klim=in_klimprime,tlim=in_tlimprime,wlabel=getOmegaLabel(min_species))
+		fig_1, ax_1 = plot1dTransform(self.FT_1d,klim=in_klimprime,tlim=in_tlimprime,klabel=getWavenumberLabel(min_species),wlabel=getOmegaLabel(min_species))
 		plotting(fig_1,ax_1,'FT_1d_'+self.quantity)
 		del self.FT_1d
 
@@ -210,10 +195,14 @@ class Simulation():
 			w_lim, k_lim = self.FT_2d.shape[0]*(in_wlimprime/self.wlim_prime), self.FT_2d.shape[1]*(in_klimprime/self.klim_prime)
 			self.FT_2d = self.FT_2d[:int(w_lim),:int(k_lim)]
 		except:
-			print('Creating FT_2d...')
-			self.FT_2d = get2dTransform(self.fieldmatrix,window=True)
-			dumpfiles(self.FT_2d,'FT_2d_'+self.quantity)
-			## Limits the size of the loaded array to our inputted limits so that it normalises properly ##
+			print('Creating all FT_2ds...')
+			for quant in self.quantities: # create all FT_2d arrays for available fields
+				fmq = load_batch_fieldmatrix([],quant)
+				FT_2d = get2dTransform(fmq,window=True)
+				dumpfiles(FT_2d,'FT_2d_'+quant)
+			# load the one you want to analyse
+			self.FT_2d = read_pkl('FT_2d_'+self.quantity)
+			# limits the size of the loaded array to our inputted limits so that it normalises properly ##
 			w_lim, k_lim = self.FT_2d.shape[0]*(in_wlimprime/self.wlim_prime), self.FT_2d.shape[1]*(in_klimprime/self.klim_prime)
 			self.FT_2d = self.FT_2d[:int(w_lim),:int(k_lim)]
 		print('plotting shape: ',np.shape(self.FT_2d))
