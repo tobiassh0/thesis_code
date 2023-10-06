@@ -1941,8 +1941,11 @@ def energies(sim_loc,frac=1,plot=False,leg=True,integ=False,linfit=False,electro
 	os.chdir(sim_loc)
 
 	# loop :: species & fields
-		# parallel loading and dump total
-	times = read_pkl('times')
+	# parallel loading and dump total
+	try:
+		times=read_pkl('times')
+	except:
+		times = batch_getTimes(np.zeros(len(read_pkl('Exenergy'))),1,len(read_pkl('Exenergy'))-1) # janky approach, only used for testing and when times.pkl hasn't been made
 	n = (len(index_list)//frac)
 	
 	#################################
@@ -1959,13 +1962,8 @@ def energies(sim_loc,frac=1,plot=False,leg=True,integ=False,linfit=False,electro
 
 	if plot:
 		print('Plotting energies...')
-		colors=['b','cyan','g','r','m','orange','k'] # will only use all of them if there are 3 +ve and 1 -ve species ## assuming no extra field values
-		tnorm=2*const.PI/getCyclotronFreq(sdfread(0),min_species) # last species
-			
-		try:
-			times=read_pkl('times')
-		except:
-			times = batch_getTimes(np.zeros(len(read_pkl('Exenergy'))),1,len(read_pkl('Exenergy'))-1) # janky approach, only used for testing and when times.pkl hasn't been made
+		colors=['b','cyan','g','r','m','orange','k','salmon','lightgreen'] # will only use all of them if there are 3 +ve and 1 -ve species ## assuming no extra field values
+		tnorm=2*const.PI/getCyclotronFreq(d0,min_species) # last species
 		
 		mean_to = 10
 		dt = (times[-1]-times[0])/len(times)
