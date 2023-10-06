@@ -49,13 +49,13 @@ for i in range(len(sim_lst)):
 
 powArr = np.array(powArr)
 ## normal
-axs.set_ylim(min(powArr[0,10:])/2,5*max(powArr[0,10:]))
+#axs.set_ylim(min(powArr[0,10:])/2,5*max(powArr[0,10:]))
 axs.legend(loc='best')
 axs.set_yscale('log')
 axs.set_xlim(wmin,wmax)
 axs.set_ylabel(r'PSD',**tnrfont)
 axs.set_xlabel(r'$f/f_{cD}$',fontsize=20)
-fig.savefig('/storage/space2/phrmsf/paper/remake/Power_log.png',bbox_inches='tight')
+#fig.savefig('/storage/space2/phrmsf/paper/remake/Power_log.png',bbox_inches='tight')
 #fig.savefig('/storage/space2/phrmsf/paper/Power_log_zoom.eps',bbox_inches='tight')
 
 ## EPS 4-page
