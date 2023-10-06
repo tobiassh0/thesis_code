@@ -1962,7 +1962,7 @@ def energies(sim_loc,frac=1,plot=False,leg=True,integ=False,linfit=False,electro
 
 	if plot:
 		print('Plotting energies...')
-		colors=['b','cyan','g','r','m','orange','k','salmon'] # will only use all of them if there are 3 +ve and 1 -ve species ## assuming no extra field values
+		colors=['b','cyan','g','r','m','orange','k','salmon','lightgreen'] # will only use all of them if there are 3 +ve and 1 -ve species ## assuming no extra field values
 		tnorm=2*const.PI/getCyclotronFreq(d0,min_species) # last species
 		
 		mean_to = 10
@@ -2017,7 +2017,7 @@ def power(klim_prime,wlim_prime,wmax,kmax,wnorm,norm_omega=r'$\Omega_D$',quantit
 		try:
 			log10_power = read_pkl('log10_power')
 			omegas = read_pkl('omegas_power')
-			read = False; calc = False
+			calc = False
 		except:
 			print('Can\'t read power and omegas...')
 			read = False ; calc = True

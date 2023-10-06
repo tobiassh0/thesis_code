@@ -2017,7 +2017,7 @@ def power(klim_prime,wlim_prime,wmax,kmax,wnorm,norm_omega=r'$\Omega_D$',quantit
 		try:
 			log10_power = read_pkl('log10_power')
 			omegas = read_pkl('omegas_power')
-			read = False; calc = False
+			calc = False
 		except:
 			print('Can\'t read power and omegas...')
 			read = False ; calc = True
