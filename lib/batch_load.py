@@ -9,7 +9,7 @@ class Simulation():
 		del ASCII_logo
 #		self.sim_file_loc = getSimulation('') # allows user to input the file destination in the dir where batch is run
 #		self.sim_file_loc = getSimulation('/storage/space2/phrmsf/lowres_D_He3/0_34_p_90')
-		self.sim_file_loc = getSimulation('/storage/space2/phrmsf/ECRH/ECRH_JT60U_5_2')
+		self.sim_file_loc = getSimulation('/storage/space2/phrmsf/lowres_D_He3/0_10_p_90')
 		self.quantity = 'Magnetic_Field_Bz'
 		self.index_list = list_sdf(self.sim_file_loc)
 		print(str(len(self.index_list))+' files')
@@ -193,6 +193,8 @@ class Simulation():
 			print('Creating all FT_2ds...')
 			for quant in self.quantities: # create all FT_2d arrays for available fields
 				fmq = load_batch_fieldmatrix([],quant)
+				if quant == 'Magnetic_Field_Bz':
+						fmq = fmq-np.mean(fmq[0:10,:]) # delta Bz				
 				FT_2d = get2dTransform(fmq,window=True)
 				dumpfiles(FT_2d,'FT_2d_'+quant)
 		# load the one you want to analyse
@@ -218,7 +220,7 @@ class Simulation():
 		plotting(fig,ax,'FT_2d_'+self.quantity)
 
 	## Power spectra
-		_,_ = power(klim_prime=self.klim_prime,wlim_prime=self.wlim_prime,wmax=self.wlim_prime,kmax=self.klim_prime,wnorm=self.wnorm,\
+		_,_ = power(klim_prime=self.klim_prime,wlim_prime=self.wlim_prime,wmax=self.wlim_prime,kmax=100,wnorm=self.wnorm,\
 			norm_omega=getOmegaLabel(min_species),quantity=self.quantity,plot=True)
 	
 #	## Poynting
