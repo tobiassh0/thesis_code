@@ -55,7 +55,7 @@ from func_load import *
 #print('vd/v0 :: {},\nvr/v0 :: {}\nu/v_A :: {}'.format(vd/v0,vr/v0,u/vA))
 #omegaall = wc_maj*np.linspace(1,25,nval)
 
-#_,kall,_ = coldplasmadispersion(sdfread(0), omegaall)
+#_,kall,_ = coldplasmadispersion(sdfread(0), 'Deuterons', '', omegaall)
 #posomega, posgamma = growth_rate_man('Alphas', 'Deuterons', 89, sdfread(0), u, vd, vr, kall, omegaall)
 #posgamma = np.array(posgamma) #; posgamma[np.isnan(posgamma)] = 0 
 #ax[0].plot(posomega/wnorm,posgamma/wnorm,color='k')
@@ -106,7 +106,7 @@ print('vpara0/v0 :: {},\nvr/v0 :: {}\nvperp0/v_A :: {}'.format(vpara0/v0,vr/v0,v
 nval = 200000
 omegaall = wc_maj*np.linspace(1,25,nval)
 
-_,kall,_ = coldplasmadispersion(d0, omegaall)
+_,kall,_ = coldplasmadispersion(d0, 'Deuterons', '', omegaall)
 posomega, posgamma = growth_rate_man('Alphas', 'Deuterons', 89, d0, vperp0, vpara0, vr, kall, omegaall)
 posgamma = np.array(posgamma) #; posgamma[np.isnan(posgamma)] = 0 
 ax[0].plot(posomega/wnorm,posgamma/wnorm,color='k')
@@ -198,7 +198,7 @@ plt.show()
 ##		meff = (getMass(species[0])/Z1)*(1-Mu[m]*Z2-Lambda[l]*Z3) + getMass(species[1])*Mu[m] + getMass(species[2])*Lambda[l]
 ##		wci = const.qe*B0/meff
 ##		omegas = wci*np.linspace(0,25,10*nval)
-##		_,k2,_ = coldplasmadispersion(sdfread(0),omegas)
+##		_,k2,_ = coldplasmadispersion(sdfread(0),'Deuterons','Tritons',omegas)
 ##		PIxx, PIxy, PIyy = PITENSOR(sdfread(0),v0,k2,omegas,theta=89)
 ##		CHI0[m,l,:] = CHI0CALC(PIxx,PIxy,PIyy,n0,k2,omegas,Mu[m],Lambda[l],Z1=1,Z2=1,Z3=2,species=['Deuterons','Tritons','Alphas'],B=2.1)
 ##dumpfiles(CHI0,'CHI0_Mu_Lambda')

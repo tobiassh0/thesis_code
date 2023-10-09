@@ -2253,7 +2253,7 @@ def map_k_growth(sim_loc,omega_min,omega_max,domega=0.25,dt_frac=0.5,tstart_frac
 	## cold plasma disp
 	omegas = wnorm*np.arange(int(omega_min),int(omega_max),domega)
 	species = getIonSpecies(d0)	
-	k1,k2,k3 = coldplasmadispersion(d0, species[0], species[1], omegas, theta=89) 
+	k1,k2,k3 = coldplasmadispersion(d0, omegas, theta=89) 
 	thresh = k2 > 0
 	k2 = k2[thresh] ; omegas = omegas[thresh]
 	## FT1d & extract data at karr points
