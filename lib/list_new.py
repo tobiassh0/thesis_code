@@ -2342,13 +2342,13 @@ def phaseCorrelation(sig,fft_sig0,dw,wnorm,wmax=35):
 # Plots and shows the experiment vs theory plot for the ratio between two species change in energy density
 # Also has the ability to plot du per-particle ratio (per species) through time for each simulation (nrows) -- will need to un-comment these lines
 def majIons_edens_ratio(sims,species=['Deuterons','Tritons'],time_norm=r'$\tau_{cD}$',\
-						xlabel=r'$[\Delta u_1/\Delta u_2]_{max}$',ylabel=r'$(\xi_1/\xi_2)(m_2/m_1)(q_1/q_2)^2$',labels=[1,11,50],lim=2.,lims=((0,1),(0,1))):
+						xlabel=r'$[\Delta u_1/\Delta u_2]_{max}$',ylabel=r'$(\xi_1/\xi_2)(m_2/m_1)(q_1/q_2)^2$',labels=[1,11,50],lims=((0,1),(0,1))):
 	mean_to = 10
 	N=50
 	c=0
 #	fig, ax = plt.subplots(figsize=(10,len(sims)*3-1),nrows=len(sims),sharex=True)
 #	fig.subplots_adjust(hspace=0.15)#hspace=0.
-	plt.plot([0,lim],[0,lim],color='darkgray',linestyle='--') # 1:1 line
+	plt.plot(lims[0],lims[0],color='darkgray',linestyle='--') # 1:1 line
 	home = os.getcwd()
 	for sim in sims:
 		sim_loc = getSimulation(sim)
@@ -2365,7 +2365,7 @@ def majIons_edens_ratio(sims,species=['Deuterons','Tritons'],time_norm=r'$\tau_{
 		duarr=[]
 		xi1,xi2,_=getConcentrationRatios(d0)
 		xi2_xi1 = xi2/xi1
-		print('Fuel ratio :: ',xi2_xi1)
+		print('Secondary conc.:: ',xi2)
 		marr = [getMass(species[0]),getMass(species[1])]
 		qarr = [getChargeNum(species[0]),getChargeNum(species[1])]
 		for i in range(len(species)):
