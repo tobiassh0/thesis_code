@@ -228,7 +228,7 @@ def Spectrogram(sim,quant='Magnetic_Field_Bz',majspec='Deuterons',minspec='Alpha
 		plt.colorbar()
 		plt.xlabel(r'$t$'+getOmegaLabel(minspec)+r'$/2\pi$',fontsize=18)
 		plt.ylabel(r'$\omega/$'+getOmegaLabel(minspec),fontsize=18)
-		plt.savefig('sum_Sxmat.png')
+		plt.savefig('sum_Sxmat.png')	
 	else:
 		fm = read_pkl('fieldmatrix_'+quant)
 		(nt, nx) = fm.shape

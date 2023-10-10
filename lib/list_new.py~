@@ -32,6 +32,7 @@ import my_constants as const
 #plt.rcParams['text.latex.unicode'] = True
 plt.style.use('classic')
 plt.tight_layout()
+plt.rcParams['axes.formatter.useoffset'] = False
 
 def formatting():
 	kwargs ={'interpolation':'nearest','origin':'lower','aspect':'auto'}
@@ -199,6 +200,7 @@ def getTimes(files):
 	# could re-code this to not use the file list
 	return times
 
+# returns the mean dt value across a simulation, assuming equal time-steps 
 def getdt(times=None,file0=None,file1=None):
 	try:
 		dt = (times[-1]-times[0])/len(times)
@@ -209,7 +211,20 @@ def getdt(times=None,file0=None,file1=None):
 			dt = None
 	return dt
 
-# Appends an array of times batch-wise
+# plots an array of dt values through time
+def plotdt(times=None):
+	if not bool(times.any()):
+		times = read_pkl('times')
+	dt = times - np.roll(times,1)
+	plt.plot(times[:-2],dt[:-2]) ; plt.ylabel('dt',**tnrfont) ; plt.xlabel('time',**tnrfont) 
+	plt.axhline(np.mean(dt[1:-10]),linestyle='--',color='k')	
+	print(np.mean(dt[1:-10]))
+	plt.show()
+	plt.savefig('dt_times.png')
+	plt.clf()
+	return None
+
+# appends an array of times batch-wise
 def batch_getTimes(times,start,stop):
 	if start == stop:
 		file = sdfread(len(index_list)-1) 
@@ -1189,19 +1204,23 @@ def powerspectrum(trans,wnorm,wlim,klim,harmonicmin,harmonicmax,kmodelow,kmodehi
 	# wlim, klim - obtain from "getDispersion" limits
 	# harmonicmin,harmonicmax,kmodelow,kmodehigh - normalised limits.
 	# if you want the power between the 1st and 10th harmonics, harmonicmin = 1,harmonicmax = 10 # normalisation dependent
-	wstart = int(trans.shape[0]*(harmonicmin/wlim)) 
-	wstop = int(trans.shape[0]*(harmonicmax/wlim))
+	nw,nk = trans.shape
+	wstart = int(nw*(harmonicmin/wlim)) 
+	wstop = int(nw*(harmonicmax/wlim))
 	print(wstart,wstop)
 	## Wavenumber range
-	kstop = int(((kmodehigh/klim))*trans.shape[1])
-	kstart = int(((kmodelow/klim))*trans.shape[1])
+	kstop = int(nk*(kmodehigh/klim))
+	kstart = int(nk*(kmodelow/klim))
 	print(kstart,kstop)
 	#kstop = int((trans.shape[1]/2.0) + (kmodehigh/klim)*(trans.shape[1]/2.0))
 	#kstart = int((trans.shape[1]/2.0) - (kmodelow/klim)*(trans.shape[1]/2.0))
 	power = np.zeros((wstop-wstart))
+	omegas = np.zeros((wstop-wstart))
+	dw = wnorm*wlim/nw # assuming all equally spaced
 	for i in range(wstart,wstop):
 		power[i-wstart] = np.sum((trans[i,kstart:kstop])**2) #positive k only
-	omegas = (wlim*wnorm)*np.linspace((wstart/trans.shape[0]),(wstop/trans.shape[0]),len(power))
+		omegas[i-wstart] = (i+wstart)*dw
+#	omegas = (wlim*wnorm)*np.linspace((wstart/trans.shape[0]),(wstop/trans.shape[0]),len(power))
 	return np.log10(power), omegas #notice it returns the log of the power and un-normalised (rad/s) omegas
 
 # Same as the Fourier power obtained in powerspectrum() but this summates in k instead
@@ -2504,7 +2523,7 @@ def Kernel(img,kernel='scharr'):
 	
 def checkallFields(ind_lst,quantities,quant):
 	allFields = True
-	for i in range(0,in_lst[-1]):
+	for i in range(0,ind_lst[-1]):
 		if set(getFields(i)) != set(quantities):
 				allFields*=False
 		else:
