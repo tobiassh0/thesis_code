@@ -37,7 +37,9 @@ class Simulation():
 		pkl_list = [item for item in lst_dir if self.quantity+'.pkl' in item] # check if fieldmatrix of quantity is pickled
 		lst_FT2d = [item for item in pkl_list if 'FT_2d' in item]
 		lst_Fm = [item for item in pkl_list if 'fieldmatrix' in item]
-		self.quantities = getFields()
+		self.quantities = ['Magnetic_Field_Bz']#getFields()
+		## check if field values are in each file		
+		# self.quantities = checkallFields(self.index_list,self.quantities,self.quantity)
 		
 		## calc and load fm & FT2d
 		if len(pkl_list) == 0: # dont have pkl files # should be on first running

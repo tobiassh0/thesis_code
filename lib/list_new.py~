@@ -1886,10 +1886,10 @@ def getEnergyLabels(file0,species):
 
 	return energy_quant, names, Energy_mult, fieldquant
 	
-def getFields():
+def getFields(n=1):
 	## check if field values in normal dump 
 	try:
-		d = sdfread(1) # hardcoded for now, will default if cant load # TODO
+		d = sdfread(n) # hardcoded for now, will default if cant load # TODO
 		keys = getKeys(d)
 		fieldquant = []
 		for key in keys:
@@ -2365,7 +2365,7 @@ def majIons_edens_ratio(sims,species=['Deuterons','Tritons'],time_norm=r'$\tau_{
 		duarr=[]
 		xi1,xi2,_=getConcentrationRatios(d0)
 		xi2_xi1 = xi2/xi1
-		print('Fuel ratio :: ',xi2_xi1)
+		print('Secondary conc.:: ',xi2)
 		marr = [getMass(species[0]),getMass(species[1])]
 		qarr = [getChargeNum(species[0]),getChargeNum(species[1])]
 		for i in range(len(species)):
@@ -2502,3 +2502,13 @@ def Kernel(img,kernel='scharr'):
 	kGmag = np.nan_to_num(kGmag,posinf=np.nan,neginf=np.nan) 	 # change +-inf vals to nan
 	return kGmag, kGangle
 	
+def checkallFields(ind_lst,quantities,quant):
+	allFields = True
+	for i in range(0,in_lst[-1]):
+		if set(getFields(i)) != set(quantities):
+				allFields*=False
+		else:
+				allFields*=True
+	allFields = bool(allFields)
+	if not allFields: quantities=[quant]
+	return quantities
