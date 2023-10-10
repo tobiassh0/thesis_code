@@ -1886,10 +1886,10 @@ def getEnergyLabels(file0,species):
 
 	return energy_quant, names, Energy_mult, fieldquant
 	
-def getFields():
+def getFields(n=1):
 	## check if field values in normal dump 
 	try:
-		d = sdfread(1) # hardcoded for now, will default if cant load # TODO
+		d = sdfread(n) # hardcoded for now, will default if cant load # TODO
 		keys = getKeys(d)
 		fieldquant = []
 		for key in keys:
@@ -2017,7 +2017,7 @@ def power(klim_prime,wlim_prime,wmax,kmax,wnorm,norm_omega=r'$\Omega_D$',quantit
 		try:
 			log10_power = read_pkl('log10_power')
 			omegas = read_pkl('omegas_power')
-			read = False; calc = False
+			calc = False
 		except:
 			print('Can\'t read power and omegas...')
 			read = False ; calc = True
@@ -2253,7 +2253,7 @@ def map_k_growth(sim_loc,omega_min,omega_max,domega=0.25,dt_frac=0.5,tstart_frac
 	## cold plasma disp
 	omegas = wnorm*np.arange(int(omega_min),int(omega_max),domega)
 	species = getIonSpecies(d0)	
-	k1,k2,k3 = coldplasmadispersion(d0, species[0], species[1], omegas, theta=89) 
+	k1,k2,k3 = coldplasmadispersion(d0, omegas, theta=89) 
 	thresh = k2 > 0
 	k2 = k2[thresh] ; omegas = omegas[thresh]
 	## FT1d & extract data at karr points
@@ -2342,13 +2342,13 @@ def phaseCorrelation(sig,fft_sig0,dw,wnorm,wmax=35):
 # Plots and shows the experiment vs theory plot for the ratio between two species change in energy density
 # Also has the ability to plot du per-particle ratio (per species) through time for each simulation (nrows) -- will need to un-comment these lines
 def majIons_edens_ratio(sims,species=['Deuterons','Tritons'],time_norm=r'$\tau_{cD}$',\
-						xlabel=r'$[\Delta u_1/\Delta u_2]_{max}$',ylabel=r'$(\xi_1/\xi_2)(m_2/m_1)(q_1/q_2)^2$',labels=[1,11,50],lim=2.,lims=((0,1),(0,1))):
+						xlabel=r'$[\Delta u_1/\Delta u_2]_{max}$',ylabel=r'$(\xi_1/\xi_2)(m_2/m_1)(q_1/q_2)^2$',labels=[1,11,50],lims=((0,1),(0,1))):
 	mean_to = 10
 	N=50
 	c=0
 #	fig, ax = plt.subplots(figsize=(10,len(sims)*3-1),nrows=len(sims),sharex=True)
 #	fig.subplots_adjust(hspace=0.15)#hspace=0.
-	plt.plot([0,lim],[0,lim],color='darkgray',linestyle='--') # 1:1 line
+	plt.plot(lims[0],lims[0],color='darkgray',linestyle='--') # 1:1 line
 	home = os.getcwd()
 	for sim in sims:
 		sim_loc = getSimulation(sim)
@@ -2365,7 +2365,7 @@ def majIons_edens_ratio(sims,species=['Deuterons','Tritons'],time_norm=r'$\tau_{
 		duarr=[]
 		xi1,xi2,_=getConcentrationRatios(d0)
 		xi2_xi1 = xi2/xi1
-		print('Fuel ratio :: ',xi2_xi1)
+		print('Secondary conc.:: ',xi2)
 		marr = [getMass(species[0]),getMass(species[1])]
 		qarr = [getChargeNum(species[0]),getChargeNum(species[1])]
 		for i in range(len(species)):
@@ -2502,3 +2502,13 @@ def Kernel(img,kernel='scharr'):
 	kGmag = np.nan_to_num(kGmag,posinf=np.nan,neginf=np.nan) 	 # change +-inf vals to nan
 	return kGmag, kGangle
 	
+def checkallFields(ind_lst,quantities,quant):
+	allFields = True
+	for i in range(0,ind_lst[-1]):
+		if set(getFields(i)) != set(quantities):
+				allFields*=False
+		else:
+				allFields*=True
+	allFields = bool(allFields)
+	if not allFields: quantities=[quant]
+	return quantities

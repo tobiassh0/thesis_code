@@ -9,7 +9,7 @@ class Simulation():
 		del ASCII_logo
 #		self.sim_file_loc = getSimulation('') # allows user to input the file destination in the dir where batch is run
 #		self.sim_file_loc = getSimulation('/storage/space2/phrmsf/lowres_D_He3/0_34_p_90')
-		self.sim_file_loc = getSimulation('/storage/space2/phrmsf/lowres_D_He3/0_10_p_90')
+		self.sim_file_loc = getSimulation('/storage/space2/phrmsf/lowres_D_He3/0_38_p_90')
 		self.quantity = 'Magnetic_Field_Bz'
 		self.index_list = list_sdf(self.sim_file_loc)
 		print(str(len(self.index_list))+' files')
@@ -38,6 +38,8 @@ class Simulation():
 		lst_FT2d = [item for item in pkl_list if 'FT_2d' in item]
 		lst_Fm = [item for item in pkl_list if 'fieldmatrix' in item]
 		self.quantities = getFields()
+		## check if field values are in each file		
+		# self.quantities = checkallFields(self.index_list,self.quantities,self.quantity)
 		
 		## calc and load fm & FT2d
 		if len(pkl_list) == 0: # dont have pkl files # should be on first running
