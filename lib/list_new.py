@@ -2531,3 +2531,35 @@ def checkallFields(ind_lst,quantities,quant):
 	allFields = bool(allFields)
 	if not allFields: quantities=[quant]
 	return quantities
+
+def getSpectrogram(fieldmatrix,times,majspec='Deuterons',minspec='Alphas',filefreq=1,clim=(None,None),plot=True,cbar=True):
+	d0	= sdfread(0)
+	tnorm = 2*const.PI/getCyclotronFreq(d0,minspec)
+	nt,nx = fieldmatrix.shape
+
+	# sampling freq
+	fs = int(len(times)/(times[-1]-times[0]))
+	# number of ffts to take and their overlap
+	nfft = len(times)//10 # lower value --> better time resolution (worse freq res)
+	noverlap = nfft//2 # better windowing between frames, removes bleeding
+	# initialise matrices
+	Spower = np.zeros((nfft,nx))
+	# loop through each position and append Spower
+	for i in range(0,nx,filefreq): # loop through
+		fmx = fieldmatrix[:,i]
+		freqs, time, Sxx = signal.spectrogram(fmx,fs,nperseg=nfft,noverlap=noverlap)
+		for j in range(len(time)):
+			Spower[j,i] = np.sum(Sxx[:,j]**2)
+		
+	L = getGridlen(d0)
+	Spower = Spower[np.all(Spower!=0,axis=1)]
+	if plot:	
+		fig,ax=plt.subplots(figsize=(8,6))
+		im = ax.imshow(Spower,extent=[0,1,0,times[-1]/tnorm],**kwargs,clim=clim)
+		if cbar:
+			cbar = plt.colorbar(im)
+			cbar.set_label('Spectrogram Power',**tnrfont)
+		ax.set_xlabel(r'$x/L$',**tnrfont)
+		ax.set_ylabel(r'$t$'+getOmegaLabel(minspec)+r'$/2\pi$',**tnrfont)
+		fig.savefig('Sx_mat_nfft_{}_noverlap_{}.png'.format(nfft,noverlap),bbox_inches='tight')
+	return Spower
