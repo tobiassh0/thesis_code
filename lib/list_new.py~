@@ -1144,6 +1144,8 @@ def getMagneticAngle(d0):
 def coldplasmadispersion(file0,omegas,theta=None): 
 	# Assumes one of the species is always electrons (harcoded)
 	# angle between B & x-hat
+	# returns:
+			# k1, k2, k3 solutions (not-normalised)	
 	if not theta: 
 		theta, _ = getMagneticAngle(file0) # assuming B directed in z-x plane
 	else:
@@ -1198,12 +1200,14 @@ def coldplasmadispersion(file0,omegas,theta=None):
 	return (np.real(n1)*omegas)/const.c , (np.real(n2)*omegas)/const.c , np.real((n3*omegas)/const.c) #, (n4*omegas)/c, omegas
 	
 # Plots the power spectrum of a signal from a 2d FFT (trans) matrix
-def powerspectrum(trans,wnorm,wlim,klim,harmonicmin,harmonicmax,kmodelow,kmodehigh):
+def powerspectrum(trans,wnorm,wklims=[None,None],wkmax=[0,None,0,None]):
 	# Plots Fourier power as a function of frequency.
 	# trans - input matrix that has been 2D FT'd
-	# wlim, klim - obtain from "getDispersion" limits
-	# harmonicmin,harmonicmax,kmodelow,kmodehigh - normalised limits.
+	# wklims - obtain from "getDispersion" limits, the limit (normalised) of the total FFT
+	# wkmax = harmonicmin,harmonicmax,kmodelow,kmodehigh - maximum that the power is taken over (normalised)
 	# if you want the power between the 1st and 10th harmonics, harmonicmin = 1,harmonicmax = 10 # normalisation dependent
+	wlim,klim = wklims
+	harmonicmin, harmonicmax, kmodelow, kmodehigh = wkmax	
 	nw,nk = trans.shape
 	wstart = int(nw*(harmonicmin/wlim)) 
 	wstop = int(nw*(harmonicmax/wlim))
@@ -2031,7 +2035,9 @@ def integrate(data,dt):
 	return csum
 
 # Home function for calculating power spectrum (call when in the relevant dir)
-def power(klim_prime,wlim_prime,wmax,kmax,wnorm,norm_omega=r'$\Omega_D$',quantity='Magnetic_Field_Bz',plot=False,read=True,outp=True):
+def power(wnorm,wklims=[None,None],wkmax=[None,None],norm_omega=r'$\Omega_D$',quantity='Magnetic_Field_Bz',plot=False,read=True,outp=True):
+	wlim_prime,klim_prime=wklims
+	wmax,kmax=wkmax	
 	if read:
 		try:
 			log10_power = read_pkl('log10_power')
@@ -2049,7 +2055,7 @@ def power(klim_prime,wlim_prime,wmax,kmax,wnorm,norm_omega=r'$\Omega_D$',quantit
 			print('## ERROR ## :: Cannot load FT_2d')
 			raise SystemExit
 		print('Calculating power...')
-		log10_power,omegas=powerspectrum(FT_2d,wnorm,wlim_prime,klim_prime,0,wmax,0,kmax)
+		log10_power,omegas=powerspectrum(FT_2d,wnorm,[wlim_prime,klim_prime],[0,wmax,0,kmax])
 		dumpfiles(log10_power,'log10_power')
 		dumpfiles(omegas,'omegas_power')
 	

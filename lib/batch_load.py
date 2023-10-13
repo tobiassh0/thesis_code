@@ -222,9 +222,9 @@ class Simulation():
 		plotting(fig,ax,'FT_2d_'+self.quantity)
 
 	## Power spectra
-		_,_ = power(klim_prime=self.klim_prime,wlim_prime=self.wlim_prime,wmax=self.wlim_prime,kmax=100,wnorm=self.wnorm,\
-			norm_omega=getOmegaLabel(min_species),quantity=self.quantity,plot=True)
-	
+		_,_ = power(self.wnorm,wklims=[self.wlim_prime,self.klim_prime],wkmax=[self.wlim_prime,100],norm_omega=getOmegaLabel(min_species),\
+						quantity=self.quantity,plot=True)
+
 #	## Poynting
 #		FTSmag = Poynting2dFT(self.times,self.Nt,self.Nx,in_klimprime=in_klimprime,plot=True)
 		

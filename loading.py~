@@ -46,8 +46,11 @@ FT_2d = FT_2d[:int(nw*wmax/wlim_prime),:int(nk*kmax/klim_prime)]
 ax.imshow(np.log10(FT_2d),interpolation='nearest',cmap='magma',origin='lower',aspect='auto',extent=[0,kmax,0,wmax],vmin=-4,vmax=6)
 theta = 86.3*const.PI/180
 omegas = wnorm*np.linspace(0,wmax,1000)
-k = omegas/(vA*np.sqrt(1+np.cos(theta)**2))
-ax.plot(k/knorm,omegas/wnorm,color='k',linestyle='--')
+#k = omegas/(vA*np.sqrt(1+np.cos(theta)**2))
+k1,k2,k3 = coldplasmadispersion(sdfread(0),omegas,theta)
+ax.plot(k1/knorm,omegas/wnorm,color='k',linestyle='--')
+ax.plot(k2/knorm,omegas/wnorm,color='b',linestyle='--')
+ax.plot(k3/knorm,omegas/wnorm,color='w',linestyle='--')
 ax.set_xlabel(r'$kv_A/\Omega_e$',fontsize=18) # v_A/\Omega_D
 ax.set_ylabel(r'$\omega/\Omega_e$',fontsize=18)
 plt.show()
