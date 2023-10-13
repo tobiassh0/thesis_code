@@ -1,4 +1,3 @@
-
 from func_load import *
 
 kwargs={'interpolation':'nearest','origin':'lower','aspect':'auto'}

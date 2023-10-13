@@ -2037,7 +2037,7 @@ def integrate(data,dt):
 # Home function for calculating power spectrum (call when in the relevant dir)
 def power(wnorm,wklims=[None,None],wkmax=[None,None],norm_omega=r'$\Omega_D$',quantity='Magnetic_Field_Bz',plot=False,read=True,outp=True):
 	wlim_prime,klim_prime=wklims
-	wmax,kmax=wkmax	
+	wmax,kmax=wkmax
 	if read:
 		try:
 			log10_power = read_pkl('log10_power')
@@ -2549,23 +2549,30 @@ def getSpectrogram(fieldmatrix,times,majspec='Deuterons',minspec='Alphas',filefr
 	nfft = len(times)//10 # lower value --> better time resolution (worse freq res)
 	noverlap = nfft//2 # better windowing between frames, removes bleeding
 	# initialise matrices
+	nes = (nt-nfft)//noverlap
+	Sarr = []
 	Spower = np.zeros((nfft,nx))
 	# loop through each position and append Spower
 	for i in range(0,nx,filefreq): # loop through
 		fmx = fieldmatrix[:,i]
 		freqs, time, Sxx = signal.spectrogram(fmx,fs,nperseg=nfft,noverlap=noverlap)
+		Sarr.append(Sxx)
 		for j in range(len(time)):
 			Spower[j,i] = np.sum(Sxx[:,j]**2)
-		
-	L = getGridlen(d0)
+	Sarr = np.array(Sarr)
+	dumpfiles(Sarr,'Sxarray')
+	dumpfiles(Spower,'Sxpower')	
+	if plot:	plotSpectrogram(Spower,times,tnorm,minspec,nfft,noverlap,clim,cbar)
+	return Spower, Sarr
+
+def plotSpectrogram(Spower,times,tnorm,nfft,noverlap,minspec='Alphas',clim=(None,None),cbar=True):
 	Spower = Spower[np.all(Spower!=0,axis=1)]
-	if plot:	
-		fig,ax=plt.subplots(figsize=(8,6))
-		im = ax.imshow(Spower,extent=[0,1,0,times[-1]/tnorm],**kwargs,clim=clim)
-		if cbar:
-			cbar = plt.colorbar(im)
-			cbar.set_label('Spectrogram Power',**tnrfont)
-		ax.set_xlabel(r'$x/L$',**tnrfont)
-		ax.set_ylabel(r'$t$'+getOmegaLabel(minspec)+r'$/2\pi$',**tnrfont)
-		fig.savefig('Sx_mat_nfft_{}_noverlap_{}.png'.format(nfft,noverlap),bbox_inches='tight')
-	return Spower
+	fig,ax=plt.subplots(figsize=(8,6))
+	im = ax.imshow(Spower,extent=[0,1,0,times[-1]/tnorm],**kwargs,clim=clim)
+	if cbar:
+		cbar = plt.colorbar(im)
+		cbar.set_label('Spectrogram Power',**tnrfont)
+	ax.set_xlabel(r'$x/L$',**tnrfont)
+	ax.set_ylabel(r'$t$'+getOmegaLabel(minspec)+r'$/2\pi$',**tnrfont)
+	fig.savefig('Sx_mat_nfft_{}_noverlap_{}.png'.format(nfft,noverlap),bbox_inches='tight')
+	return None

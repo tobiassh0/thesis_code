@@ -23,21 +23,12 @@ def getSpectrogram(fieldmatrix,times,majspec='Deuterons',minspec='Alphas',filefr
 			Spower[j,i] = np.sum(Sxx[:,j]**2)
 	Sarr = np.array(Sarr)
 	dumpfiles(Sarr,'Sxarray')
-	L = getGridlen(d0)
-	Spower = Spower[np.all(Spower!=0,axis=1)]
 	if plot:	
 		plotSpectrogram(Spower,times,minspec,nfft,noverlap,clim,cbar)
-		fig,ax=plt.subplots(figsize=(8,6))
-		im = ax.imshow(Spower,extent=[0,1,0,times[-1]/tnorm],**kwargs,clim=clim)
-		if cbar:
-			cbar = plt.colorbar(im)
-			cbar.set_label('Spectrogram Power',**tnrfont)
-		ax.set_xlabel(r'$x/L$',**tnrfont)
-		ax.set_ylabel(r'$t$'+getOmegaLabel(minspec)+r'$/2\pi$',**tnrfont)
-		fig.savefig('Sx_mat_nfft_{}_noverlap_{}.png'.format(nfft,noverlap),bbox_inches='tight')
-	return Spower
+	return Spower, Sarr
 	
 def plotSpectrogram(Spower,times,nfft,noverlap,minspec='Alphas',clim=(None,None),cbar=True)
+	Spower = Spower[np.all(Spower!=0,axis=1)]
 	fig,ax=plt.subplots(figsize=(8,6))
 	im = ax.imshow(Spower,extent=[0,1,0,times[-1]/tnorm],**kwargs,clim=clim)
 	if cbar:
@@ -233,14 +224,4 @@ def Spectrogram(fieldmatrix,quant='Magnetic_Field_Bz',majspec='Deuterons',minspe
 		if power:
 			plotSpectroPower(sdfread(0),fm,times,nx,nt,fs,filefreq=1,nfft=nfft,noverlap=noverlap,cbar=True)
 
-	
-simloc = getSimulation('/storage/space2/phrmsf/ECRH/ECRH_JT60U_5_2')
-times = read_pkl('times')
-d0 = sdfread(0)
-klim = 0.5*2*const.PI/getdxyz(d0)
-wlim = 0.5*2*const.PI/getdt(times)
-wnorm = getCyclotronFreq(d0,'Protons')
-vA = getAlfvenVel(d0)
-knorm = wnorm/vA
-quantity = 'Magnetic_Field_Bz'
-Spectrogram(simloc,quantity,majspec='Protons',minspec='FElectrons',stacked=True,power=False)
+

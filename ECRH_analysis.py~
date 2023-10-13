@@ -12,6 +12,9 @@ knorm = wnorm/vA
 quantity = 'Magnetic_Field_Bz'
 theta = 86.3*const.PI/180
 
+## particle energies
+# use rel_elec.py in energy/
+
 # FT2d & power
 wmax = 35
 kmax = 35
@@ -73,23 +76,29 @@ print(dk/knorm,dw/wnorm)
 #fig, ax = getBicoh(karea,warea,fieldmatrix,getdt(times),times[-1],getGridlen(sdfread(0)),wnorm,knorm,nfft=nfft,\
 #	noverlap=noverlap,window=True,bispectrum=bispec,klabel=klabel)
 #
-### spectrograms
-#Spower = getSpectrogram(fieldmatrix,times,majspec='Protons',minspec='FElectrons',plot=True)
-#dumpfiles(Spower,'Sx_mat_nfft_{}_noverlap_{}'.format(nfft,noverlap))
+
+## spectrograms
+Spower, Sarr = getSpectrogram(fieldmatrix,times,majspec='Protons',minspec='FElectrons',plot=True)
+print(Sarr.shape)
+fig=plt.figure(figsize=(10,10))
+ax=fig.add_subplot(111,projection='3d')
+img = ax.scatter(Sarr[:,0],Sarr[:,1],Sarr[:,2],marker='s',color='green')
+plt.show()
+sys.exit()
 
 ## linear MCI growth rates
-omegas = wnorm*np.linspace(0,wmax,2000000)
-k = omegas/(vA*np.sqrt(1+np.cos(theta)**2)) # Sumida 2023 eq. (3)
-E0 = 100E3 * const.eV_to_J
-v0 = np.sqrt(2*E0/const.me)
-u = np.cos(153.*const.PI/180.)*v0
-vd = np.sin(153.*const.PI/180.)*v0
-vr = 0.01*v0#0.001*v0#*(1/(np.sqrt(2)))
-posomega, posgamma = growth_rate_man('FElectrons', 'Protons', theta, d0, u, vd, vr, k, omegas)	
-dumpfiles(posomega,'posomega')
-dumpfiles(posgamma,'posgamma')
-posgamma = np.array(posgamma) #; posgamma[np.isnan(posgamma)] = 0 
-plt.plot(posomega/wnorm,posgamma/wnorm)
-plt.show()
+#omegas = wnorm*np.linspace(0,wmax,2000000)
+#k = omegas/(vA*np.sqrt(1+np.cos(theta)**2)) # Sumida 2023 eq. (3)
+#E0 = 100E3 * const.eV_to_J
+#v0 = np.sqrt(2*E0/const.me)
+#u = np.cos(153.*const.PI/180.)*v0
+#vd = np.sin(153.*const.PI/180.)*v0
+#vr = 0.01*v0#0.001*v0#*(1/(np.sqrt(2)))
+#posomega, posgamma = growth_rate_man('FElectrons', 'Protons', theta, d0, u, vd, vr, k, omegas)	
+#dumpfiles(posomega,'posomega')
+#dumpfiles(posgamma,'posgamma')
+#posgamma = np.array(posgamma) #; posgamma[np.isnan(posgamma)] = 0 
+#plt.plot(posomega/wnorm,posgamma/wnorm)
+#plt.show()
 
-# empirical growth rates
+## empirical growth rates
