@@ -2538,7 +2538,14 @@ def checkallFields(ind_lst,quantities,quant):
 	if not allFields: quantities=[quant]
 	return quantities
 
-def getSpectrogram(fieldmatrix,times,majspec='Deuterons',minspec='Alphas',filefreq=1,clim=(None,None),plot=True,cbar=True):
+def getSpectrogram(fieldmatrix,times,majspec='Deuterons',minspec='Alphas',nfo=[10,2],cellfreq=1,clim=(None,None),plot=True,cbar=True):
+## in 
+	# fieldmatrix :
+	# times : 
+	# majspec : 
+	# minspec : 
+	# nfo : list of integers with which to calculate nfft and noverlap (nfo[0] = len(times)/nfft, nfo[1]=nfft /noverlap)
+	# cellfreq : 
 	d0	= sdfread(0)
 	tnorm = 2*const.PI/getCyclotronFreq(d0,minspec)
 	nt,nx = fieldmatrix.shape
@@ -2546,24 +2553,24 @@ def getSpectrogram(fieldmatrix,times,majspec='Deuterons',minspec='Alphas',filefr
 	# sampling freq
 	fs = int(len(times)/(times[-1]-times[0]))
 	# number of ffts to take and their overlap
-	nfft = len(times)//10 # lower value --> better time resolution (worse freq res)
-	noverlap = nfft//2 # better windowing between frames, removes bleeding
+	nfft = len(times)//nfo[0] # lower value --> better time resolution (worse freq res)
+	noverlap = nfft//nfo[1] # better windowing between frames, removes bleeding
 	# initialise matrices
 	nes = (nt-nfft)//noverlap
 	Sarr = []
 	Spower = np.zeros((nfft,nx))
 	# loop through each position and append Spower
-	for i in range(0,nx,filefreq): # loop through
+	for i in range(0,nx,cellfreq): # loop through
 		fmx = fieldmatrix[:,i]
 		freqs, time, Sxx = signal.spectrogram(fmx,fs,nperseg=nfft,noverlap=noverlap)
 		Sarr.append(Sxx)
 		for j in range(len(time)):
 			Spower[j,i] = np.sum(Sxx[:,j]**2)
 	Sarr = np.array(Sarr)
-	dumpfiles(Sarr,'Sxarray')
-	dumpfiles(Spower,'Sxpower')	
-	if plot:	plotSpectrogram(Spower,times,tnorm,minspec,nfft,noverlap,clim,cbar)
-	return Spower, Sarr
+	dumpfiles([Sarr,freqs,time],'Sxftarray_nfft_{}_noverlap_{}'.format(nfft,noverlap))
+	dumpfiles(Spower,'Sxpower_nfft_{}_noverlap_{}'.format(nfft,noverlap))	
+	if plot:	plotSpectrogram(Spower,times,tnorm,nfft,noverlap,minspec,clim,cbar)
+	return Spower, Sarr, freqs, time
 
 def plotSpectrogram(Spower,times,tnorm,nfft,noverlap,minspec='Alphas',clim=(None,None),cbar=True):
 	Spower = Spower[np.all(Spower!=0,axis=1)]

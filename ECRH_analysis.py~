@@ -7,6 +7,7 @@ d0 = sdfread(0)
 klim = 0.5*2*const.PI/getdxyz(d0)
 wlim = 0.5*2*const.PI/getdt(times)
 wnorm = getCyclotronFreq(d0,'Protons')
+fcp = getCyclotronFreq(d0,'Protons')/(2*const.PI)
 vA = getAlfvenVel(d0)
 knorm = wnorm/vA
 quantity = 'Magnetic_Field_Bz'
@@ -78,13 +79,26 @@ print(dk/knorm,dw/wnorm)
 #
 
 ## spectrograms
-Spower, Sarr = getSpectrogram(fieldmatrix,times,majspec='Protons',minspec='FElectrons',plot=True)
+try:
+	Sarr, freqs, time = read_pkl('Sxftarray_nfft_3291_noverlap_1645')
+	Spower = read_pkl('Sxpower_nfft_1646_noverlap_823')
+except:
+	fieldmatrix = load_batch_fieldmatrix([],quantity)
+	Spower, Sarr, freqs, time = getSpectrogram(fieldmatrix,times,majspec='Protons',nfo=[5,2],minspec='FElectrons',plot=False)
 print(Sarr.shape)
-fig=plt.figure(figsize=(10,10))
-ax=fig.add_subplot(111,projection='3d')
-img = ax.scatter(Sarr[:,0],Sarr[:,1],Sarr[:,2],marker='s',color='green')
-plt.show()
+#fig=plt.figure(figsize=(10,10))
+#ax=fig.add_subplot(111,projection='3d')
+#img = ax.scatter(Sarr[:,0],Sarr[:,2],Sarr[:,1],marker='s',color='green')
+#ax.set_xlabel('pos [x]',**tnrfont)
+#ax.set_zlabel('freqs [Hz]',**tnrfont)
+#ax.set_ylabel('time [s]',**tnrfont)
+#plt.show()
+nx,nf,nt = Sarr.shape
+for x in range(0,nx,1000):
+	plt.imshow(Sarr[x,:,:],extent=[0,time[-1],freqs[0],freqs[-1]/fcp],aspect='auto',interpolation='nearest')
+	plt.show()
 sys.exit()
+
 
 ## linear MCI growth rates
 #omegas = wnorm*np.linspace(0,wmax,2000000)
