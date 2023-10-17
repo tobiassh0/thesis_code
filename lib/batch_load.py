@@ -9,7 +9,7 @@ class Simulation():
 		del ASCII_logo
 #		self.sim_file_loc = getSimulation('') # allows user to input the file destination in the dir where batch is run
 #		self.sim_file_loc = getSimulation('/storage/space2/phrmsf/lowres_D_He3/0_34_p_90')
-		self.sim_file_loc = getSimulation('/storage/space2/phrmsf/lowres_D_He3/0_38_p_90')
+		self.sim_file_loc = getSimulation('/storage/space2/phrmsf/ECRH/ECRH_zeroFE')
 		self.quantity = 'Magnetic_Field_Bz'
 		self.index_list = list_sdf(self.sim_file_loc)
 		print(str(len(self.index_list))+' files')

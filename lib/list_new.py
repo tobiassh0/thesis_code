@@ -117,17 +117,17 @@ def list_sdf(sim_file_loc):
 	return index_list
 
 # Reads a given sdf file as per the index
-def sdfread(index,d=0):
+def sdfread(index,d=0,l5=True,l4=False):
 	try:
 		d=sdf.read(('%05d'%index)+'.sdf')
-		l5 = True ; l4 = not l5
+		l5=True ; l4=not l5
 	except:
 		try:
 			d=sdf.read(('%04d'%index)+'.sdf')	
-			l4 = True ; l5 = not l4
+			l4=True ; l5=not l4
 		except:
-			if index == 0:
-				index = 1 # load 1st file instead of 0th 
+			if index==0:
+				index+=1 # load 1st file instead of 0th 
 				try:
 					if l4:
 						d=sdf.read(('%04d'%index)+'.sdf')			
@@ -135,8 +135,8 @@ def sdfread(index,d=0):
 						d=sdf.read(('%05d'%(index))+'.sdf')
 				except:
 					print('\# ERROR \# : Can\'t load {}.sdf'.format(index))
-					d=0
-	return d 
+					d=None
+	return d
 
 def getKeys(d):
 	keys = d.__dict__.keys() # returns all the names of quantities in the simulation sdf file
@@ -2134,8 +2134,8 @@ def paraVelocity(INDEX):
 	index, species, mSpec = INDEX
 	return np.sqrt(2*getQuantity1d(sdfread(index),'Derived_Average_Particle_Energy_'+species)/mSpec)
 
-# quote "cigarette plots", which show the distribution of velocity/energy normalised to the  
 
+# quote "cigarette plots", which show the distribution of velocity/energy normalised to the  
 def ciggies(sim_loc,species_lst=['Deuterons','Alphas'],nval=10000,para=False,eload=True,vload=False,logo=False):
 	if logo: # print the ciggies logo # made this because I could
 		import pyfiglet
