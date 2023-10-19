@@ -1,15 +1,16 @@
-## python files
+# python files
 import my_constants as const
 from list_new import *
 
 class Simulation():
-	def __init__(self):
-		## print ASCII logo		
-		import ASCII_logo
-		del ASCII_logo
+	import ASCII_logo
+	del ASCII_logo
+	# other global info here	
+	def __init__(self,simloc):
+		# print ASCII logo		
 #		self.sim_file_loc = getSimulation('') # allows user to input the file destination in the dir where batch is run
 #		self.sim_file_loc = getSimulation('/storage/space2/phrmsf/lowres_D_He3/0_34_p_90')
-		self.sim_file_loc = getSimulation('/storage/space2/phrmsf/ECRH/ECRH_zeroFE')
+		self.sim_file_loc = getSimulation(simloc)
 		self.quantity = 'Magnetic_Field_Bz'
 		self.index_list = list_sdf(self.sim_file_loc)
 		print(str(len(self.index_list))+' files')
@@ -257,4 +258,5 @@ class Simulation():
 
 
 if __name__ == '__main__':
-	Simulation()
+	simloc = '/storage/space2/phrmsf/lowres_D_He3/0_38_p_90'
+	Simulation(simloc)
