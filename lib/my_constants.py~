@@ -17,6 +17,6 @@ me_to_mT = 5497.93
 me_to_B11 = 19707.25
 eV_to_K = qe/kb		# CKJ^[-1] #
 eV_to_J = qe
-mult_elec_field = e0/2.0
+mult_elec_field = 0.5*e0
 mult_magn_field = 1.0/(2.0*mu0)
 g_ratio = 1.61803398875

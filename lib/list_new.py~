@@ -117,17 +117,17 @@ def list_sdf(sim_file_loc):
 	return index_list
 
 # Reads a given sdf file as per the index
-def sdfread(index,d=0):
+def sdfread(index,d=0,l5=True,l4=False):
 	try:
 		d=sdf.read(('%05d'%index)+'.sdf')
-		l5 = True ; l4 = not l5
+		l5=True ; l4=not l5
 	except:
 		try:
 			d=sdf.read(('%04d'%index)+'.sdf')	
-			l4 = True ; l5 = not l4
+			l4=True ; l5=not l4
 		except:
-			if index == 0:
-				index = 1 # load 1st file instead of 0th 
+			if index==0:
+				index+=1 # load 1st file instead of 0th 
 				try:
 					if l4:
 						d=sdf.read(('%04d'%index)+'.sdf')			
@@ -135,8 +135,8 @@ def sdfread(index,d=0):
 						d=sdf.read(('%05d'%(index))+'.sdf')
 				except:
 					print('\# ERROR \# : Can\'t load {}.sdf'.format(index))
-					d=0
-	return d 
+					d=None
+	return d
 
 def getKeys(d):
 	keys = d.__dict__.keys() # returns all the names of quantities in the simulation sdf file
@@ -1144,6 +1144,8 @@ def getMagneticAngle(d0):
 def coldplasmadispersion(file0,omegas,theta=None): 
 	# Assumes one of the species is always electrons (harcoded)
 	# angle between B & x-hat
+	# returns:
+			# k1, k2, k3 solutions (not-normalised)	
 	if not theta: 
 		theta, _ = getMagneticAngle(file0) # assuming B directed in z-x plane
 	else:
@@ -1198,12 +1200,14 @@ def coldplasmadispersion(file0,omegas,theta=None):
 	return (np.real(n1)*omegas)/const.c , (np.real(n2)*omegas)/const.c , np.real((n3*omegas)/const.c) #, (n4*omegas)/c, omegas
 	
 # Plots the power spectrum of a signal from a 2d FFT (trans) matrix
-def powerspectrum(trans,wnorm,wlim,klim,harmonicmin,harmonicmax,kmodelow,kmodehigh):
+def powerspectrum(trans,wnorm,wklims=[None,None],wkmax=[0,None,0,None]):
 	# Plots Fourier power as a function of frequency.
 	# trans - input matrix that has been 2D FT'd
-	# wlim, klim - obtain from "getDispersion" limits
-	# harmonicmin,harmonicmax,kmodelow,kmodehigh - normalised limits.
+	# wklims - obtain from "getDispersion" limits, the limit (normalised) of the total FFT
+	# wkmax = harmonicmin,harmonicmax,kmodelow,kmodehigh - maximum that the power is taken over (normalised)
 	# if you want the power between the 1st and 10th harmonics, harmonicmin = 1,harmonicmax = 10 # normalisation dependent
+	wlim,klim = wklims
+	harmonicmin, harmonicmax, kmodelow, kmodehigh = wkmax	
 	nw,nk = trans.shape
 	wstart = int(nw*(harmonicmin/wlim)) 
 	wstop = int(nw*(harmonicmax/wlim))
@@ -2031,7 +2035,9 @@ def integrate(data,dt):
 	return csum
 
 # Home function for calculating power spectrum (call when in the relevant dir)
-def power(klim_prime,wlim_prime,wmax,kmax,wnorm,norm_omega=r'$\Omega_D$',quantity='Magnetic_Field_Bz',plot=False,read=True,outp=True):
+def power(wnorm,wklims=[None,None],wkmax=[None,None],norm_omega=r'$\Omega_D$',quantity='Magnetic_Field_Bz',plot=False,read=True,outp=True):
+	wlim_prime,klim_prime=wklims
+	wmax,kmax=wkmax
 	if read:
 		try:
 			log10_power = read_pkl('log10_power')
@@ -2049,7 +2055,7 @@ def power(klim_prime,wlim_prime,wmax,kmax,wnorm,norm_omega=r'$\Omega_D$',quantit
 			print('## ERROR ## :: Cannot load FT_2d')
 			raise SystemExit
 		print('Calculating power...')
-		log10_power,omegas=powerspectrum(FT_2d,wnorm,wlim_prime,klim_prime,0,wmax,0,kmax)
+		log10_power,omegas=powerspectrum(FT_2d,wnorm,[wlim_prime,klim_prime],[0,wmax,0,kmax])
 		dumpfiles(log10_power,'log10_power')
 		dumpfiles(omegas,'omegas_power')
 	
@@ -2128,8 +2134,8 @@ def paraVelocity(INDEX):
 	index, species, mSpec = INDEX
 	return np.sqrt(2*getQuantity1d(sdfread(index),'Derived_Average_Particle_Energy_'+species)/mSpec)
 
-# quote "cigarette plots", which show the distribution of velocity/energy normalised to the  
 
+# quote "cigarette plots", which show the distribution of velocity/energy normalised to the  
 def ciggies(sim_loc,species_lst=['Deuterons','Alphas'],nval=10000,para=False,eload=True,vload=False,logo=False):
 	if logo: # print the ciggies logo # made this because I could
 		import pyfiglet
@@ -2257,22 +2263,22 @@ def extractPeaks(data,Nperwcd=1,prominence=0.3):
 	return signal.find_peaks(data,distance=Nperwcd,prominence=prominence)[0] # tune till Nperwcd encapsulates all peaks (visually)	
 
 # calculate the growth of k-modes for various time spacings
-def map_k_growth(sim_loc,omega_min,omega_max,domega=0.25,dt_frac=0.5,tstart_frac=0.5,tend_frac=2.0,color='k'):
+def map_k_growth(sim_loc,normspecies='Deuterons',omega_min=0,omega_max=100,domega=0.25,dt_frac=0.5,tstart_frac=0.5,tend_frac=2.0,color='k',plot=False):
 	## define sim
 	sim_loc = getSimulation(sim_loc)
 	d0 = sdfread(0)
 	## normalisation
-	wnorm = getCyclotronFreq(d0,'Deuterons')
-#	wnorm = getEffectiveCyclotronFreq(sdfread(0))
+	vA = getAlfvenVel(d0)	
+	wnorm = getCyclotronFreq(d0,normspecies)
 	klim = 0.5*2*const.PI/getdxyz(d0)
-	knorm = 1/getDebyeLength(d0,'Electrons')
 	times = read_pkl('times') ; tnorm = 2*const.PI/wnorm
 	T = times[-1]/tnorm
 	
 	## cold plasma disp
 	omegas = wnorm*np.arange(int(omega_min),int(omega_max),domega)
 	species = getIonSpecies(d0)	
-	k1,k2,k3 = coldplasmadispersion(d0, omegas, theta=89) 
+	#k1,k2,k3 = coldplasmadispersion(d0, omegas, theta=89) 
+	k2 = omegas/(vA*np.sqrt(1+np.cos(86.3*const.PI/180.)**2))
 	thresh = k2 > 0
 	k2 = k2[thresh] ; omegas = omegas[thresh]
 	## FT1d & extract data at karr points
@@ -2308,13 +2314,18 @@ def map_k_growth(sim_loc,omega_min,omega_max,domega=0.25,dt_frac=0.5,tstart_frac
 				continue
 	growthRatesMean = np.mean(growthRates,axis=1)
 	growthRatesSTD = np.std(growthRates,axis=1)
+	if plot:
+		thresh = growthRatesMean > 0
+		growthRatesMean = growthRatesMean[thresh]
+		omegas = omegas[thresh]
+		plt.plot(omegas/wnorm,growthRatesMean/wnorm,'o-',color=color)
+		plt.savefig('growth_kmodes.png')
 #	plt.errorbar(omegas/wnorm,growthRatesMean/wnorm,yerr=growthRatesSTD/wnorm,fmt='o',color=color)
 #	for i in range(0,round(omegas[-1]/wnorm)):
 #		plt.axvline(i,color='darkgrey',linestyle='--')
 #	plt.yscale('symlog')
 #	plt.legend()
 #	plt.show()
-
 	return omegas, growthRatesMean, growthRatesSTD
 
 ## Calculates the growth rates from the gradients of the energy densities for a quantity
@@ -2325,9 +2336,9 @@ def grad_energydens(simloc,normspecies='Deuterons',quant='Magnetic_Field_Bz',mea
 	wcD = getCyclotronFreq(d0,normspecies)
 	tcD = 2*const.PI/wcD
 	t_end = times[-1]
-	try:
+	if quant in getFields(): # field
 		pklname,label,mult = Endict(quant)
-	except: # particle 
+	else: # particle 
 		pklname = quant+'_KEdens'
 		label = getIonlabel(quant)
 		mult = 1
@@ -2337,7 +2348,8 @@ def grad_energydens(simloc,normspecies='Deuterons',quant='Magnetic_Field_Bz',mea
 	## running mean
 	if conv2: # double-convolve
 		Energyfield = np.convolve(Energyfield,np.ones(N)/N,mode='valid')
-	gradu = np.convolve(np.gradient(np.log(Energyfield),dt),np.ones(N)/N,mode='valid')
+	# gradient of log value to get growth rates of exp growth [since d/dx exp(ax) = a exp(ax)] 
+	gradu = np.convolve(np.gradient(np.log10(Energyfield),dt),np.ones(N)/N,mode='valid')
 	timesplot = np.linspace(0,max(times),len(gradu))
 #	plt.plot(timesplot/tcD,gradu*2*const.PI/wcD)
 #	plt.ylabel(r'$\gamma/\Omega_D$',fontsize=20)
@@ -2531,3 +2543,50 @@ def checkallFields(ind_lst,quantities,quant):
 	allFields = bool(allFields)
 	if not allFields: quantities=[quant]
 	return quantities
+
+def getSpectrogram(fieldmatrix,times,majspec='Deuterons',minspec='Alphas',nfo=[10,2],cellfreq=1,clim=(None,None),plot=True,cbar=True):
+## in 
+	# fieldmatrix :
+	# times : 
+	# majspec : 
+	# minspec : 
+	# nfo : list of integers with which to calculate nfft and noverlap (nfo[0] = len(times)/nfft, nfo[1]=nfft /noverlap)
+	# cellfreq : 
+	d0	= sdfread(0)
+	tnorm = 2*const.PI/getCyclotronFreq(d0,minspec)
+	nt,nx = fieldmatrix.shape
+
+	# sampling freq
+	fs = int(len(times)/(times[-1]-times[0]))
+	# number of ffts to take and their overlap
+	nfft = len(times)//nfo[0] # lower value --> better time resolution (worse freq res)
+	noverlap = nfft//nfo[1] # better windowing between frames, removes bleeding
+	# initialise matrices
+	nes = (nt-nfft)//noverlap
+	Sarr = []
+	Spower = np.zeros((nfft,nx))
+	# loop through each position and append Spower
+	for i in range(0,nx,cellfreq): # loop through
+		fmx = fieldmatrix[:,i]
+		freqs, time, Sxx = signal.spectrogram(fmx,fs,nperseg=nfft,noverlap=noverlap)
+		Sarr.append(Sxx)
+		for j in range(len(time)):
+			Spower[j,i] = np.sum(Sxx[:,j]**2)
+	Sarr = np.array(Sarr)
+	dumpfiles([Sarr,freqs,time],'Sxftarray_nfft_{}_noverlap_{}'.format(nfft,noverlap))
+	dumpfiles(Spower,'Sxpower_nfft_{}_noverlap_{}'.format(nfft,noverlap))	
+
+	if plot:	plotSpectrogram(Spower,times,tnorm,nfft,noverlap,minspec,clim,cbar)
+	return Spower, Sarr, freqs, time
+
+def plotSpectrogram(Spower,times,tnorm,nfft,noverlap,minspec='Alphas',clim=(None,None),cbar=True):
+	Spower = Spower[np.all(Spower!=0,axis=1)]
+	fig,ax=plt.subplots(figsize=(8,6))
+	im = ax.imshow(Spower,extent=[0,1,0,times[-1]/tnorm],**kwargs,clim=clim)
+	if cbar:
+		cbar = plt.colorbar(im)
+		cbar.set_label('Spectrogram Power',**tnrfont)
+	ax.set_xlabel(r'$x/L$',**tnrfont)
+	ax.set_ylabel(r'$t$'+getOmegaLabel(minspec)+r'$/2\pi$',**tnrfont)
+	fig.savefig('Sx_mat_nfft_{}_noverlap_{}.png'.format(nfft,noverlap),bbox_inches='tight')
+	return None

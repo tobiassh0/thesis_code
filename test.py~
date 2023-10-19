@@ -41,9 +41,9 @@ ax.plot(x[y > 0], y[y > 0], z[y > 0], lw=5, linestyle='--', color='red',
         zorder=4)
 
 # plot xyz axis in centre
-ax.plot([-dim-dim/10,dim+dim/10],[0,0],[0,0],color='k')
-ax.plot([0,0],[-dim-dim/10,dim+dim/10],[0,0],color='k')
-ax.plot([0,0],[0,0],[-dim-dim/10,dim+dim/10],color='k')
+ax.plot([-dim,dim],[0,0],[0,0],color='k')
+ax.plot([0,0],[-dim,dim],[0,0],color='k')
+ax.plot([0,0],[0,0],[-dim,dim],color='k')
 plt.axis('off')
 plt.show()
 

@@ -9,7 +9,7 @@ class Simulation():
 		del ASCII_logo
 #		self.sim_file_loc = getSimulation('') # allows user to input the file destination in the dir where batch is run
 #		self.sim_file_loc = getSimulation('/storage/space2/phrmsf/lowres_D_He3/0_34_p_90')
-		self.sim_file_loc = getSimulation('/storage/space2/phrmsf/lowres_D_He3/0_38_p_90')
+		self.sim_file_loc = getSimulation('/storage/space2/phrmsf/ECRH/ECRH_zeroFE')
 		self.quantity = 'Magnetic_Field_Bz'
 		self.index_list = list_sdf(self.sim_file_loc)
 		print(str(len(self.index_list))+' files')
@@ -222,9 +222,9 @@ class Simulation():
 		plotting(fig,ax,'FT_2d_'+self.quantity)
 
 	## Power spectra
-		_,_ = power(klim_prime=self.klim_prime,wlim_prime=self.wlim_prime,wmax=self.wlim_prime,kmax=100,wnorm=self.wnorm,\
-			norm_omega=getOmegaLabel(min_species),quantity=self.quantity,plot=True)
-	
+		_,_ = power(self.wnorm,wklims=[self.wlim_prime,self.klim_prime],wkmax=[self.wlim_prime,100],norm_omega=getOmegaLabel(min_species),\
+						quantity=self.quantity,plot=True)
+
 #	## Poynting
 #		FTSmag = Poynting2dFT(self.times,self.Nt,self.Nx,in_klimprime=in_klimprime,plot=True)
 		

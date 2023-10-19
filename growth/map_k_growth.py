@@ -118,7 +118,7 @@ for ttimes in times:
 	for sim in sim_lst:
 		## define sim
 		sim_loc = getSimulation('/storage/space2/phrmsf/'+sim)
-		omegas, growthRatesMean, growthRatesSTD = map_k_growth(sim_loc,0,wmax,0.25,tstart_frac=ttimes[0],tend_frac=ttimes[1])
+		omegas, growthRatesMean, growthRatesSTD = map_k_growth(sim_loc,'Deuterons',0,wmax,0.25,tstart_frac=ttimes[0],tend_frac=ttimes[1])
 #		ax[t].scatter(omegas/wnorm,growthRatesMean/wnorm,marker='o',facecolors=colors[SimIndex])
 		thresh = growthRatesMean > 0
 		growthRatesMean = growthRatesMean[thresh]
