@@ -2320,12 +2320,6 @@ def map_k_growth(sim_loc,normspecies='Deuterons',omega_min=0,omega_max=100,domeg
 		omegas = omegas[thresh]
 		plt.plot(omegas/wnorm,growthRatesMean/wnorm,'o-',color=color)
 		plt.savefig('growth_kmodes.png')
-#	plt.errorbar(omegas/wnorm,growthRatesMean/wnorm,yerr=growthRatesSTD/wnorm,fmt='o',color=color)
-#	for i in range(0,round(omegas[-1]/wnorm)):
-#		plt.axvline(i,color='darkgrey',linestyle='--')
-#	plt.yscale('symlog')
-#	plt.legend()
-#	plt.show()
 	return omegas, growthRatesMean, growthRatesSTD
 
 ## Calculates the growth rates from the gradients of the energy densities for a quantity
@@ -2475,7 +2469,7 @@ def ignorey(lax):
         ax.tick_params(labelleft=False)
 
 ## Sobel and Scharr kernel on an image which will return the gradient array
-def Kernel(img,kernel='scharr'):
+def Kernel(img,kernel='scharr',plot=True):
 	# convert img to 0-255 color
 	img = 255*img/np.nanmax(img)
 	if kernel == 'scharr':
@@ -2530,9 +2524,60 @@ def Kernel(img,kernel='scharr'):
 			kGmag[i,j] = np.sqrt(kG[0]**2 + kG[1]**2)
 			kGangle[i,j]= np.arctan2(kG[1],kG[0]) # radians between +- pi
 	kGangle = np.nan_to_num(kGangle,posinf=np.nan,neginf=np.nan) # change +-inf vals to nan
-	kGmag = np.nan_to_num(kGmag,posinf=np.nan,neginf=np.nan) 	 # change +-inf vals to nan
+	kGmag = np.nan_to_num(kGmag,posinf=np.nan,neginf=np.nan) 	 # change +-inf vals to nan		
 	return kGmag, kGangle
+
+def plotKernel(kGangle, kernel='scharr'):
+	_,kGangle = Kernel(FT2d,kernel=kernel) # scharr or sobel
+
+	# gradients as angles
+	kGangle = kGangle[1:-1,1:-1]# remove abberations around edge
+	kGangle = kGangle.flatten()
+
+	# convert to all negative angles (easier to calc real gradient)
+	for i in range(len(kGangle)):
+		if kGangle[i] > 0:
+			kGangle[i]-=const.PI #rad
+
+	# remove inf values
+	dwdk = np.nan_to_num(np.tan(kGangle),posinf=np.nan,neginf=np.nan) # remove inf and -inf values
+	dwdk = dwdk[~np.isnan(dwdk)]
+
+	# remove zero values (dont want to plot them in hist)
+	dwdk = dwdk[dwdk!=0]
+	dw_dk = dwdk * (dw/dk)/vA # normalise
+	thresh = (np.abs(dw_dk) < 10)
+	dw_dk = dw_dk[thresh]
+	print(kernel+' kernel mean :: ',np.mean(dw_dk))
+	print(kernel+' kernel medi :: ',np.median(dw_dk))
 	
+	# plot hist
+	fig,ax = plt.subplots(figsize=(6,4))
+	counts,bins,_=ax.hist(dw_dk,bins=1000,range=(-1,1),density=True) # np.log10
+	dsv = bins[np.argmax(counts)] # doppler shift velocity in units of vA
+	print(kernel+' kernel max :: ', dsv)
+	ax.set_ylabel('Normalised count',**tnrfont)
+	ax.set_xlabel(r'$d\omega/dk$'+'  '+r'$[v_A]$',**tnrfont)
+	fig.savefig('dw_dk_'+kernel+'_grad.png',bbox_inches='tight')
+	#plt.show()
+	
+	# plot FT2d
+	fig,ax=plt.subplots(figsize=(8,6))
+	ax.imshow((FT2d),**kwargs,extent=[0,kmax/knorm,0,wmax/wnorm])
+	kx = np.linspace(0,20,100)*knorm
+	# doppler shifted line 
+	for i in range(0,int(wmax/wnorm),1):
+		w = wnorm*np.ones(len(kx))*i
+		ww = w + (dsv*vA)*kx
+		ax.plot(kx/knorm,ww/wnorm,color='white',linestyle='--')
+	ax.set_xlim(0,20)
+	ax.set_ylim(0,10)
+	ax.set_ylabel(r'$\omega/\Omega_p$',**tnrfont)
+	ax.set_xlabel(r'$kv_A/\Omega_p$',**tnrfont)
+	ax.plot([0,10],[0,10],color='white',linestyle='--') # vA line
+	fig.savefig('FT_2d_doppler.png',bbox_inches='tight')
+	return None
+
 def checkallFields(ind_lst,quantities,quant):
 	allFields = True
 	for i in range(0,ind_lst[-1]):

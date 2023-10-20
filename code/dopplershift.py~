@@ -81,7 +81,7 @@ kx = np.linspace(0,20,100)*knorm
 theta = 86.3 # deg
 kperp = np.sin(theta*const.PI/180)
 kpara = np.cos(theta*const.PI/180)
-uperp = 0.9; upara = 6.076 
+uperp=0.9; upara=6.076 
 dsth = -(kperp*uperp + kpara*upara)
 print(dsv,(dsth+1))
 # doppler shifted line 

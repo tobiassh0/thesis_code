@@ -8,8 +8,8 @@
 	heat-map (norm=1 default) and returned to this script so it can be saved. 
 '''
 
-# loads all functions you might need
 from func_load import *
+# loads all functions you might need
 
 # get simulation location
 simLocation = getSimulation('/sim/file/location') # so that the dir can read each .sdf file
