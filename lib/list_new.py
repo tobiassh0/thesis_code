@@ -1243,7 +1243,51 @@ def powerspectrum_k(trans,wlim,klim,harmonicmin,harmonicmax,kmodelow,kmodehigh):
 
 	return np.log10(power_k), wavenumbers
 
+# compares the power spectral density of multiple sims, recalcualtes power spectra to make consistent # TODO change this
+def power_compare(sims,labels=[None],normspecies='Deuterons',wkmax=[25,40],quantity='Magnetic_Field_Bz'):
+	fig,ax = plt.subplots(figsize=(10,5))
+	alphas = np.linspace(0.25,1.0,len(sims))	
+	colors = plt.cm.rainbow(np.linspace(0,1,len(sims)))
+	i=0
+	home=os.getcwd()	
+	for sim in sims:
+		# load sim location		
+		sim_loc = getSimulation(sim)
+		times = read_pkl('times')	
+		d0 = sdfread(0)
+		
+		# frequency space limits and normalisation		
+		wnorm = getCyclotronFreq(d0,normspecies)
+		knorm = wnorm/getAlfvenVel(d0)
+		klim_prime = (0.5*2*const.PI/getdxyz(d0))/knorm		
+		wlim_prime = (0.5*2*const.PI/getdt(times))/wnorm
+		
+		# re-calculate power spectra
+		FT_2d = read_pkl('FT_2d_'+quantity)
+		log10_power,omegas=powerspectrum(FT_2d,wnorm,[wlim_prime,klim_prime],[0,wkmax[0],0,wkmax[1]])
+		power = 10**log10_power
+		dw = (omegas[-1]-omegas[0])/len(omegas)
+		
+		# threshold		
+		thresh = omegas < wnorm*wkmax[0]
+		omegas = omegas[thresh]/wnorm
+		psd = power[thresh]/dw
+		
+		# plot
+		ax.plot(omegas,psd,label=labels[i],color=colors[i])#,alpha=alphas[i])
+		i+=1
+		os.chdir(home)	
 
+	del times
+	# formatting
+	ax.set_ylabel('PSD',**tnrfont) ; ax.set_xlabel(r'$\omega/$'+getOmegaLabel(normspecies),**tnrfont)	
+	ax.set_yscale('log')
+	ax.set_xlim(0,wkmax[0])
+	ax.legend(loc='best')
+	fig.savefig('power_compare.png',bbox_inches='tight')
+	plt.show()
+	return None
+	
 # Plots the change in field energy densities from their mean value
 def getEnergies(energy_quant,fieldquant,nt,dump=True):
 	F0 = np.zeros(len(energy_quant))
@@ -2367,13 +2411,12 @@ def phaseCorrelation(sig,fft_sig0,dw,wnorm,wmax=35):
 # Plots and shows the experiment vs theory plot for the ratio between two species change in energy density
 # Also has the ability to plot du per-particle ratio (per species) through time for each simulation (nrows) -- will need to un-comment these lines
 def majIons_edens_ratio(sims,species=['Deuterons','Tritons'],time_norm=r'$\tau_{cD}$',\
-						xlabel=r'$[\Delta u_1/\Delta u_2]_{max}$',ylabel=r'$(\xi_1/\xi_2)(m_2/m_1)(q_1/q_2)^2$',labels=[1,11,50],lims=((0,1),(0,1))):
+						ylabel=r'$[\Delta u_1/\Delta u_2]_{max}$',xlabel=r'$(\xi_1/\xi_2)(m_2/m_1)(q_1/q_2)^2$',labels=[1,11,50],lims=((0,1),(0,1))):
 	mean_to = 10
 	N=50
 	c=0
-#	fig, ax = plt.subplots(figsize=(10,len(sims)*3-1),nrows=len(sims),sharex=True)
-#	fig.subplots_adjust(hspace=0.15)#hspace=0.
-	plt.plot(lims[0],lims[0],color='darkgray',linestyle='--') # 1:1 line
+	fig, ax = plt.subplots(figsize=(6,4))
+	ax.plot(lims[0],lims[0],color='darkgray',linestyle='--') # 1:1 line
 	home = os.getcwd()
 	for sim in sims:
 		sim_loc = getSimulation(sim)
@@ -2403,7 +2446,7 @@ def majIons_edens_ratio(sims,species=['Deuterons','Tritons'],time_norm=r'$\tau_{
 			du = (Energypart[thresh]-meanEnergypart)
 			maxdu[i] = np.max(du)
 			duarr.append(du)
-		plt.scatter((xi1/xi2)*(marr[0]/marr[1])*((qarr[1]/qarr[0])**2),maxdu[1]/maxdu[0])
+		ax.scatter((xi1/xi2)*(marr[1]/marr[0])*((qarr[0]/qarr[1])**2),maxdu[0]/maxdu[1])
 #		duarr = np.array(duarr)
 #		ax[c].plot(timespart/tcD,np.abs((xi2_xi1)*duarr[1]/duarr[0]))
 #		ax[c].annotate(str(labels[c])+'%',(times[-1]/tc1-2,1e2),xycoords='data',**tnrfont)
@@ -2420,10 +2463,11 @@ def majIons_edens_ratio(sims,species=['Deuterons','Tritons'],time_norm=r'$\tau_{
 #	ax[int(midax)].set_ylabel(r'$\left(\frac{\xi_1}{\xi_2}\right)\left|\frac{\Delta u_1(t)}{\Delta u_2(t)}\right|$',fontsize=24)
 #	ax[-1].set_xlabel(r'Time,  '+time_norm,**tnrfont)
 #	fig.savefig('/storage/space2/phrmsf/dump/du_ratio_vs_time_primary.png')
-	plt.ylabel(xlabel,**tnrfont) ; plt.xlabel(ylabel,**tnrfont)
-	plt.xlim(lims[0]) ; plt.ylim(lims[1])
-	plt.savefig('du_peak_vs_theory.png',bbox_inches='tight')
+	ax.set_ylabel(ylabel,**tnrfont) ; ax.set_xlabel(xlabel,**tnrfont)
+	ax.set_xlim(lims[0]) ; ax.set_ylim(lims[1])
+	fig.savefig('du_peak_vs_theory.png',bbox_inches='tight')
 	plt.show()
+	return None
 
 
 def shared_area(sig1,sig2,fitgauss=False):

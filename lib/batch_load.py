@@ -40,7 +40,7 @@ class Simulation():
 		pkl_list = [item for item in lst_dir if self.quantity+'.pkl' in item] # check if fieldmatrix of quantity is pickled
 		lst_FT2d = [item for item in pkl_list if 'FT_2d' in item]
 		lst_Fm = [item for item in pkl_list if 'fieldmatrix' in item]
-		self.quantities = ['Magnetic_Field_Bz']#getFields()
+		self.quantities = getFields() # ['Magnetic_Field_Bz']
 		## check if field values are in each file		
 		# self.quantities = checkallFields(self.index_list,self.quantities,self.quantity)
 		
@@ -260,5 +260,5 @@ class Simulation():
 
 
 if __name__ == '__main__':
-	simloc = '/storage/space2/phrmsf/lowres_D_He3/0_38_p_90'
+	simloc = '/storage/space2/phrmsf/lowres_D_He3/0_05_p_90'
 	Simulation(simloc)
