@@ -11,7 +11,7 @@ from func_load import *
 #plt.show()
 
 # load sim & FT2d 
-sim_loc = getSimulation('/storage/space2/phrmsf/lowres_D_He3/0_25_p_90')
+sim_loc = getSimulation('/storage/space2/phrmsf/lowres_D_He3/0_38_p_90')
 FT2d = read_pkl('FT_2d_Magnetic_Field_Bz')
 d0 = sdfread(0)
 times = read_pkl('times')
@@ -19,64 +19,78 @@ vA = getAlfvenVel(d0)
 print(vA)
 Ep = 14.68*1e6*const.qe
 vp = (2*Ep/getMass('Protons'))**0.5 # proton velocity
-klim = 0.5*2*const.PI/getdxyz(d0)
+klim = 0.5*2*const.PI/getdxyz(d0) 
 wlim = 0.5*2*const.PI/getdt(times)
 wcp = getCyclotronFreq(d0,'Protons')
 wcD = getCyclotronFreq(d0,'Deuterons')
 wnorm = wcp
 knorm = wnorm/vA
-dk = 5*2*const.PI/getGridlen(d0)
-dw = 0.5*2*const.PI/times[-1]
+(nw,nk) = (FT2d.shape)
+dk = 2*const.PI/getGridlen(d0) # no factor half (see e-notes 24/10/23)
+dw = 2*const.PI/times[-1]
+
+# figure setup
+fig,ax=plt.subplots(ncols=3,figsize=(6*3,4))
 
 ## calc gradients in image
 # cut FT2d into size needed
 (nw,nk) = FT2d.shape
-kmax = 50*knorm ; wmax = 10*wnorm
+kmax = 25*knorm ; wmax = 10*wnorm
 FT2d = np.log10(FT2d[:int(nw*wmax/wlim),:int(nk*kmax/klim)])
 (nw,nk) = FT2d.shape
 
 # threshold FT2d
 thresh = 1.8
-for i in range(nw):
-	for j in range(nk):
-		if FT2d[i,j] < thresh:
-			FT2d[i,j] = 0
-		else:
-			continue
+tFT2d = FT2d.copy()
+#tFT2d[FT2d < 0.8] = 0
+tFT2d[FT2d < thresh] = 0
+
+#for i in range(nw):
+#	for j in range(nk):
+#		
+#		if FT2d[i,j] < thresh:
+#			FT2d[i,j] = 0
+#		else:
+#			continue
 
 # Kernel gradient map
-kernel = 'scharr'
-_,kGangle = Kernel(FT2d,kernel=kernel) # scharr or sobel
+kernel = 'custom'
+_,kGangle = Kernel(tFT2d,kernel=kernel) # scharr, sobel or custom
 # gradients as angles
 kGangle = kGangle[1:-1,1:-1]# remove abberations around edge
+im = ax[0].imshow(kGangle*180/const.PI,**kwargs,extent=[0,kmax/knorm,0,wmax/wnorm],cmap='Accent')
+plt.colorbar(im)
+print((dw/dk)/vA)
+# remove zero values (dont want to plot them in hist)
+dwdk = np.nan_to_num(1/np.tan(kGangle),posinf=np.nan,neginf=np.nan) # remove inf and -inf values
+dw_dk = dwdk * (dw/dk)/vA # normalise
 kGangle = kGangle.flatten()
 # convert to all negative angles (easier to calc real gradient)
 for i in range(len(kGangle)):
 	if kGangle[i] > 0:
 		kGangle[i]-=const.PI #rad
 # remove inf values
-dwdk = np.nan_to_num(np.tan(kGangle),posinf=np.nan,neginf=np.nan) # remove inf and -inf values
+dwdk = np.nan_to_num(1/np.tan(kGangle),posinf=np.nan,neginf=np.nan) # remove inf and -inf values
 dwdk = dwdk[~np.isnan(dwdk)]
 # remove zero values (dont want to plot them in hist)
 dwdk = dwdk[dwdk!=0]
 dw_dk = dwdk * (dw/dk)/vA # normalise
-thresh = (np.abs(dw_dk) < 10)
+thresh = (np.abs(dw_dk) < 1.0) & (np.abs(dw_dk) > 0.01)
 dw_dk = dw_dk[thresh]
 print(kernel+' kernel mean :: ',np.mean(dw_dk))
 print(kernel+' kernel medi :: ',np.median(dw_dk))
 # plot hist
-fig,ax = plt.subplots(figsize=(6,4))
-counts,bins,_=ax.hist(dw_dk,bins=1000,range=(-1,1),density=True) # np.log10
+counts,bins,_=ax[1].hist(kGangle*180/const.PI,bins=1000,density=True)#,range=(-1,1)) # np.log10
 dsv = bins[np.argmax(counts)] # doppler shift velocity in units of vA
 print(kernel+' kernel max :: ', dsv)
-ax.set_ylabel('Normalised count',**tnrfont)
-ax.set_xlabel(r'$d\omega/dk$'+'  '+r'$[v_A]$',**tnrfont)
-fig.savefig('dw_dk_'+kernel+'_grad.png',bbox_inches='tight')
+ax[1].set_ylabel('Normalised count',**tnrfont)
+ax[1].set_xlabel(r'$d\omega/dk$'+'  '+r'$[v_A]$',**tnrfont)
+#fig.savefig('dw_dk_'+kernel+'_grad.png',bbox_inches='tight')
 #plt.show()
 
 # plot FT2d
-fig,ax=plt.subplots(figsize=(8,6))
-ax.imshow((FT2d),**kwargs,extent=[0,kmax/knorm,0,wmax/wnorm])
+#fig,ax=plt.subplots(figsize=(8,6))
+ax[2].imshow((tFT2d[1:,1:]),**kwargs,extent=[0,kmax/knorm,0,wmax/wnorm])
 kx = np.linspace(0,20,100)*knorm
 theta = 86.3 # deg
 kperp = np.sin(theta*const.PI/180)
@@ -89,17 +103,17 @@ for i in range(0,int(wmax/wnorm),1):
 	w = wnorm*np.ones(len(kx))*i
 	# empirical
 	ww = w + (dsv*vA)*kx
-	ax.plot(kx/knorm,ww/wnorm,color='white',linestyle='--')
-	# theory
-	tww = w + ((dsth+1)*vA)*kx
-	ax.plot(kx/knorm,tww/wnorm,color='white',linestyle='-.')
-ax.set_xlim(0,20)
-ax.set_ylim(0,10)
-ax.set_ylabel(r'$\omega/\Omega_p$',**tnrfont)
-ax.set_xlabel(r'$kv_A/\Omega_p$',**tnrfont)
-ax.plot([0,10],[0,10],color='white',linestyle='--') # vA line
-fig.savefig('FT_2d_doppler_th.png',bbox_inches='tight')
-#plt.show()
+	ax[2].plot(kx/knorm,ww/wnorm,color='white',linestyle='--')
+#	# theory
+#	tww = w + ((dsth+1)*vA)*kx
+#	ax.plot(kx/knorm,tww/wnorm,color='white',linestyle='-.')
+ax[2].set_xlim(0,20)
+ax[2].set_ylim(0,10)
+ax[2].set_ylabel(r'$\omega/\Omega_p$',**tnrfont)
+ax[2].set_xlabel(r'$kv_A/\Omega_p$',**tnrfont)
+ax[2].plot([0,10],[0,10],color='white',linestyle='--') # vA line
+#fig.savefig('FT_2d_doppler_th.png',bbox_inches='tight')
+plt.show()
 sys.exit()
 
 

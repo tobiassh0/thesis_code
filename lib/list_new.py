@@ -2513,7 +2513,7 @@ def ignorey(lax):
         ax.tick_params(labelleft=False)
 
 ## Sobel and Scharr kernel on an image which will return the gradient array
-def Kernel(img,kernel='scharr',plot=True):
+def Kernel(img,kernel='sobel',plot=True):
 	# convert img to 0-255 color
 	img = 255*img/np.nanmax(img)
 	if kernel == 'scharr':
@@ -2522,6 +2522,9 @@ def Kernel(img,kernel='scharr',plot=True):
 	if kernel == 'sobel':
 		Gx=np.array([[1,0,-1],[2,0,-2],[1,0,-1]])
 		Gy=np.array([[1,2,1],[0,0,0],[-1,-2,-1]])
+	if kernel == 'custom':
+		Gx=np.array([[10,0,-10],[3,0,-3],[10,0,-10]])
+		Gy=np.array([[10,3,10],[0,0,0],[-10,-3,-10]])
 	# magnitude and angle arrays
 	kGmag = np.zeros(img.shape)
 	kGangle = np.zeros(img.shape)

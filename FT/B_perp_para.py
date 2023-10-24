@@ -15,7 +15,8 @@ dBx = Bx - np.mean(Bx[0:10,:])
 dBy = By - np.mean(By[0:10,:])
 
 theta = 86.3*const.PI/180. # deg
-phi = const.PI/2 - theta
+# rotation is +ve for counter-clockwise in a R-handed cartesian coordinate system
+phi = -(const.PI/2 - theta)
 cos = np.cos(phi) ; sin = np.sin(phi)
 Bperp = np.sqrt((cos**2)*(Bx**2) + (sin**2)*(Bz**2) + (By**2)) 
 Bpara = np.sqrt((sin**2)*(Bx**2) + (cos**2)*(Bz**2))
