@@ -28,21 +28,22 @@ knorm = wnorm/vA
 (nw,nk) = (FT2d.shape)
 dk = 2*const.PI/getGridlen(d0) # no factor half (see e-notes 24/10/23)
 dw = 2*const.PI/times[-1]
-
+print(dw,dk)
 # figure setup
 fig,ax=plt.subplots(ncols=3,figsize=(6*3,4))
 
 ## calc gradients in image
 # cut FT2d into size needed
 (nw,nk) = FT2d.shape
-kmax = 25*knorm ; wmax = 10*wnorm
-FT2d = np.log10(FT2d[:int(nw*wmax/wlim),:int(nk*kmax/klim)])
+kmax = 20*knorm ; wmax = 10*wnorm
+kmin = 0*knorm; wmin = 0#*wnorm
+FT2d = np.log10(FT2d[:int(nw*wmax/wlim),int(nk*kmin/klim):int(nk*kmax/klim)])
 (nw,nk) = FT2d.shape
 
 # threshold FT2d
 thresh = 1.8
 tFT2d = FT2d.copy()
-#tFT2d[FT2d < 0.8] = 0
+#tFT2d[FT2d > 1.6] = 0
 tFT2d[FT2d < thresh] = 0
 
 #for i in range(nw):
@@ -62,7 +63,7 @@ im = ax[0].imshow(kGangle*180/const.PI,**kwargs,extent=[0,kmax/knorm,0,wmax/wnor
 plt.colorbar(im)
 print((dw/dk)/vA)
 # remove zero values (dont want to plot them in hist)
-dwdk = np.nan_to_num(1/np.tan(kGangle),posinf=np.nan,neginf=np.nan) # remove inf and -inf values
+dwdk = np.nan_to_num(np.tan(kGangle),posinf=np.nan,neginf=np.nan) # remove inf and -inf values
 dw_dk = dwdk * (dw/dk)/vA # normalise
 kGangle = kGangle.flatten()
 # convert to all negative angles (easier to calc real gradient)
@@ -70,21 +71,25 @@ for i in range(len(kGangle)):
 	if kGangle[i] > 0:
 		kGangle[i]-=const.PI #rad
 # remove inf values
-dwdk = np.nan_to_num(1/np.tan(kGangle),posinf=np.nan,neginf=np.nan) # remove inf and -inf values
+dwdk = np.nan_to_num(np.tan(kGangle),posinf=np.nan,neginf=np.nan) # remove inf and -inf values
 dwdk = dwdk[~np.isnan(dwdk)]
 # remove zero values (dont want to plot them in hist)
 dwdk = dwdk[dwdk!=0]
 dw_dk = dwdk * (dw/dk)/vA # normalise
-thresh = (np.abs(dw_dk) < 1.0) & (np.abs(dw_dk) > 0.01)
+thresh = (np.abs(dw_dk) < 2.0) & (np.abs(dw_dk) > 0.001)
 dw_dk = dw_dk[thresh]
 print(kernel+' kernel mean :: ',np.mean(dw_dk))
 print(kernel+' kernel medi :: ',np.median(dw_dk))
 # plot hist
-counts,bins,_=ax[1].hist(kGangle*180/const.PI,bins=1000,density=True)#,range=(-1,1)) # np.log10
+counts,bins,_=ax[1].hist(dw_dk,bins=1000,density=True,range=(-1,1)) # np.log10
 dsv = bins[np.argmax(counts)] # doppler shift velocity in units of vA
 print(kernel+' kernel max :: ', dsv)
 ax[1].set_ylabel('Normalised count',**tnrfont)
 ax[1].set_xlabel(r'$d\omega/dk$'+'  '+r'$[v_A]$',**tnrfont)
+# plot kde
+kde = stats.gaussian_kde(dw_dk)
+xx = np.linspace(-1,1,1000)
+ax[1].plot(xx,kde(xx),color='r')
 #fig.savefig('dw_dk_'+kernel+'_grad.png',bbox_inches='tight')
 #plt.show()
 
@@ -108,10 +113,11 @@ for i in range(0,int(wmax/wnorm),1):
 #	tww = w + ((dsth+1)*vA)*kx
 #	ax.plot(kx/knorm,tww/wnorm,color='white',linestyle='-.')
 ax[2].set_xlim(0,20)
-ax[2].set_ylim(0,10)
+ax[2].set_ylim(0,20)
 ax[2].set_ylabel(r'$\omega/\Omega_p$',**tnrfont)
 ax[2].set_xlabel(r'$kv_A/\Omega_p$',**tnrfont)
 ax[2].plot([0,10],[0,10],color='white',linestyle='--') # vA line
+
 #fig.savefig('FT_2d_doppler_th.png',bbox_inches='tight')
 plt.show()
 sys.exit()

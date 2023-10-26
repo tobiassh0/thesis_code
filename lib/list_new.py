@@ -2489,8 +2489,9 @@ def shared_area(sig1,sig2,fitgauss=False):
 		x = np.linspace(0,lx,lx)
 		popt, pcov = curve_fit(lambda sharea,b,c: np.exp(a*(x-b)**2)+c,x,sharea,maxfev=5000) # exponential fitting
 		peak = popt[1] # a,b,c 
-		return sharea, peak
-	return sharea
+	else:
+		peak = np.max()
+	return sharea, peak
 	
 def outside_ticks(fig):
 	for i, ax in enumerate(fig.axes):
