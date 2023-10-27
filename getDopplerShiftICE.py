@@ -9,7 +9,26 @@ import scipy
 #	plt.plot(x,yds,color='k',alpha=1-i/30)
 #plt.show()
 
-def getKernelDoppler(sims,FT2darr,normspecies,logthresh=1.8,wkmax=[10,25],plot=True,kernel='custom',dwdkrange=(-0.5,0.5),theta=86.3):
+def getKernelDoppler(sims,FT2darr,normspecies,wkmax=[10,25],logthresh=1.8,kernel='custom',dwdkrange=(-0.5,0.5),theta=86.3,plot=True):
+	"""
+	Uses the kernel method (see list_new.py and this link [https://pyimagesearch.com/2021/05/12/image-gradients-with-opencv-sobel-and-scharr/]) 
+	to find the gradients within the image. Uses a custom/modified Scharr kernel which is more sensitive to 
+	-45deg gradients. Plots the histogram of these gradients as well as the converted grad to vA atop the 2d 
+	FFT.
+		params in
+			sims:			list of sims to analyse and extract each gradient from
+			FT2darr:		list of 2d FFTs corresponding to the sims in list sims 
+			normspecies:the normalisation species used for w,k space
+			wkmax:		the limits of the 2d FFT [wmax,kmax] which to plot, in units of normspecies normalisation 
+			logthresh:	the log value of the thresh which to apply to the 2d FFT 
+			kernel:		the kernel to use (sobel, scharr, custom)
+			dwdkrange:	the range over dw/dk (grad) space which to calculate the histogram (modify this for accurate working)
+			theta:		redundant parameter, but useful if you want to plot the theoretical doppler as well
+		params out
+			Plots and saves the histograms of gradients (dw/dk) and 2d FFT with doppler shifted harmonics for the whole 
+			array of sims provided. 
+			dsvarr:		an array of all doppler velocities in units of vA (per sim)
+	"""	
 	home = os.getcwd()
 	# load sim & FT2d 
 	l = len(sims)
@@ -117,22 +136,23 @@ def getKernelDoppler(sims,FT2darr,normspecies,logthresh=1.8,wkmax=[10,25],plot=T
 	fig2.savefig('FT_2d_doppler.png',bbox_inches='tight')
 	return dsvarr
 
-os.chdir('/storage/space2/phrmsf/lowres_D_He3/')
-home = os.getcwd()
-sims = np.sort([i for i in os.listdir() if 'p_90' in i])
-quantity='Magnetic_Field_Bz'
-FT2d = []
-for sim in sims:
-	_=getSimulation(sim)
-	FT2d.append(read_pkl('FT_2d_'+quantity))
-	os.chdir(home)
-dsvarr = getKernelDoppler(sims,FT2d,normspecies='Protons')
-sys.exit()
-
-#ds,va = np.split(dsva,2,axis=1)
-
 
 def getIntegrateDoppler(sims,FT2darr,normspecies='Protons',wkmax=[20,20],logthresh=1.8):
+	"""
+	Extracts the maximum point in a smaller array (so don't use edge of array and bias sample) of the 2d FFT
+	the loops through multiple angles (angle +ve clockwise from North) and extracts the values of the threshed
+	2d FFT array, summates them then plots this integrand vs its corresponding angle. Can then find the angle
+	of doppler shift and convert this to a velocity, plotting this atop the 2d FFT for multiple l 
+	harmonics.  
+		params in
+			sims:			list of sims to analyse and extract each gradient from
+			FT2darr:		list of 2d FFTs corresponding to the sims in list sims 
+			normspecies:the normalisation species used for w,k space
+			wkmax:		the limits of the 2d FFT [wmax,kmax] which to plot, in units of normspecies normalisation 
+			logthresh:	the log value of the thresh which to apply to the 2d FFT 
+		params out
+			Plots the gradient angle vs. normalised integral to the number of cells np.sum(zi)/len(zi) 
+	"""	
 	for i in range(len(sims)):
 		# setup
 		sim_loc = getSimulation(sim)	
@@ -187,7 +207,7 @@ def getIntegrateDoppler(sims,FT2darr,normspecies='Protons',wkmax=[20,20],logthre
 			# map coordinates to integrate
 			zi = scipy.ndimage.map_coordinates(FT2d, np.vstack((y,x)))
 			# integrate and append to array
-			integ[i]=np.sum(zi)
+			integ[i]=np.sum(zi/len(zi)) # normalise to integ per cell
 		# maxangle (shared area)
 		maxangle = angles[np.argmax(integ)]
 		# plot angles vs integral
@@ -208,11 +228,23 @@ def getIntegrateDoppler(sims,FT2darr,normspecies='Protons',wkmax=[20,20],logthre
 
 		plt.show()
 		sys.exit()
+	return None	
 		
-			# integrate d,k space along line
-		# find maximum power along line as function of angle
-		# plot 2d FFT with doppler shifted harmonics
-		
+quantity='Magnetic_Field_Bz'
+
+## kernel
+#os.chdir('/storage/space2/phrmsf/lowres_D_He3/')
+#home = os.getcwd()
+#sims = np.sort([i for i in os.listdir() if 'p_90' in i])
+#FT2d = []
+#for sim in sims:
+#	_=getSimulation(sim)
+#	FT2d.append(read_pkl('FT_2d_'+quantity))
+#	os.chdir(home)
+#dsvarr = getKernelDoppler(sims,FT2d,normspecies='Protons')
+#sys.exit()
+
+## line integrate
 sim=getSimulation('/storage/space2/phrmsf/lowres_D_He3/0_38_p_90')
 sims=[sim]
 FT2d = [read_pkl('FT_2d_'+quantity)]
