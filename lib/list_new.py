@@ -2410,13 +2410,40 @@ def phaseCorrelation(sig,fft_sig0,dw,wnorm,wmax=35):
 
 # Plots and shows the experiment vs theory plot for the ratio between two species change in energy density
 # Also has the ability to plot du per-particle ratio (per species) through time for each simulation (nrows) -- will need to un-comment these lines
-def majIons_edens_ratio(sims,species=['Deuterons','Tritons'],time_norm=r'$\tau_{cD}$',\
-						ylabel=r'$[\Delta u_1/\Delta u_2]_{max}$',xlabel=r'$(\xi_1/\xi_2)(m_2/m_1)(q_1/q_2)^2$',labels=[1,11,50],lims=((0,1),(0,1))):
+def majIons_edens_ratio(sims,species=['Deuterons','Tritons'],time_norm=r'$\tau_{cD}$',ylabel=r'$[\Delta u_1/\Delta u_2]_{max}$',\
+								xlabel=r'$(\xi_1/\xi_2)(m_2/m_1)(q_1/q_2)^2$',labels=[None],lims=((0,1),(0,1)),identify=True,through_time=False):
+	"""
+		Function to find the ratio between energy densities of two species (specified) across a range of simulations (specified) and plot it 
+		either via a 1:1 correlation (through_time=False) or through time for each simulation (through_time=True). Is able to identify each
+		simulation for either scenario (identify=True/False). Then saves each figure in the home directory that the code is executed in.
+		
+		params in:
+			sims				: the simulations you want to loop through and extract their du [J m^-3]
+			species			: the species present in each simulation which you want to compare
+			time_norm		: normalised time with which to plot the through_time version
+			ylabel			: self exp.
+			xlabel			: self exp.
+			labels			: the labels of each simulation (i.e. concentration %), valid if identify=True
+			lims				: the limits of the 1:1 line plot (default is between 0 and 1)
+			identify			: identifies each simulation and annotates/plots a legend box (default False)
+			through_time	: determines whether you plot a through_time or 1:1 du ratio (default False)
+		params out:
+			None, plots the respective figures 
+	"""	
 	mean_to = 10
 	N=50
 	c=0
-	fig, ax = plt.subplots(figsize=(6,4))
-	ax.plot(lims[0],lims[0],color='darkgray',linestyle='--') # 1:1 line
+	if identify:
+		import matplotlib.cm as cm
+		colors = cm.rainbow(np.linspace(0,1,len(sims)))
+	else:
+		colors = ['b']*len(sims)
+		labels = [None]*len(sims)
+	if not through_time:
+		fig,ax=plt.subplots(figsize=(6,4))
+		ax.plot(lims[0],lims[0],color='darkgray',linestyle='--') # 1:1 line
+	else:
+		fig,ax=plt.subplots(nrows=len(sims),figsize=(8,3*len(sims)))		
 	home = os.getcwd()
 	for sim in sims:
 		sim_loc = getSimulation(sim)
@@ -2446,27 +2473,36 @@ def majIons_edens_ratio(sims,species=['Deuterons','Tritons'],time_norm=r'$\tau_{
 			du = (Energypart[thresh]-meanEnergypart)
 			maxdu[i] = np.max(du)
 			duarr.append(du)
-		ax.scatter((xi1/xi2)*(marr[1]/marr[0])*((qarr[0]/qarr[1])**2),maxdu[0]/maxdu[1])
-#		duarr = np.array(duarr)
-#		ax[c].plot(timespart/tcD,np.abs((xi2_xi1)*duarr[1]/duarr[0]))
-#		ax[c].annotate(str(labels[c])+'%',(times[-1]/tc1-2,1e2),xycoords='data',**tnrfont)
-#		ax[c].set_ylim(1e-3,1e3)
-#		ax[c].axhline(marr[0]/marr[1],linestyle='--',color='k')
-#		ax[c].set_yscale('log')
+		if not through_time:
+			ax.scatter((xi1/xi2)*(marr[1]/marr[0])*((qarr[0]/qarr[1])**2),maxdu[0]/maxdu[1],color=colors[c],label=labels[c])
+			xy = ((xi1/xi2)*(marr[1]/marr[0])*((qarr[0]/qarr[1])**2),maxdu[0]/maxdu[1])
+#			ax.annotate(str(labels[c]),xy=xy,xycoords='data',xytext=(.5,0),textcoords='offset fontsize',fontsize=16,fontname='Times New Roman')
+		else:	## through time for each sim
+			duarr = np.array(duarr)
+			ax[c].plot(timespart/tcD,np.abs((xi2_xi1)*duarr[1]/duarr[0]))
+			ax[c].annotate(str(labels[c])+'%',(times[-1]/tc1-2,1e2),xycoords='data',**tnrfont)
+			ax[c].set_ylim(1e-3,1e3)
+			ax[c].axhline(marr[0]/marr[1],linestyle='--',color='k')
+			ax[c].set_yscale('log')
 		os.chdir(home)
 		c+=1
-#	ax[0].set_yticks([1e-2,1e-1,1e0,1e1,1e2,1e3])
-#	ax[1].set_yticks([1e-2,1e-1,1e0,1e1,1e2,1e3])
-#	ax[2].set_yticks([1e-3,1e-2,1e-1,1e0,1e1,1e2,1e3])
-#	midax = len(ax)//2
-#	ax[0].set_xlim(0,times[-1]/tc1-1)
-#	ax[int(midax)].set_ylabel(r'$\left(\frac{\xi_1}{\xi_2}\right)\left|\frac{\Delta u_1(t)}{\Delta u_2(t)}\right|$',fontsize=24)
-#	ax[-1].set_xlabel(r'Time,  '+time_norm,**tnrfont)
-#	fig.savefig('/storage/space2/phrmsf/dump/du_ratio_vs_time_primary.png')
-	ax.set_ylabel(ylabel,**tnrfont) ; ax.set_xlabel(xlabel,**tnrfont)
-	ax.set_xlim(lims[0]) ; ax.set_ylim(lims[1])
-	fig.savefig('du_peak_vs_theory.png',bbox_inches='tight')
-	plt.show()
+	if through_time:
+		if identify:
+			for c in range(len(sims)):
+				ax[c].annotate(labels[c],xy=(0.9,0.9), xycoords='axes fraction')
+		midax = len(ax)//2
+		ax[int(midax)].set_ylabel(r'$\left(\frac{\xi_1}{\xi_2}\right)\left|\frac{\Delta u_1(t)}{\Delta u_2(t)}\right|$',fontsize=24)
+		ax[-1].set_xlabel(r'Time,  '+time_norm,**tnrfont)
+		fig.savefig('du_ratio_vs_time.png')
+	else:
+		if identify:
+			import matplotlib as mpl
+			mpl.rc('font',family='Times New Roman')
+			ax.legend(loc='best',fontsize=16)
+		ax.set_ylabel(ylabel,**tnrfont) ; ax.set_xlabel(xlabel,**tnrfont)
+		ax.set_xlim(lims[0]) ; ax.set_ylim(lims[1])
+		fig.savefig('du_peak_vs_theory.png',bbox_inches='tight')
+		plt.show()
 	return None
 
 

@@ -1,7 +1,7 @@
 
 from func_load import *
 
-simloc = getSimulation('/storage/space2/phrmsf/ECRH/ECRH_zeroFE')#JT60U_5_2')
+simloc = getSimulation('/storage/space2/phrmsf/ECRH/ECRH_JT60U_6')#JT60U_5_2')
 times = read_pkl('times')
 d0 = sdfread(0)
 klim = 0.5*2*const.PI/getdxyz(d0)
@@ -59,6 +59,7 @@ print(dk/knorm,dw/wnorm)
 ##ax[1].set_xlim(10**(-2.5),10**(0.5))
 #ax[1].set_ylim(0,wmax)
 #ax[1].set_xlabel(r'PSD',**tnrfont)#fontsize=20)
+#ax[1].set_ylabel('')
 #ax[1].set_yticklabels([])
 #ax[1].tick_params(axis='both',direction='out',top=False,right=False,left=True,bottom=True)
 #ax[1].set_ylabel(r'$\omega/\Omega_p$',fontsize=18)
@@ -66,18 +67,18 @@ print(dk/knorm,dw/wnorm)
 #fig.savefig('/storage/space2/phrmsf/ECRH/paper/FT2d_Bz_PSD.eps',bbox_inches='tight')
 #plt.show()
 
-## bicoherence
-# finer granularity (higher nffts)
-#fieldmatrix = load_batch_fieldmatrix([],quantity)
-#karea = klim/knorm #80
-#warea = wlim/wnorm # 60
-#nfft = len(times)//5
-#noverlap = nfft//2
-#bispec=True #boolean, True as default will calculate both bicoh AND bispec
-#klabel = r'$v_A/\Omega_e$'
-#fig, ax = getBicoh(karea,warea,fieldmatrix,getdt(times),times[-1],getGridlen(sdfread(0)),wnorm,knorm,nfft=nfft,\
-#	noverlap=noverlap,window=True,bispectrum=bispec,klabel=klabel)
-
+# bicoherence
+#finer granularity (higher nffts)
+fieldmatrix = load_batch_fieldmatrix([],quantity)
+karea = klim/knorm #80
+warea = wlim/wnorm # 60
+nfft = len(times)//10
+noverlap = nfft//2
+bispec=True #boolean, True as default will calculate both bicoh AND bispec
+klabel = r'$v_A/\Omega_e$'
+fig, ax = getBicoh(karea,warea,fieldmatrix,getdt(times),times[-1],getGridlen(sdfread(0)),wnorm,knorm,nfft=nfft,\
+	noverlap=noverlap,window=True,bispectrum=bispec,klabel=klabel)
+plotting(fig,ax,'bicoherence')
 
 ## spectrograms
 #nfo = [10,2]
@@ -112,10 +113,10 @@ print(dk/knorm,dw/wnorm)
 #tplot, graddu = grad_energydens(simloc,normspecies='Protons',quant='Electrons',conv2=True)
 #plt.plot(tplot,graddu)
 #plt.show()
-# FT1d growth rates
-omegas, growthRatesMean, growthRatesSTD = map_k_growth(simloc,'Protons',0,30,tstart_frac=0.0,tend_frac=1.0,color='k')
-thresh = growthRatesMean > 0
-growthRatesMean = growthRatesMean[thresh]
-omegas = omegas[thresh]
-plt.plot(omegas/(2*const.PI*fcp),growthRatesMean/(2*const.PI*fcp),'-o')
-plt.show()
+## FT1d growth rates
+#omegas, growthRatesMean, growthRatesSTD = map_k_growth(simloc,'Protons',0,30,tstart_frac=0.0,tend_frac=1.0,color='k')
+#thresh = growthRatesMean > 0
+#growthRatesMean = growthRatesMean[thresh]
+#omegas = omegas[thresh]
+#plt.plot(omegas/(2*const.PI*fcp),growthRatesMean/(2*const.PI*fcp),'-o')
+#plt.show()
