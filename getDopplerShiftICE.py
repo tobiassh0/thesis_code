@@ -9,7 +9,8 @@ import scipy
 #	plt.plot(x,yds,color='k',alpha=1-i/30)
 #plt.show()
 
-def getKernelDoppler(sims,FT2darr,normspecies,wkmax=[10,25],logthresh=1.8,kernel='custom',dwdkrange=(-0.5,0.5),theta=86.3,plot=True):
+def getKernelDoppler(sims,FT2darr,normspecies,wkmax=[10,25],logthresh=1.8,kernel='custom',dwdkrange=(-0.5,0.5),labels=[None],\
+							theta=86.3,plot=True):
 	"""
 	Uses the kernel method (see list_new.py and this link [https://pyimagesearch.com/2021/05/12/image-gradients-with-opencv-sobel-and-scharr/]) 
 	to find the gradients within the image. Uses a custom/modified Scharr kernel which is more sensitive to 
@@ -24,6 +25,7 @@ def getKernelDoppler(sims,FT2darr,normspecies,wkmax=[10,25],logthresh=1.8,kernel
 			kernel:		the kernel to use (sobel, scharr, custom)
 			dwdkrange:	the range over dw/dk (grad) space which to calculate the histogram (modify this for accurate working)
 			theta:		redundant parameter, but useful if you want to plot the theoretical doppler as well
+			labels:		label with which to annotate the threshed 2d FFTs
 		params out
 			Plots and saves the histograms of gradients (dw/dk) and 2d FFT with doppler shifted harmonics for the whole 
 			array of sims provided. 
@@ -34,13 +36,14 @@ def getKernelDoppler(sims,FT2darr,normspecies,wkmax=[10,25],logthresh=1.8,kernel
 	l = len(sims)
 	if l == 1: l+=1
 	fig1,ax1=plt.subplots(nrows=l,figsize=(6,4*len(sims)))
-	fig2,ax2=plt.subplots(nrows=l,figsize=(6,4*len(sims)))
+	fig2,ax2=plt.subplots(nrows=2,ncols=l//2,figsize=(8,4))
+	fig2.subplots_adjust(hspace=0.1,wspace=0.1)
+	ax2 = ax2.ravel()
 	dsvarr=[] # 1d array of gradient in units of m/s per sim
-	i=0
-	for sim in sims:
+	for i in range(len(sims)):
 		## calc gradients in image
 		# setup
-		sim_loc = getSimulation(sim)	
+		sim_loc = getSimulation(sims[i])	
 		d0 = sdfread(0)
 		times = read_pkl('times')
 		vA = getAlfvenVel(d0)
@@ -124,14 +127,27 @@ def getKernelDoppler(sims,FT2darr,normspecies,wkmax=[10,25],logthresh=1.8,kernel
 #				ax2[i].plot(kx/knorm,tww/wnorm,color='white',linestyle='-.')
 			ax2[i].set_xlim(0,20) # reduce plotting limits
 			ax2[i].set_ylim(0,10) # " " 
-			ax2[i].set_ylabel(r'$\omega/$'+getOmegaLabel(normspecies),**tnrfont)
+			#ax2[i].set_ylabel(r'$\omega/$'+getOmegaLabel(normspecies),**tnrfont)
 			ax2[i].plot([0,10],[0,10],color='white',linestyle='--') # vA line
-		i+=1
+			ax2[i].set_yticks([]) ; ax2[i].set_yticklabels([])
+			ax2[i].annotate(hlabels[i],xy=(5,8.7),xycoords='data',color='white',ha='center',va='bottom')
+			if i >= len(sims)//2:
+				ax2[i].set_xticks([0,5,10,15]) ; ax2[i].set_xticklabels([0,5,10,15])
+				ax2[i].set_xlabel(r'$kv_A/\Omega_p$',**tnrfont)
+
+			else:
+				ax2[i].set_xticks([]) ; ax2[i].set_xticklabels([])
 		os.chdir(home)
 	print(os.getcwd())
+	## format edge axes
+	ax2[0].set_ylabel(r'$\omega/$'+getOmegaLabel(normspecies),**tnrfont)
+	ax2[len(ax2)//2].set_ylabel(r'$\omega/$'+getOmegaLabel(normspecies),**tnrfont)
+	ax2[0].set_yticks([0,2,4,6,8,10]) ; ax2[0].set_yticklabels([0,2,4,6,8,10])
+	ax2[len(ax2)//2].set_yticks([0,2,4,6,8,10]) ; ax2[len(ax2)//2].set_yticklabels([0,2,4,6,8,10])
+	ax2[-1].set_xticks([0,5,10,15,20]) ; ax2[i].set_xticklabels([0,5,10,15,20])
 	ax1[-1].set_xlabel(r'$d\omega/dk$'+'  '+r'$[v_A]$',**tnrfont)
 	fig1.savefig('dw_dk_'+kernel+'_grad.png',bbox_inches='tight')
-	ax2[-1].set_xlabel(r'$kv_A/\Omega_p$',**tnrfont)
+#	ax2[-1].set_xlabel(r'$kv_A/\Omega_p$',**tnrfont)
 #	plt.show()
 	fig2.savefig('FT_2d_doppler.png',bbox_inches='tight')
 	return dsvarr
@@ -232,17 +248,18 @@ def getIntegrateDoppler(sims,FT2darr,normspecies='Protons',wkmax=[20,20],logthre
 		
 quantity='Magnetic_Field_Bz'
 
-## kernel
-#os.chdir('/storage/space2/phrmsf/lowres_D_He3/')
-#home = os.getcwd()
-#sims = np.sort([i for i in os.listdir() if 'p_90' in i])
-#FT2d = []
-#for sim in sims:
-#	_=getSimulation(sim)
-#	FT2d.append(read_pkl('FT_2d_'+quantity))
-#	os.chdir(home)
-#dsvarr = getKernelDoppler(sims,FT2d,normspecies='Protons')
-#sys.exit()
+# kernel
+os.chdir('/storage/space2/phrmsf/lowres_D_He3/')
+home = os.getcwd()
+sims = np.sort([i for i in os.listdir() if 'p_90' in i])
+hlabels = [int(i[2:4]) for i in sims]
+FT2darr = []
+for sim in sims:
+	_=getSimulation(sim)
+	FT2darr.append(read_pkl('FT_2d_'+quantity))
+	os.chdir(home)
+dsvarr = getKernelDoppler(sims,FT2darr,labels=hlabels,normspecies='Protons')
+sys.exit()
 
 ## line integrate
 sim=getSimulation('/storage/space2/phrmsf/lowres_D_He3/0_38_p_90')
