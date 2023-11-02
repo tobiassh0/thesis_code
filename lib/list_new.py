@@ -2394,6 +2394,32 @@ def grad_energydens(simloc,normspecies='Deuterons',quant='Magnetic_Field_Bz',mea
 #	plt.xlabel(r'$t/\tau_{cD}$',fontsize=20)
 	return timesplot, gradu
 
+## get the cross correlation between two matrices
+def getCrossCorrelation(mat1,mat2,name='density_energy',axis=0):
+	if mat1.shape != mat2.shape:
+		print('# ERROR # :: Cant calculate cross-correlation of unequal arrays')
+		sys.exit()
+	else:
+		# normalise both matrices
+		mat1 = mat1/mat1.max() ; mat2 = mat2/mat2.max()
+		# setup cross correlation matrix
+		crosscor = np.zeros(mat1.shape)
+		# might not match up
+		l = mat1.shape[axis]
+		if axis == 0:
+			for i in range(l):
+				crosscor[i,:] = np.correlate(mat1[i,:],mat2[i,:],'same')
+		elif axis == 1:
+			for i in range(l):
+				crosscor[:,i] = np.correlate(mat1[:,i],mat2[:,i],'same')
+		dumpfiles(crosscor,name)
+		return crosscor
+
+## plot the cross correlation as a heatmap, from getCrossCorrelation
+def plotCrossCorrelation(crosscor,ylabel='y',xlabel='x'):
+	plt.imshow(crosscor,**kwargs,cmap='bwr') # blue white red map to show -1, 0, 1
+	plt.ylabel(ylabel) ; plt.xlabel(xlabel)
+	plt.show()
 
 ## Calculates the phase correlation between two signals, sig & sig0 (only need fft)
 # returns the value of the shift corresponding to the phase difference between both arrays
