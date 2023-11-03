@@ -1,11 +1,14 @@
 import os
 
+#rootdir = '/storage/space2/phrmsf/lowres_D_He3/'
 rootdir = '/home/space/phrmsf/Documents/thesis_code/'
-#rootdir = '/storage/space2/phrmsf/'
+
+filename = '_KE'
+newfilename = '_KEdens'
 
 for subdir, dirs, files in os.walk(rootdir):
 	for f in files:
-		if '_KE' in f:
+		if filename in f:
 			print(os.path.join(subdir,f))
-			os.rename(os.path.join(subdir,f),os.path.join(subdir,str(f).replace('_KE','_KEdens')))
+			os.rename(os.path.join(subdir,f),os.path.join(subdir,str(f).replace(filename,newfilename)))
 			print(f)

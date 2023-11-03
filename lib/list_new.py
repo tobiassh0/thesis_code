@@ -112,7 +112,7 @@ def filelist(lim):
 
 # Lists all the sdf files in the given simulation, converts this to a list of indices and returns it (as list of numbers)
 def list_sdf(sim_file_loc):
-	sdf_list = [i for i in os.listdir(sim_file_loc) if ".sdf" in i and 'TempOut' not in i] # ignores Temp files 
+	sdf_list = [i for i in os.listdir(sim_file_loc) if '.sdf' in i and 'TempOut' not in i] # ignores Temp files 
 	index_list = np.sort(np.asarray([s.replace('.sdf','') for s in sdf_list], dtype=int))
 	return index_list
 
@@ -2400,26 +2400,34 @@ def getCrossCorrelation(mat1,mat2,name='density_energy',axis=0):
 		print('# ERROR # :: Cant calculate cross-correlation of unequal arrays')
 		sys.exit()
 	else:
-		# normalise both matrices
-		mat1 = mat1/mat1.max() ; mat2 = mat2/mat2.max()
 		# setup cross correlation matrix
 		crosscor = np.zeros(mat1.shape)
 		# might not match up
 		l = mat1.shape[axis]
+		print(l)
 		if axis == 0:
 			for i in range(l):
-				crosscor[i,:] = np.correlate(mat1[i,:],mat2[i,:],'same')
+				print(i/l*100)
+				# normalise both matrices according to https://en.wikipedia.org/wiki/Cross-correlation#Zero-normalized_cross-correlation_(ZNCC)
+				normat1 = (mat1[i,:]-np.mean(mat1[i,:]))/(np.std(mat1[i,:])*len(mat1[i,:]))
+				normat2 = (mat2[i,:]-np.mean(mat2[i,:]))/(np.std(mat2[i,:]))
+				crosscor[i,:] = np.correlate(normat1,normat2,'same')
 		elif axis == 1:
 			for i in range(l):
-				crosscor[:,i] = np.correlate(mat1[:,i],mat2[:,i],'same')
+				normat1 = (mat1[:,i]-np.mean(mat1[:,i]))/(np.std(mat1[:,i])*len(mat1[:,i]))
+				normat2 = (mat2[:,i]-np.mean(mat2[:,i]))/(np.std(mat2[:,i]))
+				crosscor[:,i] = np.correlate(normat1,normat2,'same')
 		dumpfiles(crosscor,name)
 		return crosscor
 
 ## plot the cross correlation as a heatmap, from getCrossCorrelation
 def plotCrossCorrelation(crosscor,ylabel='y',xlabel='x'):
-	plt.imshow(crosscor,**kwargs,cmap='bwr') # blue white red map to show -1, 0, 1
-	plt.ylabel(ylabel) ; plt.xlabel(xlabel)
-	plt.show()
+	fig,ax=plt.subplots(figsize=(7,5))
+	im = ax.imshow(crosscor,**kwargs,cmap='bwr') # blue white red map to show -1, 0, 1
+	ax.set_ylabel(ylabel,**tnrfont) ; plt.xlabel(xlabel,**tnrfont)
+	plt.colorbar(im)
+#	fig.savefig('CrossCorrelation.png')
+	return fig,ax
 
 ## Calculates the phase correlation between two signals, sig & sig0 (only need fft)
 # returns the value of the shift corresponding to the phase difference between both arrays
