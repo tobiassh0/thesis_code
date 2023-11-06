@@ -2303,8 +2303,8 @@ def ciggies(sim_loc,species_lst=['Deuterons','Alphas'],nval=10000,para=False,elo
 	return None
 
 # extract peaks in a dataset (used for power spectra comparisons)	
-def extractPeaks(data,Nperwcd=1,prominence=0.3):
-	return signal.find_peaks(data,distance=Nperwcd,prominence=prominence)[0] # tune till Nperwcd encapsulates all peaks (visually)	
+def extractPeaks(data,Nperw=1,prominence=0.3):
+	return signal.find_peaks(data,distance=Nperw,prominence=prominence)[0] # tune till Nperw encapsulates all peaks (visually)	
 
 # calculate the growth of k-modes for various time spacings
 def map_k_growth(sim_loc,normspecies='Deuterons',omega_min=0,omega_max=100,domega=0.25,dt_frac=0.5,tstart_frac=0.5,tend_frac=2.0,color='k',plot=False):
@@ -2395,7 +2395,7 @@ def grad_energydens(simloc,normspecies='Deuterons',quant='Magnetic_Field_Bz',mea
 	return timesplot, gradu
 
 ## get the cross correlation between two matrices
-def getCrossCorrelation(mat1,mat2,name='density_energy',axis=0):
+def getCrossCorrelationMat(mat1,mat2,name='density_energy',axis=0):
 	if mat1.shape != mat2.shape:
 		print('# ERROR # :: Cant calculate cross-correlation of unequal arrays')
 		sys.exit()
@@ -2420,8 +2420,20 @@ def getCrossCorrelation(mat1,mat2,name='density_energy',axis=0):
 		dumpfiles(crosscor,name)
 		return crosscor
 
+## get the cross correlation between two matrices
+def getCrossCorrelation(sig1,sig2,name='power_crosscor'):
+	if sig1.shape[0] != sig2.shape[0]:
+		print('# ERROR # :: Cant calculate cross-correlation of unequal arrays')
+		sys.exit()
+	else:
+		# setup cross correlation array
+		crosscor = np.zeros(sig1.shape[0])
+		crosscor = np.correlate(sig1,sig2,'same')
+		dumpfiles(crosscor,name)
+		return crosscor
+		
 ## plot the cross correlation as a heatmap, from getCrossCorrelation
-def plotCrossCorrelation(crosscor,ylabel='y',xlabel='x'):
+def plotCrossCorrelationMat(crosscor,ylabel='y',xlabel='x'):
 	fig,ax=plt.subplots(figsize=(7,5))
 	im = ax.imshow(crosscor,**kwargs,cmap='bwr') # blue white red map to show -1, 0, 1
 	ax.set_ylabel(ylabel,**tnrfont) ; plt.xlabel(xlabel,**tnrfont)
@@ -2429,6 +2441,12 @@ def plotCrossCorrelation(crosscor,ylabel='y',xlabel='x'):
 #	fig.savefig('CrossCorrelation.png')
 	return fig,ax
 
+def plotCrossCorrelation(xarr,crosscor,ylabel='y',xlabel='x'):
+	fig,ax=plt.subplots(figsize=(6,4))
+	ax.plot(xarr,crosscor)
+	ax.set_ylabel(ylabel,**tnrfont) ; plt.xlabel(xlabel,**tnrfont)
+	return fig,ax
+	
 ## Calculates the phase correlation between two signals, sig & sig0 (only need fft)
 # returns the value of the shift corresponding to the phase difference between both arrays
 def phaseCorrelation(sig,fft_sig0,dw,wnorm,wmax=35):
@@ -2540,12 +2558,13 @@ def majIons_edens_ratio(sims,species=['Deuterons','Tritons'],time_norm=r'$\tau_{
 	return None
 
 
-def shared_area(sig1,sig2,fitgauss=False):
+def shared_area(sig1,sig2,dx=None,fitgauss=False):
 	lx = len(sig1)
 	if lx!=len(sig2): 
 		print('## ERROR ## :: Both signals need the same length')
 		raise SystemExit
-	dx = sig1[-1]/lx
+	if not dx:
+		dx = sig1[-1]/lx
 	rolled = np.zeros(lx)
 	sharea=[]
 	for i in range(lx):
@@ -2557,10 +2576,10 @@ def shared_area(sig1,sig2,fitgauss=False):
 		sharea.append(np.sum(rolled*dx))
 	if fitgauss:
 		x = np.linspace(0,lx,lx)
-		popt, pcov = curve_fit(lambda sharea,b,c: np.exp(a*(x-b)**2)+c,x,sharea,maxfev=5000) # exponential fitting
+		popt, pcov = curve_fit(lambda x,a,b,c: np.exp(a*(x-b)**2)+c,x,sharea,maxfev=10000) # exponential fitting
 		peak = popt[1] # a,b,c 
 	else:
-		peak = np.max()
+		peak = np.argmax(sharea) # index
 	return sharea, peak
 	
 def outside_ticks(fig):
