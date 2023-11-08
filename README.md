@@ -21,3 +21,28 @@ There are various files used here that are old and will likely be removed so don
 Acknolwedgements include Omstavan Samant, Ben Chapman and James Cook as the writing of a few of these functions was done by them and is treated as legacy code. Every single function has either been written (as is the case with the majority) or edited by myself to suit my needs better.
 
 
+## Modular system
+Have included the ability for the user to create a new file from scratch in the parent directory (i.e. above `/lib`). An example of this is listed below for a user who wants to analyse the spatial cross-correlation between multiple field components
+
+
+```
+# import all functions
+from func_load import *
+# import spatial correlation functions
+import correlation.spatial_crosscor as sc
+# instanstiate simulation location
+sim = getSimulation(SIM_FILE_PATH)
+# load array of times
+times = read_pkl('times')
+# list all available fields
+fields = getFields()
+# loop through all fields without repeating duplicates
+for i in range(len(fields)):
+    for j in range(i,len(fields)):
+        F1 = fields[i]
+        F2 = fields[j]
+        _,_,norm1=Endict(F1)
+        _,_,norm2=Endict(F2)
+        dphase,Rtdx = sc.getSpatialCorrelation(d0=sdfread(0),F1=F1,F2=F2,norm=[norm1,norm2],plot=False)
+        sc.plotSpatialCorrelation(F1,F2,Rtdx,dphase,times,MINSPECIES)        
+```
