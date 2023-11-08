@@ -1141,7 +1141,7 @@ def getMagneticAngle(d0):
 	return phi_x, phi_y # will return 90 degrees for phi_y most of the time
 
 # Plots the cold plasma dispersion for ionic species 1 and 2 (two maj or maj and min)
-def coldplasmadispersion(file0,omegas,theta=None): 
+def coldplasmadispersion(file0,omegas,theta=None):
 	# Assumes one of the species is always electrons (harcoded)
 	# angle between B & x-hat
 	# returns:
@@ -1283,6 +1283,7 @@ def power_compare(sims,labels=[None],normspecies='Deuterons',wkmax=[25,40],quant
 	ax.set_ylabel('PSD',**tnrfont) ; ax.set_xlabel(r'$\omega/$'+getOmegaLabel(normspecies),**tnrfont)	
 	ax.set_yscale('log')
 	ax.set_xlim(0,wkmax[0])
+	ax.set_xticks(np.linspace(0,wkmax[0],11))
 	ax.legend(loc='best')
 	fig.savefig('power_compare.png',bbox_inches='tight')
 	plt.show()

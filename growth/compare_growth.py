@@ -167,8 +167,8 @@ for i in [1,2,3]:
 	ax[i].set_xticklabels(['0','750','1500','2250'])
 	ax[i].set_yticklabels([])
 ax[0].set_yticklabels([0,5,10,15,20,25,30])	
-fig.savefig('/storage/space2/phrmsf/dump/CompareGrowth.png',bbox_inches='tight')
 
+fig.savefig('/storage/space2/phrmsf/dump/CompareGrowth.png',bbox_inches='tight')
 plt.clf()
 
 ############################################################################

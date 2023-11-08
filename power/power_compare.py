@@ -4,7 +4,7 @@ from func_load import *
 os.chdir('/storage/space2/phrmsf/lowres_D_He3/')
 sims = np.sort([i for i in os.listdir() if 'p_90' in i])
 hlabels = np.array([int(i[2:4]) for i in sims])
-power_compare(sims,labels=hlabels,normspecies='Deuterons')
+power_compare(sims,labels=hlabels,wkmax=[20,45],normspecies='Protons')
 sys.exit()
 
 ###############################################################################
