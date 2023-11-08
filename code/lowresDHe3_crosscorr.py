@@ -1,6 +1,7 @@
-
 from func_load import *
+import .correlation.cross-correlation as cc
 
+## example with ntot and Ep
 # get sim
 simloc = getSimulation('/storage/space2/phrmsf/lowres_D_He3/0_34_p_90')
 ind_lst = list_sdf(simloc)
@@ -31,5 +32,5 @@ Ep = read_pkl('Protons_KEdensmatrix')
 dEp = Ep-np.mean(Ep[0:10,:])
 
 # calculate cross correlation
-crosscorr = getCrossCorrelation(ntot,dEp)
-plotCrossCorrelation(crosscor,ylabel='t',xlabel='x')
+crosscorr = cc.getCrossCorrelation(ntot,dEp)
+cc.plotCrossCorrelation(crosscor,ylabel='t',xlabel='x')

@@ -1,33 +1,6 @@
 
 from func_load import *
 
-
-def signedCurv(fx,dx):
-	### take the absolute for defined "curvature" or the square integral to get the total curvature of fx 
-	## In
-	#	fx : np array of points to calculate curvature ; dx : spacing in x-array points
-	## Out
-	#	kx : signed curvature, as defined here (https://en.wikipedia.org/wiki/Curvature#Graph_of_a_function)
-	#	kxint : Integral of squared signed-curvature, higher the value --> more curvy / less smooth
-	fxp = np.gradient(fx,dx)
-	fxpp = np.gradient(fxp,dx)
-	kx = abs(fxpp)/(1+fxp**2)**(1.5)
-	kxint = np.sum((kx)*dx)
-	return kx, kxint
-	
-def phaseCorrelation(sig,fft_sig0,dw,wnorm):
-	fft_sig = np.fft.fft(sig)
-	fft_sig_conj = np.conj(fft_sig)
-	R = (fft_sig0 * fft_sig_conj) / abs(fft_sig0 * fft_sig_conj)
-	r = np.fft.ifft(R)
-	x = dw*np.arange(0,len(r),1)
-	shift = x[np.argmax(r)]
-#	print('SHIFT HERE : ',shift)
-	if shift > x[-1]/2:
-		shift = shift-x[-1]
-
-	return shift
-
 ###################
 mD = const.me_to_mD
 mT = const.me_to_mT
@@ -100,7 +73,8 @@ for i in range(len(sim_lst)):
 #	axs[1].scatter(xi2[i],fmp/wcD,color=tcolors[1])
 #	
 	## Phase correlation
-	shift = phaseCorrelation(power,fft_power0,tdw,wcD)
+	import phasecorrelation as pc
+	shift =  pc.phaseCorrelation(power,fft_power0,tdw,wcD)
 	fpc = -shift
 
 	## Shared area between curves & Argmin difference

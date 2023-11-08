@@ -52,7 +52,6 @@ for t, c in zip(times,np.arange(0,len(times),1)):
 #	ax[c].hist(E_left/(1000*const.qe),color='r',bins=100,density=True) ## uncomment for a nrow plot of histograms
 #	ax[c].hist(E_right/(1000*const.qe),color='b',bins=100,density=True) ## uncomment for a nrow plot of histograms
 
-
 # plot energy & hist
 fig,ax=plt.subplots(ncols=2,figsize=(8,9),sharey=True)
 fig.subplots_adjust(wspace=0.05)
