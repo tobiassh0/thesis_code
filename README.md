@@ -25,17 +25,22 @@ Acknolwedgements include Omstavan Samant, Ben Chapman and James Cook as the writ
 Have included the ability for the user to create a new file from scratch in the parent directory (i.e. above `/lib`). An example of this is listed below for a user who wants to analyse the spatial cross-correlation between multiple field components
 
 
-```
+```c
 # import all functions
 from func_load import *
+
 # import spatial correlation functions
 import correlation.spatial_crosscor as sc
+
 # instanstiate simulation location
 sim = getSimulation(SIM_FILE_PATH)
+
 # load array of times
 times = read_pkl('times')
+
 # list all available fields
 fields = getFields()
+
 # loop through all fields without repeating duplicates
 for i in range(len(fields)):
     for j in range(i,len(fields)):
