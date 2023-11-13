@@ -9,9 +9,11 @@ import numpy as np
 import sdf
 import pickle
 import matplotlib.pyplot as plt
+# scipy
 from scipy import special as spec
 from scipy import stats, signal
 from scipy.optimize import curve_fit
+import scipy.odr as odr
 from matplotlib.path import Path
 import multiprocessing as mp ## parallelisation
 #from cv2 import cv2 # used to make images
@@ -589,6 +591,52 @@ def getPerpParaVel(d, species):
 #	
 #	v_perp = np.sqrt(vperp_x**2 + vperp_y**2) ; v_para = np.sqrt(vpara_x**2 + vpara_y**2)
 #	return v_perp, v_para
+
+def ODR_fit(x,y,sx=None,sy=None,beta0=[1,0],curve='linear'):
+	"""
+	fit a linear/quadratic function based off of the ODR approach in the scipy package
+	(https://docs.scipy.org/doc/scipy/reference/odr.html)
+		
+		IN
+			x : x array of points to fit
+			y : y array "				"
+			sx, sy : error arrays of the x and y values
+			beta0 : an estimation on the parameters to fit the curve with
+			curve : name of the curve to fit (linear,quad)
+		OUT
+			params : the parameters of the curve defined
+			params_err : errors on the determined parameters
+	"""
+	if curve == 'linear':
+		func = func_linear
+	elif curve=='quad':
+		func = func_quad
+	else:
+		print('## ERROR ## :: curve function has not been defined')
+
+	# check if errors are present, use std otherwise
+	if not sx:
+		sx = np.std(x)
+	if not sy:
+		sy = np.std(y)
+
+	# fit ODR line of best fit with errors
+	linear_model = odr.Model(func)
+	data = odr.RealData(x=x,y=y,sx=sx,sy=sy)
+	myodr = odr.ODR(data, linear_model, beta0=[1,-0.1])
+	myout = myodr.run()
+#	myout.pprint()
+
+	params = myout.beta
+	params_err = myout.sd_beta
+	return params, params_err
+
+def func_linear(p,x):
+	m,c = p
+	return m*x + c
+
+def func_quad(p,x):
+	return p[0]*x**2 + p[1]*x + p[2]
 
 # Returns the plotting limits of a 2d FT fieldmatrix which looks to see if there is a magnetic field present (va flag) or not
 def PlottingLimits(files, species, Z):

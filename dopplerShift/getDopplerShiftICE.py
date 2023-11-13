@@ -103,7 +103,7 @@ def getKernelDoppler(sims,FT2darr,normspecies,wkmax=[10,25],logthresh=1.8,kernel
 			counts,bins,_=ax1[i].hist(dw_dk,bins=1000,density=True,range=dwdkrange) # np.log10
 			#ax1[i].hist(counts,bins=bins) dw_dk
 			dsv = bins[np.argmax(counts)] # doppler shift velocity, in units of vA
-			dsvarr.append(dsv*vA)
+			dsvarr.append([dsv*vA,dsv,vA])
 			print(kernel+' kernel max :: ', dsv)
 			ax1[i].set_ylabel('Normalised count',**tnrfont)
 			#dsva.append([dsv,vA])
@@ -149,8 +149,8 @@ def getKernelDoppler(sims,FT2darr,normspecies,wkmax=[10,25],logthresh=1.8,kernel
 	fig1.savefig('dw_dk_'+kernel+'_grad.png',bbox_inches='tight')
 #	ax2[-1].set_xlabel(r'$kv_A/\Omega_p$',**tnrfont)
 #	plt.show()
-	fig2.savefig('FT_2d_doppler.png',bbox_inches='tight')
-	return dsvarr
+#	fig2.savefig('FT_2d_doppler.png',bbox_inches='tight')
+	return np.array(dsvarr)
 
 
 def getIntegrateDoppler(sims,FT2darr,normspecies='Protons',wkmax=[20,20],logthresh=1.8):
@@ -246,26 +246,78 @@ def getIntegrateDoppler(sims,FT2darr,normspecies='Protons',wkmax=[20,20],logthre
 		sys.exit()
 	return None	
 		
-quantity='Magnetic_Field_Bz'
+def PLOTDOPPLER(hlabels,dsvarr):
+	hlabels = hlabels/100
+	dsv_vA,dsv,vA = dsvarr[:,0], dsvarr[:,1], dsvarr[:,2]
+	fig,axs=plt.subplots(figsize=(4,8),nrows=3,sharex=True)
+	fig.subplots_adjust(hspace=0.1)
+	##	vA
+	axs[0].scatter(hlabels,vA/const.c,color='k')
+	axs[0].set_ylabel(r'$v_A/c$',**tnrfont)
+	axs[0].set_ylim(0.0265,0.031)
+	# fit linear curve
+	params, params_err = ODR_fit(x=hlabels,y=vA/const.c)
+	axs[0].plot(hlabels,func_linear(params,hlabels),color='r',linestyle='--')
+	top = (params[0] + params_err[0], params[1] + params_err[1])
+	bottom = (params[0] - params_err[0], params[1] - params_err[1])
+	axs[0].fill_between(hlabels,hlabels*top[0]+top[1],hlabels*bottom[0]+bottom[1],color='r',alpha=1/3)
+	# pearsons cross cor
+	r = np.corrcoef(hlabels,vA/const.c)[0,1]
+	axs[0].annotate(r'$r={}$'.format(np.around(r,3)),xy=(0.03,0.85),xycoords='axes fraction',ha='left',va='bottom',fontsize=18)
 
-# kernel
-os.chdir('/storage/space2/phrmsf/lowres_D_He3/')
-home = os.getcwd()
-sims = np.sort([i for i in os.listdir() if 'p_90' in i])
-hlabels = [int(i[2:4]) for i in sims]
-FT2darr = []
-for sim in sims:
-	_=getSimulation(sim)
-	FT2darr.append(read_pkl('FT_2d_'+quantity))
-	os.chdir(home)
-dsvarr = getKernelDoppler(sims,FT2darr,labels=hlabels,normspecies='Protons')
-sys.exit()
+	## v_dop
+	axs[1].scatter(hlabels,abs(dsv),color='k')
+	axs[1].set_ylabel(r'$|v_{dop}/v_A|$',**tnrfont)
+	axs[1].set_ylim(0.118,0.138)
+	# fit linear curve
+	params, params_err = ODR_fit(x=hlabels,y=abs(dsv))
+	axs[1].plot(hlabels,func_linear(params,hlabels),color='r',linestyle='--')
+	top = (params[0] + params_err[0], params[1] + params_err[1])
+	bottom = (params[0] - params_err[0], params[1] - params_err[1])
+	axs[1].fill_between(hlabels,hlabels*top[0]+top[1],hlabels*bottom[0]+bottom[1],color='r',alpha=1/3)
+	# pearsons cross cor
+	r = np.corrcoef(hlabels,abs(dsv))[0,1]
+	axs[1].annotate(r'$r={}$'.format(np.around(r,3)),xy=(0.97,0.85),xycoords='axes fraction',ha='right',va='bottom',fontsize=18)
+	## v_dop %
+	axs[2].scatter(hlabels,abs(dsv_vA)/abs(dsv_vA[0]),color='k')
+	axs[2].set_ylabel(r'$|v_{dop}/v_{dop}^{(5)}|$',**tnrfont)
+	axs[2].set_xlabel(r'$\xi_{He3}$',**tnrfont)
+	axs[2].set_ylim(0.95,1.05)
+	# fit linear curve
+	params, params_err = ODR_fit(x=hlabels,y=abs(dsv_vA)/abs(dsv_vA[0]))
+	axs[2].plot(hlabels,func_linear(params,hlabels),color='r',linestyle='--')
+	top = (params[0] + params_err[0], params[1] + params_err[1])
+	bottom = (params[0] - params_err[0], params[1] - params_err[1])
+	axs[2].fill_between(hlabels,hlabels*top[0]+top[1],hlabels*bottom[0]+bottom[1],color='r',alpha=1/3)
+	# pearsons cross cor
+	r = np.corrcoef(hlabels,abs(dsv_vA)/abs(dsv_vA[0]))[0,1]
+	axs[2].annotate(r'$r={}$'.format(np.around(r,3)),xy=(0.97,0.85),xycoords='axes fraction',ha='right',va='bottom',fontsize=18)
 
-## line integrate
-sim=getSimulation('/storage/space2/phrmsf/lowres_D_He3/0_38_p_90')
-sims=[sim]
-FT2d = [read_pkl('FT_2d_'+quantity)]
-getIntegrateDoppler(sims,FT2d)
+	#fig.savefig('vA_vdop_fits.png',bbox_inches='tight')
+	plt.show()
+	return None
+	
+if __name__ == '__main__':
+	quantity='Magnetic_Field_Bz'
+	os.chdir('/storage/space2/phrmsf/lowres_D_He3/')
+	home = os.getcwd()
+	sims = np.sort([i for i in os.listdir() if 'p_90' in i])
+	hlabels = np.array([int(i[2:4]) for i in sims])
+	FT2darr = []
+	for sim in sims:
+		_=getSimulation(sim)
+		FT2darr.append(read_pkl('FT_2d_'+quantity))
+		os.chdir(home)
+	# kernel
+	dsvarr = getKernelDoppler(sims,FT2darr,labels=hlabels,normspecies='Protons')
+	plt.clf()
+	PLOTDOPPLER(hlabels,dsvarr)
+	
+	## line integrate
+	sim=getSimulation('/storage/space2/phrmsf/lowres_D_He3/0_38_p_90')
+	sims=[sim]
+	FT2d = [read_pkl('FT_2d_'+quantity)]
+	getIntegrateDoppler(sims,FT2d)
 		
 		
 		

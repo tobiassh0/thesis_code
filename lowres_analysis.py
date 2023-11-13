@@ -2,13 +2,6 @@
 def func_exp(x,a,x0,sigma,offset):
 	return a*np.exp(-(x-x0)**2/(2*sigma**2))+offset
 
-def func_linear(p,x):
-	m,c = p
-	return m*x + c
-
-def func_quad(p,x):
-	return p[0]*x**2 + p[1]*x + p[2]
-
 def pearsonscc(sims,xiHe3):
 	home = os.getcwd()
 	# compare power spectra trend
@@ -41,7 +34,7 @@ def pearsonscc(sims,xiHe3):
 		omegas= omegas[thresh]
 		w = np.linspace(-omegas[-1]/2,omegas[-1]/2,len(omegas))/wcp
 		# get cross correlation
-		crosscor = getCrossCorrelation(np.log10(power),np.log10(power5)) # allows for correct difference between curves
+		crosscor = cc.getCrossCorrelation(np.log10(power),np.log10(power5)) # allows for correct difference between curves
 		# weighted arithmetic mean
 		mean = np.sum(w*crosscor)/np.sum(crosscor) ; sigma = 5#np.sqrt(np.sum(crosscor*(w-mean)**2)/np.sum(crosscor))
 		offset = -10
@@ -70,15 +63,11 @@ def pearsonscc(sims,xiHe3):
 	xiHe3_err = np.std(xiHe3)
 	perrs[0] = np.std(peaks) # re-write error on 5% xiHe3
 	# fit ODR line of best fit with errors
-	linear_model = Model(func_linear)
-	data = RealData(x=xiHe3,y=peaks,sx=xiHe3_err,sy=perrs)
-	myodr = ODR(data, linear_model, beta0=[1,-0.1])
-	myout = myodr.run()
-	myout.pprint()
+	params, params_err = ODR_fit(x=xiHe3,y =peaks,sx=xiHe3_err,sy=perrs,curve='linear') # check list_new
 	x_fit = np.linspace(0,.5,100)
-	y_fit = func_linear(myout.beta,x_fit)
+	y_fit = func_linear(params,x_fit)
 	ax.plot(x_fit,y_fit,color='r',linestyle='--')
-	ax.annotate(r'$d \omega_{off}/d \xi_{He3}=$'+r'$({}\pm{})$'.format(np.around(myout.beta[0],2),np.around(myout.sd_beta[0],2))+r'$\Omega_p$',\
+	ax.annotate(r'$d \omega_{off}/d \xi_{He3}=$'+r'$({}\pm{})$'.format(np.around(params[0],2),np.around(params_err[0],2))+r'$\Omega_p$',\
 					xy=(0.95,0.05),xycoords='axes fraction',ha='right',va='bottom',fontsize=18)
 	fig.savefig('PearsonsCorrCoef.png',bbox_inches='tight')
 	plt.show()
@@ -132,11 +121,12 @@ def nEcc(sims,xiHe3):
 
 if __name__ == '__main__':
 	from func_load import *
-	from scipy.odr import *
+#	from scipy.odr import *
+	import correlation.cross_correlation as cc
 	os.chdir('/storage/space2/phrmsf/lowres_D_He3/')
 	sims = np.sort([i for i in os.listdir() if 'p_90' in i])
 	xiHe3 = np.array([int(i[2:4])/100 for i in sims])
-	#pearsonscc(sims,xiHe3)
+	pearsonscc(sims,xiHe3)
 	#nEcc(sims,xiHe3)
 	
 	
