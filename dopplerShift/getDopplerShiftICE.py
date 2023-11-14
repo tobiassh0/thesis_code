@@ -264,7 +264,6 @@ def PLOTDOPPLER(hlabels,dsvarr):
 	# pearsons cross cor
 	r = np.corrcoef(hlabels,vA/const.c)[0,1]
 	axs[0].annotate(r'$r={}$'.format(np.around(r,3)),xy=(0.03,0.85),xycoords='axes fraction',ha='left',va='bottom',fontsize=18)
-
 	## v_dop
 	axs[1].scatter(hlabels,abs(dsv),color='k')
 	axs[1].set_ylabel(r'$|v_{dop}/v_A|$',**tnrfont)
@@ -292,8 +291,8 @@ def PLOTDOPPLER(hlabels,dsvarr):
 	# pearsons cross cor
 	r = np.corrcoef(hlabels,abs(dsv_vA)/abs(dsv_vA[0]))[0,1]
 	axs[2].annotate(r'$r={}$'.format(np.around(r,3)),xy=(0.97,0.85),xycoords='axes fraction',ha='right',va='bottom',fontsize=18)
-
-	#fig.savefig('vA_vdop_fits.png',bbox_inches='tight')
+	axs[2].set_xlim(0.,0.5)
+	fig.savefig('vA_vdop_fits.png',bbox_inches='tight')
 	plt.show()
 	return None
 	

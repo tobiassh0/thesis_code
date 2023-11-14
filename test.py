@@ -73,6 +73,16 @@ def t2():
 	ax[3].set_xlabel(r'$t/\tau_{cp}$',**tnrfont)
 	fig.savefig('/home/space/phrmsf/Documents/EPOCH/5_devel/epoch1d/NDW_collection.png',bbox_inches='tight')
 
+def t3():
+	theta = np.linspace(0,2*const.PI,100)
+	theta_pitch = theta
+	TH,TH_P = np.meshgrid(theta,theta_pitch)
+	COSDIFF = np.cos(TH-TH_P)
+	plt.imshow(COSDIFF,**kwargs,cmap='bwr',extent=[0,2*const.PI,0,2*const.PI])
+	plt.show()
+
+
 if __name__ == '__main__':
 	#t1()
-	t2()
+	#t2()
+	t3()
