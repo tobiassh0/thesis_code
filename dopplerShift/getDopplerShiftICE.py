@@ -1,5 +1,7 @@
+
 from func_load import *
 import scipy
+
 ### General process of doppler shift is a linear trend if the frequency (y-axis) due to the wavenumber (x-axis)
 ## un-commenting will reveal this graphically with a simple example  
 #x = np.arange(0,100,0.01)

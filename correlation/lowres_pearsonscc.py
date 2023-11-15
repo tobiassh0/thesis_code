@@ -56,7 +56,7 @@ def pearsonscc(sims,xiHe3):
 			_yerr = None
 		ax.errorbar(_x,_y,yerr=_yerr,xerr=None,fmt='o',color=c,capsize=15)
 	r = np.corrcoef(xiHe3,peaks)[0,1]
-	ax.set_ylabel(r'$\omega_{off}/\Omega_p$',**tnrfont)
+	ax.set_ylabel(r'$\delta\omega/\Omega_p$',**tnrfont)
 	ax.set_xlabel(r'$\xi_{He3}$',**tnrfont)
 	ax.annotate(r'$r={}$'.format(np.around(r,2)),xy=(0.03,0.9),xycoords='axes fraction',ha='left',va='bottom',fontsize=18)
 	ax.set_xlim(0.,0.5) ; ax.set_ylim(-0.05,0.45)
@@ -67,7 +67,7 @@ def pearsonscc(sims,xiHe3):
 	x_fit = np.linspace(0,.5,100)
 	y_fit = func_linear(params,x_fit)
 	ax.plot(x_fit,y_fit,color='r',linestyle='--')
-	ax.annotate(r'$d \omega_{off}/d \xi_{He3}=$'+r'$({}\pm{})$'.format(np.around(params[0],2),np.around(params_err[0],2))+r'$\Omega_p$',\
+	ax.annotate(r'$d(\delta \omega)/d \xi_{He3}=$'+r'$({}\pm{})$'.format(np.around(params[0],2),np.around(params_err[0],2))+r'$\Omega_p$',\
 					xy=(0.95,0.05),xycoords='axes fraction',ha='right',va='bottom',fontsize=18)
 	fig.savefig('PearsonsCorrCoef.png',bbox_inches='tight')
 	plt.show()
