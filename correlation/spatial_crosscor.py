@@ -1,6 +1,4 @@
 
-from func_load import *
-
 def getSpatialCorrelation(d0,F1='Magnetic_Field_Bz',F2='Electric_Field_Ex',norm=[np.sqrt(const.mult_magn_field),np.sqrt(const.mult_elec_field)],\
 								phase_res=500,plot=True):
 	# in:
@@ -63,21 +61,23 @@ def plotSpatialCorrelation(F1,F2,Rtdx,dphase,times,minspec):
 
 #simloc=getSimulation('/storage/space2/phrmsf/ECRH/ECRH_JT60U_5_2')
 
-os.chdir('/storage/space2/phrmsf/lowres_D_He3/')
-home = os.getcwd()
-sims = np.sort([i for i in os.listdir() if 'p_90' in i])
-hlabels = [int(i[2:4]) for i in sims]
-for sim in sims:
-	simloc = getSimulation(sim)
-	times = read_pkl('times')
-	T = times[-1]
-	tcmin = 2*const.PI/getCyclotronFreq(sdfread(0),'Protons')
-	fields = ['Magnetic_Field_Bz','Electric_Field_Ex']#getFields()
-	for i in range(len(fields)):
-		for j in range(i,len(fields)): # one less field than previous loop (excludes repeats)
-			F1 = fields[i]
-			F2 = fields[j]
-			_,_,norm1=Endict(F1)
-			_,_,norm2=Endict(F2)
-			dphase,Rtdx=getSpatialCorrelation(d0=sdfread(0),F1=F1,F2=F2,norm=[norm1,norm2],plot=True)
-	os.chdir(home)
+if __name__=='__main__':
+	from func_load import *
+	os.chdir('/storage/space2/phrmsf/lowres_D_He3/')
+	home = os.getcwd()
+	sims = np.sort([i for i in os.listdir() if 'p_90' in i])
+	hlabels = [int(i[2:4]) for i in sims]
+	for sim in sims:
+		simloc = getSimulation(sim)
+		times = read_pkl('times')
+		T = times[-1]
+		tcmin = 2*const.PI/getCyclotronFreq(sdfread(0),'Protons')
+		fields = ['Magnetic_Field_Bz','Electric_Field_Ex']#getFields()
+		for i in range(len(fields)):
+			for j in range(i,len(fields)): # one less field than previous loop (excludes repeats)
+				F1 = fields[i]
+				F2 = fields[j]
+				_,_,norm1=Endict(F1)
+				_,_,norm2=Endict(F2)
+				dphase,Rtdx=getSpatialCorrelation(d0=sdfread(0),F1=F1,F2=F2,norm=[norm1,norm2],plot=True)
+		os.chdir(home)

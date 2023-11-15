@@ -1,10 +1,11 @@
-from func_load import *
+
 
 def paraVelocity(INDEX):
 	index, minority, mMin = INDEX
 	print(index)
 	return np.sqrt(2*getQuantity1d(sdfread(index),'Derived_Average_Particle_Energy_'+minority)/mMin)
 
+# plots the 
 def fv_vA(sim_loc,minority='Alphas',nval=10000,para=True):
 	ind_lst = list_sdf(sim_loc)
 	time = read_pkl('times')
@@ -69,14 +70,12 @@ def fv_vA(sim_loc,minority='Alphas',nval=10000,para=True):
 	#plt.show()
 	return fMin
 
-#C3s = ['2','5']
-#for C3 in C3s:
-#	print('C3_'+C3)
-#	sim_loc = getSimulation('/storage/space2/phrmsf/C3_comp/C3_'+C3)
-#	fAlpha = fv_vA(sim_loc)
-
-sim_loc = getSimulation('/storage/space2/phrmsf/old/JET_26148')
-fAlpha = fv_vA(sim_loc,'Alphas')
-
-
-
+if __name__=='__main__':
+	from func_load import *
+	#C3s = ['2','5']
+	#for C3 in C3s:
+	#	print('C3_'+C3)
+	#	sim_loc = getSimulation('/storage/space2/phrmsf/C3_comp/C3_'+C3)
+	#	fAlpha = fv_vA(sim_loc)	
+	sim_loc = getSimulation('/storage/space2/phrmsf/old/JET_26148')
+	fAlpha = fv_vA(sim_loc,'Alphas')
