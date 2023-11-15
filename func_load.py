@@ -1,6 +1,6 @@
 import os, sys
 # un-comment if PYTHONPATH variable isn't appended
-path = '/home/space/phrmsf/Documents/thesis_code/lib'
+path = os.getcwd()+'/lib'
 sys.path.append(path)
 
 from list_new import *
