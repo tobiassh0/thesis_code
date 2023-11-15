@@ -1,7 +1,4 @@
 
-from func_load import *
-import scipy
-
 ### General process of doppler shift is a linear trend if the frequency (y-axis) due to the wavenumber (x-axis)
 ## un-commenting will reveal this graphically with a simple example  
 #x = np.arange(0,100,0.01)
@@ -294,16 +291,19 @@ def PLOTDOPPLER(hlabels,dsvarr):
 	r = np.corrcoef(hlabels,abs(dsv_vA)/abs(dsv_vA[0]))[0,1]
 	axs[2].annotate(r'$r={}$'.format(np.around(r,3)),xy=(0.97,0.85),xycoords='axes fraction',ha='right',va='bottom',fontsize=18)
 	axs[2].set_xlim(0.,0.5)
-	fig.savefig('vA_vdop_fits.png',bbox_inches='tight')
+	#fig.savefig('vA_vdop_fits.png',bbox_inches='tight')
 	plt.show()
 	return None
 	
 if __name__ == '__main__':
+	from func_load import *
+	import scipy
 	quantity='Magnetic_Field_Bz'
 	os.chdir('/storage/space2/phrmsf/lowres_D_He3/')
 	home = os.getcwd()
 	sims = np.sort([i for i in os.listdir() if 'p_90' in i])
 	hlabels = np.array([int(i[2:4]) for i in sims])
+	hlabels = hlabels[1:] ; sims = sims[1:] # remove 0% case
 	FT2darr = []
 	for sim in sims:
 		_=getSimulation(sim)
@@ -313,7 +313,7 @@ if __name__ == '__main__':
 	dsvarr = getKernelDoppler(sims,FT2darr,labels=hlabels,normspecies='Protons')
 	plt.clf()
 	PLOTDOPPLER(hlabels,dsvarr)
-	
+	sys.exit()
 	## line integrate
 	sim=getSimulation('/storage/space2/phrmsf/lowres_D_He3/0_38_p_90')
 	sims=[sim]

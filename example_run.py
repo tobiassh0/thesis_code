@@ -13,9 +13,11 @@ from func_load import *
 
 # can import modules from other files that aren't in lib/list_new
 #import correlation.cross_correlation as cc
+#import dopplerShift.dopplershift as ds
+#ds.doppler_onesim(sim=SIM_FILE_LOC)
 
 # get simulation location
-simLocation = getSimulation('/sim/file/location') # so that the dir can read each .sdf file
+simLocation = getSimulation(SIM_FILE_LOC) # so that the dir can read each .sdf file
 
 # list of all output files
 t_files = list_sdf(simLocation)
