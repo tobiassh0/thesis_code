@@ -1492,14 +1492,14 @@ def getFreq_Wavenum(file0,maj_species,min_species,Zmaj,Zmin):
 def Chi0Calc(file0,v0,kall,omegaall,species='Deuterons',wci=None,theta=90):
 #	Adapted from appendix A in ref. https://aip.scitation.org/doi/10.1063/1.860304 ; eqns [A.6], [A.8] and [A.16]
 	# IN # 
-	# v0 : perpendicular birth energy of minority species 
-	# kall : real k2 solutions to the cold plasma dispersion
-	# omegall : corresponding (to kall) omega solutions along the FAW 
-	# species : species name you want to normalise frequencies to
-	# theta : Angle B0 to sim domain
+		# v0 : perpendicular birth energy of minority species 
+		# kall : real k2 solutions to the cold plasma dispersion
+		# omegall : corresponding (to kall) omega solutions along the FAW 
+		# species : species name you want to normalise frequencies to
+		# theta : Angle B0 to sim domain
 	# OUT #
-	# Chi0 : Solution to eqn. [29]
-	# PIxx, PIxy, PIyy : Components to the solution for Chi0, given in the ref		 
+		# Chi0 : Solution to eqn. [29]
+		# PIxx, PIxy, PIyy : Components to the solution for Chi0, given in the ref		 
 
 	if not wci:
 		wci = getCyclotronFreq(file0,species)
@@ -1537,11 +1537,68 @@ def Chi0Calc(file0,v0,kall,omegaall,species='Deuterons',wci=None,theta=90):
 	
 	return Chi0#, PIxx, PIxy, PIyy
 
+def growth_rates_analytical_all(theta, minions, majions , v0, u, kall, omegaall, val): #emin in eV
+	d = sdfread(0) #use quantities when they are initialised
+	wcycb = getCyclotronFreq(d,minions) # cyc freq for beam ions
+	wcyci = getCyclotronFreq(d,majions) # cyc freq for bulk ions
+	wpb = getPlasmaFreq(d,minions) #square of beam ion plasma frequency, z=1 for tritons
+	wpi = getPlasmaFreq(d,majions) #square of bulk ion plasma frequency, z=1 for deuterons
+	va = getAlfvenVel(d) #alfven vel
+	#val = 0.0068
+	vr = val*v0#getvr(readsdf(200))
+	#vr = getvr(readsdf(200)) #approx para velocity spreadval*v0
+	#val = vr/v0
 
+	theta = theta*(const.PI/180.0) #radians
+	gammas = np.zeros(omegaall.shape[0]) #growth rates
+	for i in range(0, omegaall.shape[0]):
+		l = round(omegaall[i]/wcycb) #l closest to the omega
+		kpara = kall[i]*np.cos(theta)#/np.tan(theta) #assumes input k is k_perp
+		kperp = kall[i]*np.sin(theta) #assumes input k is k_perp
+		Npara = (kpara*va)/omegaall[i] 
+		Nperp = (kperp*va*np.sin(theta))/omegaall[i] #assumes input k is k_perp
+		eetal = (omegaall[i] - l*wcycb)/(kpara*vr) # vd=0
+		za = kall[i]*np.sin(theta)*v0/wcycb
+		############## M_l ###############################################################
+		mlterm1 = 2.0*l*(omegaall[i]/wcyci)*((spec.jvp(l,za)**2) + ((1.0/za**2)*(l**2 - za**2)*spec.jv(l,za)**2))
+		mlterm2 = -2.0*((omegaall[i]**2 - wcyci**2)/wcyci**2)*((spec.jv(l,za)*spec.jvp(l,za))/za)*((l**2)*Nperp**2 - (za**2 - 2.0*(l**2))*(Npara**2))
+		mlterm3 = (2.0*spec.jv(l,za)*spec.jvp(l,za)/za)*(za**2 - 2.0*(l**2))
+		ml = mlterm1 + mlterm2 + mlterm3
+		##################################################################################
+						#
+						#
+		############# N_l #################################################################
+		nlterm1 = -2.0*l*(omegaall[i]/wcyci)*(spec.jv(l,za)*spec.jvp(l,za)/za)
+		nlterm2pre = (omegaall[i]**2 - wcyci**2)/wcyci**2
+		nlterm2 = (Npara**2)*((l*spec.jv(l,za)/za)**2 + spec.jvp(l,za)**2) + (Nperp*l*spec.jv(l,za)/za)**2
+		nlterm3 = (l*spec.jv(l,za)/za)**2 + spec.jvp(l,za)**2
+		nl = nlterm1 + nlterm2pre*nlterm2 + nlterm3
+		#################################################################################		
+						#
+						#
+		########## Gamma ################################################################
+		pre = (((wpb*(wcyci**2))/wpi)**2)*((const.PI**0.5)/(2.0*omegaall[i]))*np.exp(-(eetal**2))
+		term1 = 1.0/((wcyci + (omegaall[i] - wcyci)*(Npara**2))*(wcyci - (omegaall[i] + wcyci)*(Npara**2)))
+		term2 = ((l*wcycb*ml)/(kpara*vr)) - (2.0*eetal*nl)*((u/vr)**2)
+		gammas[i] = pre*term1*term2
+	
+	####### Want gamma > 1 only ###########
+	posomega = [] ; posgamma = []	
+	for i in range(0,gammas.shape[0]):
+		if (gammas[i] >= 0):
+			posomega.append(omegaall[i])
+			posgamma.append(gammas[i])
+		#else:
+		#	print i
+
+	#return posomega/wcycb, posgamma/wcycb
+	return omegaall/wcycb, gammas/wcycb
+	
 ## Find the growth rates of the MCI in its linear phase based off of drift and spread velocities
 def growth_rate_man(minions, majions, theta, file0, u, vd, vr, karr, omegarr):
-	# vr is para drift
-	# vd is perp drift
+	# u is perp drift
+	# vr is para thermal spread
+	# vd is para drift
 	# emin is beam energy in eV
 
 	# THIS GROWTH RATE CORRESPONDS TO EQUATIONS (8)-(10) OF MCCLEMENTS ET AL. POP 3 (2) 1996
@@ -1739,6 +1796,7 @@ def calcNewColdDisp(in_klimprime,Te,Ti):
 	
 	w_pi = getPlasmaFreq(file0,ion_species)
 	w_pe = getPlasmaFreq(file0,'Electrons')
+	w_ci = getCyclotronFreq(file0,ion_species)
 	w_ci = getCyclotronFreq(file0,ion_species)
 	w_ce = getCyclotronFreq(file0,'Electrons')
 	w_LH = 1/np.sqrt((1/(w_pi**2))+(1/(w_ci*w_ce)))
@@ -2397,105 +2455,7 @@ def grad_energydens(simloc,normspecies='Deuterons',quant='Magnetic_Field_Bz',mea
 #	plt.xlabel(r'$t/\tau_{cD}$',fontsize=20)
 	return timesplot, gradu
 
-
-# Plots and shows the experiment vs theory plot for the ratio between two species change in energy density
-# Also has the ability to plot du per-particle ratio (per species) through time for each simulation (nrows) -- will need to un-comment these lines
-def majIons_edens_ratio(sims,species=['Deuterons','Tritons'],time_norm=r'$\tau_{cD}$',ylabel=r'$[\Delta u_1/\Delta u_2]_{max}$',\
-								xlabel=r'$(\xi_1/\xi_2)(m_2/m_1)(q_1/q_2)^2$',labels=[None],lims=((0,1),(0,1)),identify=True,through_time=False):
-	"""
-		Function to find the ratio between energy densities of two species (specified) across a range of simulations (specified) and plot it 
-		either via a 1:1 correlation (through_time=False) or through time for each simulation (through_time=True). Is able to identify each
-		simulation for either scenario (identify=True/False). Then saves each figure in the home directory that the code is executed in.
-		
-		params in:
-			sims				: the simulations you want to loop through and extract their du [J m^-3]
-			species			: the species present in each simulation which you want to compare
-			time_norm		: normalised time with which to plot the through_time version
-			ylabel			: self exp.
-			xlabel			: self exp.
-			labels			: the labels of each simulation (i.e. concentration %), valid if identify=True
-			lims				: the limits of the 1:1 line plot (default is between 0 and 1)
-			identify			: identifies each simulation and annotates/plots a legend box (default False)
-			through_time	: determines whether you plot a through_time or 1:1 du ratio (default False)
-		params out:
-			None, plots the respective figures 
-	"""	
-	mean_to = 10
-	N=50
-	c=0
-	if identify:
-		import matplotlib.cm as cm
-		colors = cm.rainbow(np.linspace(0,1,len(sims)))
-	else:
-		colors = ['b']*len(sims)
-		labels = [None]*len(sims)
-	if not through_time:
-		fig,ax=plt.subplots(figsize=(6,4))
-		ax.plot(lims[0],lims[0],color='darkgray',linestyle='--') # 1:1 line
-	else:
-		fig,ax=plt.subplots(nrows=len(sims),figsize=(8,3*len(sims)))		
-	home = os.getcwd()
-	for sim in sims:
-		sim_loc = getSimulation(sim)
-		times = read_pkl('times')
-		d0 = sdfread(0)
-		nx = len(getQuantity1d(d0,'Derived_Number_Density'))
-		n0 = getQuantity1d(d0,'Derived_Number_Density_Electrons')
-		wc1 = getCyclotronFreq(d0,species[0])
-		tc1 = 2*const.PI/wc1
-		dt = (times[-1]-times[0])/len(times)
-		dt_p = dt/tc1
-		## field & species energies
-		maxdu = np.zeros(len(species))
-		duarr=[]
-		xi1,xi2,_=getConcentrationRatios(d0)
-		xi2_xi1 = xi2/xi1
-		print('Secondary conc.:: ',xi2)
-		marr = [getMass(species[0]),getMass(species[1])]
-		qarr = [getChargeNum(species[0]),getChargeNum(species[1])]
-		for i in range(len(species)):
-			Energypart = read_pkl(species[i]+'_KEdens')/(1000*const.qe) # keV/m^3
-			meanEnergypart = np.mean(Energypart[:mean_to])
-			Energypart = np.convolve(Energypart,np.ones(N)/N,mode='valid')
-			timespart = np.linspace(0,max(times),len(Energypart))
-			thresh = timespart/tc1 < 6.1
-			timespart = timespart[thresh]
-			du = (Energypart[thresh]-meanEnergypart)
-			maxdu[i] = np.max(du)
-			duarr.append(du)
-		if not through_time:
-			ax.scatter((xi1/xi2)*(marr[1]/marr[0])*((qarr[0]/qarr[1])**2),maxdu[0]/maxdu[1],color=colors[c],label=labels[c])
-			xy = ((xi1/xi2)*(marr[1]/marr[0])*((qarr[0]/qarr[1])**2),maxdu[0]/maxdu[1])
-#			ax.annotate(str(labels[c]),xy=xy,xycoords='data',xytext=(.5,0),textcoords='offset fontsize',fontsize=16,fontname='Times New Roman')
-		else:	## through time for each sim
-			duarr = np.array(duarr)
-			ax[c].plot(timespart/tcD,np.abs((xi2_xi1)*duarr[1]/duarr[0]))
-			ax[c].annotate(str(labels[c])+'%',(times[-1]/tc1-2,1e2),xycoords='data',**tnrfont)
-			ax[c].set_ylim(1e-3,1e3)
-			ax[c].axhline(marr[0]/marr[1],linestyle='--',color='k')
-			ax[c].set_yscale('log')
-		os.chdir(home)
-		c+=1
-	if through_time:
-		if identify:
-			for c in range(len(sims)):
-				ax[c].annotate(labels[c],xy=(0.9,0.9), xycoords='axes fraction')
-		midax = len(ax)//2
-		ax[int(midax)].set_ylabel(r'$\left(\frac{\xi_1}{\xi_2}\right)\left|\frac{\Delta u_1(t)}{\Delta u_2(t)}\right|$',fontsize=24)
-		ax[-1].set_xlabel(r'Time,  '+time_norm,**tnrfont)
-		fig.savefig('du_ratio_vs_time.png')
-	else:
-		if identify:
-			import matplotlib as mpl
-			mpl.rc('font',family='Times New Roman')
-			ax.legend(loc='best',fontsize=16)
-		ax.set_ylabel(ylabel,**tnrfont) ; ax.set_xlabel(xlabel,**tnrfont)
-		ax.set_xlim(lims[0]) ; ax.set_ylim(lims[1])
-		fig.savefig('du_peak_vs_theory.png',bbox_inches='tight')
-		plt.show()
-	return None
-
-
+# shared-area between two signals
 def shared_area(sig1,sig2,dx=None,fitgauss=False):
 	lx = len(sig1)
 	if lx!=len(sig2): 

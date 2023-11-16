@@ -1,6 +1,4 @@
 
-from func_load import *
-#import correlation.spatial_crosscor as sc
 
 def t1():
 	wca = 2.1 * (2 * abs(const.qe))/getMass('Alphas')
@@ -81,8 +79,47 @@ def t3():
 	plt.imshow(COSDIFF,**kwargs,cmap='bwr',extent=[0,2*const.PI,0,2*const.PI])
 	plt.show()
 
+def t4():
+	# check Delta u_D/Delta u_He3 vs xiHe3
+	os.chdir('/storage/space2/phrmsf/lowres_D_He3')
+	sims = np.sort([i for i in os.listdir() if 'p_90' in i and i!='0_00_p_90'])
+	hlabels = np.array([int(i[2:4]) for i in sims])
+	maxduarr,xiarr,marr,qarr=gr.majIons_edens_ratio(sims,species=['Deuterons','He3'],time_norm=r'$\tau_{cD}$',plot=False)
+	plt.scatter(xiarr[:,1],maxduarr[:,0]/maxduarr[:,1])
+	plt.ylabel('uD/uHe3',**tnrfont)
+	plt.xlabel('xiHe3',**tnrfont)
+	os.chdir('/storage/space2/phrmsf/lowres_D_He3')
+	plt.savefig('maxdu_ratio_vs_xiHe3.png')
+	plt.show()
 
+def t5(): # compare growth rates 
+	sim_loc = getSimulation('/storage/space2/phrmsf/traceT/old/traceT_highres_0_01')
+	theta = 89.
+	minions = 'Alphas'
+	majions = 'Deuterons'
+	wcyca = getCyclotronFreq(sdfread(0),minions)
+	omegaall = wcyca*np.linspace(0,25,20000)
+	vA = getAlfvenVel(sdfread(0))
+	_,kall,_ = coldplasmadispersion(sdfread(0),omegaall)
+	emin = 3.5e6
+	v0 = np.sqrt(2*emin*const.qe/getMass(minions))
+	val = 0.001
+	u = 1.67*vA #v0*np.sin(pitch_angle)
+	vd = np.sqrt(v0**2 - u**2) #v0*np.sin(pitch_angle)
+	vr = v0/1000
+	norm_w1, norm_gamma1 = growth_rates_analytical_all(theta, minions, majions , v0, u, kall, omegaall, vr/v0) #v0 in m/s
+	w2, gamma2 = growth_rate_man(minions, majions, theta, sdfread(0), u, vd, vr, kall, omegaall)
+	w1, gamma1 = norm_w1*wcyca, norm_gamma1*wcyca
+	plt.plot(w1/wcyca,gamma1/wcyca,color='r')
+	plt.plot(w2/wcyca,gamma2/wcyca,color='b')
+	plt.show()
+	
 if __name__ == '__main__':
+	from func_load import *
+	#import correlation.spatial_crosscor as sc
 	#t1()
 	#t2()
-	t3()
+	#t3()
+	#import energy.gyroresonance as gr
+	#t4()
+	t5()
