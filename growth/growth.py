@@ -2,16 +2,17 @@
 def TGROWTH():
 	sim_loc = getSimulation('/storage/space2/phrmsf/traceT/old/traceT_highres_0_01')
 	ind = list_sdf(sim_loc)
-	nval = 200000
+	nval = int(1e6)
 	
 	sim_loc = getSimulation('/storage/space2/phrmsf/traceT/old/traceT_highres_0_01')
 	theta = 89.
 	minions = 'Alphas'
 	majions = 'Deuterons'
 	wcyca = getCyclotronFreq(sdfread(0),minions)
-	omegaall = wcyca*np.linspace(0,25,200000)
+	omegaall = wcyca*np.linspace(0,25,nval)
 	vA = getAlfvenVel(sdfread(0))
-	kall = coldplasmadispersion(sdfread(0),omegaall)
+	print(vA)
+	_,kall,_ = coldplasmadispersion(sdfread(0),omegaall)
 	emin = 3.5E6
 	v0 = np.sqrt(2*emin*const.qe/getMass(minions))
 	val = 0.001
@@ -31,7 +32,7 @@ def TGROWTH():
 	E0 = 3.5E6 * const.eV_to_J
 	malpha = const.me*const.me_to_malpha
 	v0 = np.sqrt(2*E0/malpha)
-	u = 0.9*vA # np.cos(0.22*const.PI)*v0
+	u = 0.98*vA # np.cos(0.22*const.PI)*v0
 	vd = np.sqrt(v0**2 - u**2) # np.sin(0.22*const.PI)*v0 #0.06*v0#0.001*v0#*(1/(np.sqrt(2)))
 	vr = v0/1000
 	print('vr/v0 :: {}\nu/v_A :: {}'.format(vr/v0,u/vA))
@@ -55,3 +56,32 @@ def TGROWTH():
 if __name__=='__main__':
 	from func_load import *
 	TGROWTH()
+	nval = int(1e6)
+	theta = 89.
+	n0 = 1e19
+	xib = 1e-3
+	nb = n0*xib	
+	ni = n0 - 2*nb # quasi-neutrality
+	if ni + 2*nb != n0:
+		print('# ERROR # : quasi-neutrality not asserted')
+		raise SystemExit
+	B0 = 2.1
+	rho0 = nb*getMass('Alphas') + ni*getMass('Deuterons')
+	vA = B0/np.sqrt(const.mu0*rho0)
+	emin = 3.5e6 * const.qe
+	v0 = np.sqrt(2*emin/getMass('Alphas'))
+	u = v0*np.cos(-0.646)
+	print(u/v0,u/vA)
+	wce = const.qe*B0/const.me
+	wcycb = 2*const.qe*B0/getMass('Alphas')
+	wcyci = const.qe*B0/getMass('Deuterons')
+	wpe = np.sqrt((n0*(const.qe)**2)/(const.me*const.e0))
+	wpb = np.sqrt((nb*(2*const.qe)**2)/(getMass('Alphas')*const.e0))
+	wpi = np.sqrt((ni*(const.qe)**2)/(getMass('Deuterons')*const.e0))
+	wcyc = [wcycb,wcyci]
+	wp = [wpb,wpi]
+	omegaall = wpb*np.linspace(0,25,nval)
+	_,kall,_=coldplasmadispersion_analytical(omegaall,wpf=[wpe,wpb,wpi],wcf=[wce,wcycb,wcyci],theta=theta)
+	plt.plot(kall,omegaall/wcycb) ; plt.show()
+	wprime, gprime = growth_rates_analytical_all(vA,theta,v0,u,kall,omegaall,val=1/1000,wcyc=wcyc,wp=wp)
+	plt.plot(wprime,gprime,color='k') ; plt.show()

@@ -1188,6 +1188,49 @@ def getMagneticAngle(d0):
 		phi_y = const.PI/2
 	return phi_x, phi_y # will return 90 degrees for phi_y most of the time
 
+def coldplasmadispersion_analytical(omegas,wpf=[None,None,None],wcf=[None,None,None],theta=None):
+	# Assumes one of the species is always electrons (harcoded)
+	# angle between B & x-hat
+	# returns:
+			# k1, k2, k3 solutions (not-normalised)	
+	if not theta: 
+		theta = 89. # assumes angle
+	sin = np.sin(theta) ; cos = np.cos(theta)
+	print(theta, sin, cos)
+	# setup electron plasma and cyc freq
+	wpf=np.array(wpf)
+	wcf=np.array(wcf)
+	wpe,wpb,wpi = wpf
+	wce,wcb,wci = wcf
+	# setup components	
+	l = len(omegas)
+	R=np.ones(l); P=np.ones(l); L=np.ones(l); S=np.zeros(l); D=np.zeros(l) 
+	B=np.zeros(l); F=np.zeros(l); A=np.zeros(l); C=np.zeros(l) 
+	tr=0; tl=0; tp=0
+	# calculate components
+	for i in range(len(wpf)):
+		tr += (wpf[i]**2)/(omegas*(omegas + wcf[i]))
+		tl += (wpf[i]**2)/(omegas*(omegas - wcf[i]))
+		tp += (wpf[i]**2)/(omegas**2)
+	R = R - tr
+	L = L - tl
+	P = P - tp
+
+	S = 0.5*(R+L) ; D = 0.5*(R-L)
+	C = P*R*L
+	B = R*L*(sin**2) + P*S*(1.0 +cos**2)
+	F = (((R*L - P*S)**2)*(sin**4) + 4.0*(P**2)*(D**2)*(cos**2))**0.5
+	A = S*(sin**2) + P*(cos**2)
+	n1 = np.zeros(l, dtype=complex) ; n2=np.zeros(l, dtype=complex); n3=np.zeros(l, dtype=complex)#; n4=np.zeros(l, dtype=complex) 
+	n3 = np.lib.scimath.sqrt((R*L)/S)
+	n1 =  np.lib.scimath.sqrt((B+F)/(2.0*A))
+	n2 = np.lib.scimath.sqrt((B-F)/(2.0*A))
+	n3 = -np.lib.scimath.sqrt((B+F)/(2.0*A))
+	#n4 = -np.lib.scimath.sqrt((B-F)/(2.0*A))
+	del R, P, L, S, D, B, F, A
+	return (np.real(n1)*omegas)/const.c , (np.real(n2)*omegas)/const.c , np.real((n3*omegas)/const.c) #, (n4*omegas)/c, omegas
+	
+	
 # Plots the cold plasma dispersion for ionic species 1 and 2 (two maj or maj and min)
 def coldplasmadispersion(file0,omegas,theta=None):
 	# Assumes one of the species is always electrons (harcoded)
@@ -1537,17 +1580,11 @@ def Chi0Calc(file0,v0,kall,omegaall,species='Deuterons',wci=None,theta=90):
 	
 	return Chi0#, PIxx, PIxy, PIyy
 
-def growth_rates_analytical_all(theta, minions, majions , v0, u, kall, omegaall, val): #emin in eV
-	d = sdfread(0) #use quantities when they are initialised
-	wcycb = getCyclotronFreq(d,minions) # cyc freq for beam ions
-	wcyci = getCyclotronFreq(d,majions) # cyc freq for bulk ions
-	wpb = getPlasmaFreq(d,minions) #square of beam ion plasma frequency, z=1 for tritons
-	wpi = getPlasmaFreq(d,majions) #square of bulk ion plasma frequency, z=1 for deuterons
-	va = getAlfvenVel(d) #alfven vel
-	#val = 0.0068
-	vr = val*v0#getvr(readsdf(200))
-	#vr = getvr(readsdf(200)) #approx para velocity spreadval*v0
-	#val = vr/v0
+
+def growth_rates_analytical_all(va,theta,v0,u,kall,omegaall,val,wcyc=[None,None],wp=[None,None]):
+	wcycb,wcyci=wcyc 
+	wpb,wpi=wp
+	vr = val*v0
 
 	theta = theta*(const.PI/180.0) #radians
 	gammas = np.zeros(omegaall.shape[0]) #growth rates
@@ -1648,13 +1685,15 @@ def growth_rate_man(minions, majions, theta, file0, u, vd, vr, karr, omegarr):
 		#################################################################################		
 						#
 		########## Gamma ################################################################
-		gterm1 = (wpmin**2/wpi**2)*(wcyci**4/((wcyci+(w-wcyci)*Npara**2)*(wcyci-(w+wcyci)*Npara**2)))
+		gterm1 = ((wpmin**2)/(wpi**2))*((wcyci**4)/((wcyci+(w-wcyci)*Npara**2)*(wcyci-(w+wcyci)*Npara**2)))
 		gterm2 = ((l*wcycmin/(kpara*vr))*ml-((2*u**2)/(vr**2)*eetal*nl))
-		gterm3 = np.sqrt(const.PI)/(2*w)*np.exp(-1*eetal**2)
+		gterm3 = (np.sqrt(const.PI)/(2*w))*np.exp(-1*eetal**2)
 		gammas[i] = gterm1*gterm2*gterm3
+#		if (w/wcycmin)//1 == 17 and gterm3 != 0:
+#			print(gterm1,gterm2,gterm3,wcycmin)
 		#################################################################################		
 	
-	####### Want gamma > 1 only ###########
+	####### Want gamma > 0 only ###########
 	posomega = [] ; posgamma = []	
 
 	for i in range(0,gammas.shape[0]):
