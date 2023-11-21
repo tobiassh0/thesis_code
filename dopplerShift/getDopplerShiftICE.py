@@ -35,7 +35,7 @@ def getKernelDoppler(sims,FT2darr,normspecies,wkmax=[10,25],logthresh=1.8,kernel
 	l = len(sims)
 	if l == 1: l+=1
 	fig1,ax1=plt.subplots(nrows=l,figsize=(6,4*len(sims)))
-	fig2,ax2=plt.subplots(nrows=2,ncols=l//2,figsize=(8,4))
+	fig2,ax2=plt.subplots(nrows=3,ncols=l//3,figsize=(8,5))
 	fig2.subplots_adjust(hspace=0.1,wspace=0.1)
 	ax2 = ax2.ravel()
 	dsvarr=[] # 1d array of gradient in units of m/s per sim
@@ -130,25 +130,25 @@ def getKernelDoppler(sims,FT2darr,normspecies,wkmax=[10,25],logthresh=1.8,kernel
 			ax2[i].plot([0,10],[0,10],color='white',linestyle='--') # vA line
 			ax2[i].set_yticks([]) ; ax2[i].set_yticklabels([])
 			ax2[i].annotate(hlabels[i],xy=(5,8.7),xycoords='data',color='white',ha='center',va='bottom')
-			if i >= len(sims)//2:
+			if i >= 2*len(sims)//3:
 				ax2[i].set_xticks([0,5,10,15]) ; ax2[i].set_xticklabels([0,5,10,15])
 				ax2[i].set_xlabel(r'$kv_A/\Omega_p$',**tnrfont)
-
 			else:
 				ax2[i].set_xticks([]) ; ax2[i].set_xticklabels([])
+			if i%3==0:
+				ax2[i].set_ylabel(r'$\omega/$'+getOmegaLabel(normspecies),**tnrfont)
+				ax2[i].set_yticks([0,2,4,6,8,10]) ; ax2[i].set_yticklabels([0,2,4,6,8,10])
 		os.chdir(home)
 	print(os.getcwd())
 	## format edge axes
-	ax2[0].set_ylabel(r'$\omega/$'+getOmegaLabel(normspecies),**tnrfont)
-	ax2[len(ax2)//2].set_ylabel(r'$\omega/$'+getOmegaLabel(normspecies),**tnrfont)
-	ax2[0].set_yticks([0,2,4,6,8,10]) ; ax2[0].set_yticklabels([0,2,4,6,8,10])
-	ax2[len(ax2)//2].set_yticks([0,2,4,6,8,10]) ; ax2[len(ax2)//2].set_yticklabels([0,2,4,6,8,10])
-	ax2[-1].set_xticks([0,5,10,15,20]) ; ax2[i].set_xticklabels([0,5,10,15,20])
+#	ax2[len(ax2)//2].set_ylabel(r'$\omega/$'+getOmegaLabel(normspecies),**tnrfont)
+#	ax2[len(ax2)//2].set_yticks([0,2,4,6,8,10]) ; ax2[len(ax2)//2].set_yticklabels([0,2,4,6,8,10])
+	ax2[-1].set_xticks([0,5,10,15,20]) ; ax2[-1].set_xticklabels([0,5,10,15,20])
 	ax1[-1].set_xlabel(r'$d\omega/dk$'+'  '+r'$[v_A]$',**tnrfont)
 	fig1.savefig('dw_dk_'+kernel+'_grad.png',bbox_inches='tight')
 #	ax2[-1].set_xlabel(r'$kv_A/\Omega_p$',**tnrfont)
 #	plt.show()
-#	fig2.savefig('FT_2d_doppler.png',bbox_inches='tight')
+	fig2.savefig('FT_2d_doppler_all.png',bbox_inches='tight')
 	return np.array(dsvarr)
 
 
@@ -278,7 +278,7 @@ def PLOTDOPPLER(hlabels,dsvarr):
 	axs[1].annotate(r'$r={}$'.format(np.around(r,3)),xy=(0.97,0.85),xycoords='axes fraction',ha='right',va='bottom',fontsize=18)
 	## v_dop %
 	axs[2].scatter(hlabels,abs(dsv_vA)/abs(dsv_vA[0]),color='k')
-	axs[2].set_ylabel(r'$|v_{dop}/v_{dop}^{(5)}|$',**tnrfont)
+	axs[2].set_ylabel(r'$|v_{dop}/v_{dop}^{(0)}|$',**tnrfont)
 	axs[2].set_xlabel(r'$\xi_{He3}$',**tnrfont)
 	axs[2].set_ylim(0.95,1.05)
 	# fit linear curve
@@ -290,8 +290,8 @@ def PLOTDOPPLER(hlabels,dsvarr):
 	# pearsons cross cor
 	r = np.corrcoef(hlabels,abs(dsv_vA)/abs(dsv_vA[0]))[0,1]
 	axs[2].annotate(r'$r={}$'.format(np.around(r,3)),xy=(0.97,0.85),xycoords='axes fraction',ha='right',va='bottom',fontsize=18)
-	axs[2].set_xlim(0.,0.5)
-	#fig.savefig('vA_vdop_fits.png',bbox_inches='tight')
+	axs[2].set_xlim(-0.05,0.5)
+	fig.savefig('vA_vdop_fits.png',bbox_inches='tight')
 	plt.show()
 	return None
 	
@@ -303,7 +303,6 @@ if __name__ == '__main__':
 	home = os.getcwd()
 	sims = np.sort([i for i in os.listdir() if 'p_90' in i])
 	hlabels = np.array([int(i[2:4]) for i in sims])
-	hlabels = hlabels[1:] ; sims = sims[1:] # remove 0% case
 	FT2darr = []
 	for sim in sims:
 		_=getSimulation(sim)

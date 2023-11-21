@@ -126,6 +126,7 @@ if __name__ == '__main__':
 	os.chdir('/storage/space2/phrmsf/lowres_D_He3/')
 	sims = np.sort([i for i in os.listdir() if 'p_90' in i])
 	xiHe3 = np.array([int(i[2:4])/100 for i in sims])
+	sims = sims[1:] ; xiHe3 = xiHe3[1:] # remove 0% sim
 	pearsonscc(sims,xiHe3)
 	#nEcc(sims,xiHe3)
 	

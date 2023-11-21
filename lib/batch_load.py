@@ -260,6 +260,6 @@ class Simulation():
 
 
 if __name__ == '__main__':
-	simloc = '/storage/space2/phrmsf/ECRH/ECRH_JT60U_6'#lowres_D_He3/0_05_p_90'
-	simloc = '/storage/space2/phrmsf/lowres_D_He3/0_00_p_90'
+	#simloc = '/storage/space2/phrmsf/ECRH/ECRH_JT60U_6'#lowres_D_He3/0_05_p_90'
+	simloc = '/storage/space2/phrmsf/lowres_D_He3/0_00_p_90'#energy_protons/1MEV'
 	Simulation(simloc)
