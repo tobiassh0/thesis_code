@@ -720,6 +720,15 @@ def plot1d(d,varname):
 	fig.savefig(home_path+varname+'.jpeg',bbox_inches='tight')
 	ax.clear()
 
+# plot 2d fieldmatrix in the layout T,X
+def plotMatrix(matrix,name='matrix_quantity',extents=[None,None,None,None],cbar=True,cmap='jet'):
+	fig,ax=plt.subplots(figsize=(8,4))
+	im = ax.imshow(matrix,extent=extents,**kwargs,cmap=cmap)
+	if cbar:
+		fig.colorbar(im)
+	plotting(fig,ax,name)
+	return None
+
 # Moving average calculation of a quantity
 def temporal_average(index_list,quantity,points=np.linspace(-1,1,3,dtype=int)):
 	# TODO : Make this use the file_list rather than index_list and then phase this index_list out from the whole code
