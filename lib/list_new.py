@@ -118,13 +118,21 @@ def list_sdf(sim_file_loc):
 	index_list = np.sort(np.asarray([s.replace('.sdf','') for s in sdf_list], dtype=int))
 	return index_list
 
-# Reads a given sdf file as per the index
-def sdfread(index,d=0,l5=True,l4=False):
-	indlst = list_sdf(os.getcwd())
-	if indlst[-1] > 9999:
+# Returns two booleans on whether n-zeros used by EPOCH is 4 or 5 (XXXX.sdf vs. XXXXX.sdf)
+def getl4l5(l4=False,l5=True):
+	f = [i.replace('.sdf','') for i in os.listdir() if '.sdf' in i and 'TempOut' not in i]
+	if len(f[0]) == 4:
+		l4=True; l5=False
+	elif len(f[0]) == 5:
 		l4=False; l5=True
 	else:
-		lf=True ; l5=False
+		print('# ERROR # : Can\'t determine n-zeros used.')
+		l4=False; l5=False
+	return l4, l5
+
+# Reads a given sdf file as per the index
+def sdfread(index,d=0,l5=True,l4=False):
+	l4, l5 = getl4l5()
 	d = None
 	try: # try and load
 		if index==0:
