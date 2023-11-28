@@ -4,12 +4,11 @@ def TGROWTH():
 	ind = list_sdf(sim_loc)
 	nval = int(1e6)
 	
-	sim_loc = getSimulation('/storage/space2/phrmsf/traceT/old/traceT_highres_0_01')
 	theta = 89.
 	minions = 'Alphas'
 	majions = 'Deuterons'
 	wcyca = getCyclotronFreq(sdfread(0),minions)
-	omegaall = wcyca*np.linspace(0,25,nval)
+	omegaall = wcyca*np.linspace(1,25,nval)
 	vA = getAlfvenVel(sdfread(0))
 	print(vA)
 	_,kall,_ = coldplasmadispersion(sdfread(0),omegaall)
@@ -17,9 +16,10 @@ def TGROWTH():
 	v0 = np.sqrt(2*emin*const.qe/getMass(minions))
 	val = 0.001
 	u = 0.98*vA #v0*np.sin(pitch_angle)
-	vd = np.sqrt(v0**2 - u**2) #v0*np.sin(pitch_angle)
+	vd = np.sqrt(v0**2 - u**2) #v0*np.cos(pitch_angle)
 	vr = v0/1000
 	w2, gamma2 = growth_rate_man(minions, majions, theta, sdfread(0), u, vd, vr, kall, omegaall)
+	print('plotting here')
 	plt.plot(w2/wcyca,gamma2/wcyca) ; plt.show()
 	sys.exit()
 

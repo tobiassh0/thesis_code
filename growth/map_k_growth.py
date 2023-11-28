@@ -1,148 +1,5 @@
-
-from func_load import *
-
-
-#def extractPeaks(data,Nperwcd=1,prominence=0.3):
-#	return signal.find_peaks(data,distance=Nperwcd,prominence=prominence)[0] # tune till Nperwcd encapsulates all peaks (visually)
-
-#---------------------------------------------------------------------#
-### extract growth rates per omega spacing
-#sim_lst = ['traceT_D_89_T_11','traceT_D_99_T_01','traceT_0_00']#'traceT_0_50',
-#SimIndex=0
-#colors=['g','r','cyan']#'b',
-#colors = ['b','r','k']
-#shapes = ['o','o','o']
-#labels = [r'$11\%$',r'$1\%$',r'$0\%$'] #r'$50\%$',
-#fig,axs=plt.subplots(figsize=(10,10/(const.g_ratio)),nrows=2,sharex=True)
-#fig.subplots_adjust(hspace=0.1)
-#ax = axs.ravel()
-
-##for i in np.arange(0,12,2): ax[0].axvline(i,color='darkgrey',linestyle='--')
-
-#sim_0 = getSimulation('/storage/space2/phrmsf/traceT_0_00')
-#wnorm = getCyclotronFreq(sdfread(0),'Deuterons')
-#for sim in sim_lst:
-#	## define sim
-#	sim_loc = getSimulation('/storage/space2/phrmsf/'+sim)
-##	wnorm = getEffectiveCyclotronFreq(sdfread(0))
-#	omegas, growthRatesMean, growthRatesSTD = map_k_growth(sim_loc,0,25,0.25)#,tstart_frac=0.5,tend_frac=2.0)
-##	ax[0].errorbar(omegas/wnorm,growthRatesMean/wnorm,growthRatesSTD/wnorm,fmt='o',color=colors[SimIndex],label=labels[SimIndex])
-#	ax[1].scatter(omegas/wnorm,growthRatesMean/wnorm,marker=shapes[SimIndex],facecolors=colors[SimIndex],edgecolors=colors[SimIndex],label=labels[SimIndex])	
-#	SimIndex+=1
-
-#ax[1].set_ylabel(r'$\gamma_{s}/\Omega_D$',fontsize=20)	
-#ax[1].set_ylim(0,3.5)
-##ax[1].set_yscale('symlog')
-#ax[1].set_xlim(2,25)
-#ax[1].legend(loc='upper left')
-#### growth rates
-#sim_loc = getSimulation('/storage/space2/phrmsf/traceT_highres_0_01')
-#ind = list_sdf(sim_loc)
-#nval = 500000
-
-#minions = 'Alphas'
-#majions = 'Deuterons'
-#elec = 'Electrons'
-#theta,_ = getMagneticAngle(sdfread(0))
-#wc_maj = getCyclotronFreq(sdfread(0),majions)
-#vA = getAlfvenVel(sdfread(0))
-#E0 = 3.5E6 * const.eV_to_J
-#malpha = const.me*const.me_to_malpha
-#v0 = np.sqrt(2*E0/malpha)
-#u = np.cos(0.22*const.PI)*v0
-#vd = np.sin(0.22*const.PI)*v0
-#vr = 0.001*v0#0.001*v0#*(1/(np.sqrt(2)))
-#print('vd/v0 :: {},\nvr/v0 :: {}\nu/v_A :: {}'.format(vd/v0,vr/v0,u/vA))
-#omegaall = wc_maj*np.linspace(1,25,nval)
-
-#_,kall,_ = coldplasmadispersion(sdfread(0), omegaall)
-#posomega, posgamma = growth_rate_man('Alphas', 'Deuterons', 89, sdfread(0), u, vd, vr, kall, omegaall)
-#posgamma = np.array(posgamma) #; posgamma[np.isnan(posgamma)] = 0 
-#ax[0].plot(posomega/wnorm,posgamma/wnorm,color='k')
-#ax[0].set_ylabel(r'$\gamma_{l}/\Omega_D$',fontsize=20)
-#ax[0].set_ylim(0,1.4e3)
-#ax[1].set_xlabel(r'$\omega/\Omega_D$',fontsize=20)
-#plt.show()
-#fig.savefig('/storage/space2/phrmsf/paper/Bz_kt_growth_0_25.eps')
-#fig.savefig('/storage/space2/phrmsf/paper/Bz_kt_growth_0_25.png')
 #---------------------------------------------------------------------#
 
-#---------------------------------------------------------------------#
-## multiple growth rates 
-sim_lst = ['traceT_D_89_T_11','traceT_D_99_T_01','traceT_0_00']#'traceT_0_50',
-colors=['g','r','cyan']#'b',
-colors = ['b','r','k']
-shapes = ['o','o','o']
-labels = [r'$11\%$',r'$1\%$',r'$0\%$'] #r'$50\%$',
-fig,axs=plt.subplots(figsize=(8,6),nrows=3,sharex=True)
-fig.subplots_adjust(hspace=0.1)
-ax = axs.ravel()
-times = [[0,0.5],[0.5,2.0]]
-wmax = 25
-
-## deuteron harmonics
-for a in np.arange(1,axs.shape[0],1):
-	for i in np.arange(0,wmax+1,1):
-		ax[a].axvline(i,color='darkgrey',linestyle='--')
-
-## theory
-minions = 'Alphas'
-majions = 'Deuterons'
-elec = 'Electrons'
-simloc = getSimulation('/storage/space2/phrmsf/traceT_0_00')
-d0 = sdfread(0)
-theta,_ = getMagneticAngle(d0)
-wc_maj = getCyclotronFreq(d0,majions)
-wc_min = getCyclotronFreq(d0,minions)
-wnorm = wc_min
-vA = getAlfvenVel(d0)
-E0 = 3.5E6 * const.qe
-malpha = const.me*const.me_to_malpha
-v0 = np.sqrt(2*E0/malpha)
-vperp0 = np.cos(0.22*const.PI)*v0
-vpara0 = np.sin(0.22*const.PI)*v0
-vr = 0.001*v0#0.01*v0#*(1/(np.sqrt(2)))
-print('vpara0/v0 :: {},\nvr/v0 :: {}\nvperp0/v_A :: {}'.format(vpara0/v0,vr/v0,vperp0/vA))
-nval = 200000
-omegaall = wc_maj*np.linspace(1,25,nval)
-
-_,kall,_ = coldplasmadispersion(d0, omegaall)
-posomega, posgamma = growth_rate_man('Alphas', 'Deuterons', 89, d0, vperp0, vpara0, vr, kall, omegaall)
-posgamma = np.array(posgamma) #; posgamma[np.isnan(posgamma)] = 0 
-ax[0].plot(posomega/wnorm,posgamma/wnorm,color='k')
-
-## empirical growths
-t=1
-for ttimes in times:
-	SimIndex=0
-	for sim in sim_lst:
-		## define sim
-		sim_loc = getSimulation('/storage/space2/phrmsf/'+sim)
-		omegas, growthRatesMean, growthRatesSTD = map_k_growth(sim_loc,'Deuterons',0,wmax,0.25,tstart_frac=ttimes[0],tend_frac=ttimes[1])
-#		ax[t].scatter(omegas/wnorm,growthRatesMean/wnorm,marker='o',facecolors=colors[SimIndex])
-		thresh = growthRatesMean > 0
-		growthRatesMean = growthRatesMean[thresh]
-		omegas = omegas[thresh]
-		ax[t].plot(omegas/wnorm,growthRatesMean/wnorm,'-o',color=colors[SimIndex])
-		SimIndex+=1
-	ax[t].set_ylim(0,3.5)
-	ax[t].set_xlim(0,wmax)
-	ax[t].set_ylabel(r'$\gamma_s/\Omega_\alpha$',**tnrfont)
-	t+=1
-
-# time range annotations
-ax[0].set_ylabel(r'$\gamma_l/\Omega_\alpha$',**tnrfont)
-ax[1].text(1.,2.8,r'$0<t/\tau_{cD}<0.5$',color='black',fontsize=16,bbox=dict(facecolor='white',edgecolor='black',boxstyle='square,pad=0.25'))
-ax[2].text(1.,2.8,r'$0.5<t/\tau_{cD}<2.0$',color='black',fontsize=16,bbox=dict(facecolor='white',edgecolor='black',boxstyle='square,pad=0.25'))
-# x-label
-ax[2].set_xlabel(r'$\omega/\Omega_\alpha$',**tnrfont)
-#fig.savefig('/storage/space2/phrmsf/paper/Bz_kt_growth_twoTimes.png')
-#fig.savefig('/home/space/phrmsf/Documents/thesis_code/Bz_kt_growth_twoTimes.png')
-plt.show()	
-
-#---------------------------------------------------------------------#
-
-#---------------------------------------------------------------------#
 ##def PITENSOR(file0,v0,kall,omegaall,theta=90):
 ##	theta = theta*(const.PI/180) # radians
 ##	PIxx = np.zeros(len(omegaall),complex) ; PIxy = np.zeros(len(omegaall),complex) ; PIyy = np.zeros(len(omegaall),complex)
@@ -204,6 +61,131 @@ plt.show()
 ##dumpfiles(CHI0,'CHI0_Mu_Lambda')
 ##plt.imshow(CHI0,**kwargs) ; plt.show()
 
+#---------------------------------------------------------------------#
 
+## multiple empirical growth rates (for multiple time-ranges) plotted against theory 
 
+def multi_empirical_growths(sim_lst,labels,majions,minions,Emin=3.5e6,theory_sim=None,theta=89,\
+										times=[[0,0.5],[0.5,2.0]],wmin=0,wmax=25,dw=0.25,nval=int(1e6)):
+	"""
+		Function for an n-rows plot of the [0] theoretical growth rates [1] time range 1 [2] time range 2 ... [n] time range n
+		Each time range in the times array is given as 2 values, times[n] = [tstart, tend]. Using these ranges, the growth rates
+		are extracted empirically according to the cold plasma dispersion
+		
+		In:
+			sim_lst 		: list of simulations to compare
+			labels 		: (not used) can label each species 
+			majions 		: majority ions
+			minions 		: minority ions
+			Emin 			: Minority species energy in eV
+			theory_sim 	: simulation used to calculate theoretical growth rates
+			theta 		: angle between B-field and sim domain
+			times 		: time array shape (n,2) which dictates time ranges to calculate empirical growth rates
+			wmin & wmax : the minimum and maximum frequencies used for plotting & growth rates
+			dw				: spacing in normalised freq to empirically calculate the growth rates
+			nval			: the number of data points to calculate the theoretical growth rates
+		Out:
+			n-rows plot of the theory, and n time ranges		
+	"""	
+	## setup
+	times = np.array(times) # convert to numpy array
+	home=os.getcwd() # get cwd to save figs in and find sims
+	colors = ['b','r','k','g','orange']
+	if len(colors) < len(sim_lst):
+		colors = plt.cm.rainbow(np.linspace(0,1,len(sims)))
+	shapes = ['o']*len(sim_lst)
+	
+	# plot setup
+	fig,axs=plt.subplots(figsize=(8,6),nrows=times.shape[0]+1,sharex=True)
+	fig.subplots_adjust(hspace=0.1)
+	ax = axs.ravel()
+	
+	# majority harmonics
+	for a in np.arange(1,axs.shape[0],1):
+		for i in np.arange(0,wmax+1,1):
+			ax[a].axvline(i,color='darkgrey',linestyle='--')
+	
+	## theory
+	_=getSimulation(theory_sim)
+	d0 = sdfread(0)
+	nval = int(1e6)
+
+	# setup	
+	theta = 89.
+	wcyca = getCyclotronFreq(d0,minions)
+	wnorm = wcyca
+	omegaall = wnorm*np.linspace(wmin,wmax,nval)
+	vA = getAlfvenVel(d0)
+	print(vA)
+
+	# cold plasma dispersion
+	_,kall,_ = coldplasmadispersion(d0,omegaall)
+	v0 = np.sqrt(2*Emin*const.qe/getMass(minions))
+	u = 0.98*vA #v0*np.sin(pitch_angle)
+	vd = np.sqrt(v0**2 - u**2) #v0*np.cos(pitch_angle)
+	vr = v0/1000
+	
+	# get theoretical growth rates & plot
+	posomega, posgamma = growth_rate_man(minions, majions, theta, d0, u, vd, vr, kall, omegaall)
+	ax[0].plot(posomega/wcyca,posgamma/wcyca,color='k')
+	ax[0].set_ylabel(r'$\gamma_l/$'+getOmegaLabel(minions),**tnrfont)
+	ax[0].set_xlim(wmin,wmax)
+	
+	# hard coded limits
+	#ax[0].set_ylim(0,2500)
+
+	## empirical growths
+	t=1
+	for ttimes in times:
+		SimIndex=0
+		for sim in sim_lst:
+			os.chdir(home)
+
+			# define sim
+			sim_loc = getSimulation(sim)
+			theta,_ = getMagneticAngle(sdfread(0))
+
+			# get empirical growth rates for a range of k values and corresponding frequencies
+			omegas, growthRatesMean, growthRatesSTD = map_k_growth(sim_loc,minions,wmin,wmax,dw,tstart_frac=ttimes[0],tend_frac=ttimes[1],theta=theta*180/const.PI)
+
+			# thresh so if < 0 ignore data point
+			thresh = growthRatesMean > 0
+			growthRatesMean = growthRatesMean[thresh]
+			omegas = omegas[thresh]
+
+			# plot
+			ax[t].plot(omegas/wnorm,growthRatesMean/wnorm,'-o',color=colors[SimIndex])
+			SimIndex+=1
+		ax[t].set_xlim(0,wmax)
+		ax[t].set_ylabel(r'$\gamma_s/$'+getOmegaLabel(minions),**tnrfont)
+		
+		## hard-coded formatting
+		# ylim 
+		#ax[t].set_ylim(0,3.5)
+		
+		# annotation label (alpha) 
+		ax[t].annotate(str(ttimes[0])+r'$<t/\tau_{c\alpha}<$'+str(ttimes[1]),xy=(0.04,0.7125),xycoords='axes fraction',\
+							**tnrfont,ha='left',va='bottom',bbox=dict(boxstyle='square',pad=0.15,fc='w', ec='k', lw=1))
+		t+=1
+	
+	# x-label
+	ax[-1].set_xlabel(r'$\omega/$'+getOmegaLabel(minions),**tnrfont)
+	#plt.show()
+	fig.savefig(home+'/Bz_kt_{}_{}_{}.png'.format(wmin,wmax,dw),bbox_inches='tight')
+	fig.savefig(home+'/Bz_kt_{}_{}_{}.eps'.format(wmin,wmax,dw),bbox_inches='tight')
+	return None
+
+#---------------------------------------------------------------------#
+
+if __name__=='__main__':
+	from func_load import * 
+#	os.chdir('/storage/space2/phrmsf/traceT/')
+#	sims = ['traceT_D_100_T_00','traceT_D_99_T_01','traceT_D_89_T_11']
+#	tlabels = [r'$0\%$',r'$1\%$',r'$11\%$']
+#	multi_empirical_growths(np.flip(sims),np.flip(tlabels),'Deuterons','Alphas',theory_sim=sims[0],times=[[0.5,2.0]])
+
+	os.chdir('/storage/space2/phrmsf/lowres_D_He3/')
+	sims = np.sort([i for i in os.listdir() if 'p_90' in i])
+	hlabels = np.array([int(i[2:4]) for i in sims])	
+	multi_empirical_growths(sims,hlabels,'Deuterons','Protons',theory_sim=sims[0])
 

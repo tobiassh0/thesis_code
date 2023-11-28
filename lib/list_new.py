@@ -1658,6 +1658,7 @@ def growth_rates_analytical_all(va,theta,v0,u,kall,omegaall,val,wcyc=[None,None]
 	
 ## Find the growth rates of the MCI in its linear phase based off of drift and spread velocities
 def growth_rate_man(minions, majions, theta, file0, u, vd, vr, karr, omegarr):
+	# f(vpara,vperp) = (1/(2pi^1.5 u v_r)) * exp(-(vpara-vd)^2/vr^2) * delta(vperp-u)	
 	# u is perp drift
 	# vr is para thermal spread
 	# vd is para drift
@@ -1668,14 +1669,19 @@ def growth_rate_man(minions, majions, theta, file0, u, vd, vr, karr, omegarr):
 	
 	Zmin = getChargeNum(minions)
 	Zmaj = getChargeNum(majions)
-	wcycmin = getCyclotronFreq(file0,minions) # cyc freq for beam ions (minority)
-	wcyci = getCyclotronFreq(file0,majions) # cyc freq for bulk ions
+	wcycmin = getCyclotronFreq(file0,minions)
+	wcyci = getCyclotronFreq(file0,majions)
 
-	wpmin = getPlasmaFreq(file0, minions) #square of beam ion plasma frequency, z=1 for tritons
-	wpi = getPlasmaFreq(file0, majions) #square of bulk ion plasma frequency, z=1 for deuterons
+	wpmin = getPlasmaFreq(file0, minions)
+	wpi = getPlasmaFreq(file0, majions)
 	vA = getAlfvenVel(file0)
 
-	theta = theta*(const.PI/180.0) #radians
+	# angle
+	if not theta:
+		theta,_=getMagneticAngle(file0)
+	else: # if theta is provided, assume in degrees
+		theta = theta*(const.PI/180.0) #radians
+
 	gammas = np.zeros(omegarr.shape[0]) #growth rates
 
 	for i in range(0, omegarr.shape[0]):
@@ -2429,10 +2435,12 @@ def ciggies(sim_loc,species_lst=['Deuterons','Alphas'],nval=10000,para=False,elo
 
 # extract peaks in a dataset (used for power spectra comparisons)	
 def extractPeaks(data,Nperw=1,prominence=0.3):
-	return signal.find_peaks(data,distance=Nperw,prominence=prominence)[0] # tune till Nperw encapsulates all peaks (visually)	
+	# tune till Nperw encapsulates all peaks (visually)
+	return signal.find_peaks(data,distance=Nperw,prominence=prominence)[0]
 
 # calculate the growth of k-modes for various time spacings
-def map_k_growth(sim_loc,normspecies='Deuterons',omega_min=0,omega_max=100,domega=0.25,dt_frac=0.5,tstart_frac=0.5,tend_frac=2.0,color='k',plot=False):
+def map_k_growth(sim_loc,normspecies='Alphas',omega_min=0,omega_max=50,domega=0.25,dt_frac=0.5,\
+					tstart_frac=0.5,tend_frac=2.0,theta=89.,color='k',plot=False):
 	## define sim
 	sim_loc = getSimulation(sim_loc)
 	d0 = sdfread(0)
@@ -2446,8 +2454,8 @@ def map_k_growth(sim_loc,normspecies='Deuterons',omega_min=0,omega_max=100,domeg
 	## cold plasma disp
 	omegas = wnorm*np.arange(int(omega_min),int(omega_max),domega)
 	species = getIonSpecies(d0)	
-	#k1,k2,k3 = coldplasmadispersion(d0, omegas, theta=89) 
-	k2 = omegas/(vA*np.sqrt(1+np.cos(86.3*const.PI/180.)**2))
+	_,k2,_ = coldplasmadispersion(d0, omegas, theta=theta) 
+	#k2 = omegas/(vA*np.sqrt(1+np.cos(86.3*const.PI/180.)**2))
 	thresh = k2 > 0
 	k2 = k2[thresh] ; omegas = omegas[thresh]
 	## FT1d & extract data at karr points
@@ -2464,7 +2472,7 @@ def map_k_growth(sim_loc,normspecies='Deuterons',omega_min=0,omega_max=100,domeg
 #		data = np.mean((FT1d[1:,round(harmonics[i])-1:round(harmonics[i])+1]),axis=1)
 		data = (FT1d[1:,round(harmonics[i])])
 		# extract peaks in data
-		peaks = extractPeaks(data,Nperwcd=10)
+		peaks = extractPeaks(data,Nperw=10)
 		datapeak = data[peaks]
 		time_dummy = times[peaks]
 #		indexpeak = np.ones(len(datapeak))*i

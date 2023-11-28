@@ -69,8 +69,9 @@ def pearsonscc(sims,xiHe3):
 	ax.plot(x_fit,y_fit,color='r',linestyle='--')
 	ax.annotate(r'$d(\delta \omega)/d \xi_{He3}=$'+r'$({}\pm{})$'.format(np.around(params[0],2),np.around(params_err[0],2))+r'$\Omega_p$',\
 					xy=(0.95,0.05),xycoords='axes fraction',ha='right',va='bottom',fontsize=18)
-	fig.savefig('PearsonsCorrCoef.png',bbox_inches='tight')
 	plt.show()
+	sys.exit()
+	fig.savefig('PearsonsCorrCoef.png',bbox_inches='tight')
 	#np.savetxt('pearsonscrosscor.txt',np.array([xiHe3,peaks,perrs]).T)
 
 def nEcc(sims,xiHe3):
