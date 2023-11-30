@@ -1219,7 +1219,7 @@ def coldplasmadispersion_analytical(omegas,wpf=[None,None,None],wcf=[None,None,N
 	# returns:
 			# k1, k2, k3 solutions (not-normalised)	
 	if not theta: 
-		theta = 89. # assumes angle
+		theta = 89.0*(const.PI/180) # assume an angle
 	sin = np.sin(theta) ; cos = np.cos(theta)
 	print(theta, sin, cos)
 	# setup electron plasma and cyc freq
@@ -1253,7 +1253,7 @@ def coldplasmadispersion_analytical(omegas,wpf=[None,None,None],wcf=[None,None,N
 	n3 = -np.lib.scimath.sqrt((B+F)/(2.0*A))
 	#n4 = -np.lib.scimath.sqrt((B-F)/(2.0*A))
 	del R, P, L, S, D, B, F, A
-	return (np.real(n1)*omegas)/const.c , (np.real(n2)*omegas)/const.c , np.real((n3*omegas)/const.c) #, (n4*omegas)/c, omegas
+	return (np.real(n1)*omegas)/const.c , (np.real(n2)*omegas)/const.c , (np.real(n3)*omegas)/const.c #, (n4*omegas)/c, omegas
 	
 	
 # Plots the cold plasma dispersion for ionic species 1 and 2 (two maj or maj and min)
@@ -1617,8 +1617,8 @@ def growth_rates_analytical_all(va,theta,v0,u,kall,omegaall,val,wcyc=[None,None]
 		l = round(omegaall[i]/wcycb) #l closest to the omega
 		kpara = kall[i]*np.cos(theta)#/np.tan(theta) #assumes input k is k_perp
 		kperp = kall[i]*np.sin(theta) #assumes input k is k_perp
-		Npara = (kpara*va)/omegaall[i] 
-		Nperp = (kperp*va*np.sin(theta))/omegaall[i] #assumes input k is k_perp
+		Npara = (kpara*va)/omegaall[i]
+		Nperp = (kperp*va)/omegaall[i] #assumes input k is k_perp
 		eetal = (omegaall[i] - l*wcycb)/(kpara*vr) # vd=0
 		za = kall[i]*np.sin(theta)*v0/wcycb
 		############## M_l ###############################################################
