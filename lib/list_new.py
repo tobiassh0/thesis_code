@@ -1654,7 +1654,7 @@ def growth_rates_analytical_all(va,theta,v0,u,kall,omegaall,val,wcyc=[None,None]
 		#	print i
 
 	#return posomega/wcycb, posgamma/wcycb
-	return omegaall/wcycb, gammas/wcycb
+	return np.array(posomega)/wcycb, np.array(posgamma)/wcycb
 	
 ## Find the growth rates of the MCI in its linear phase based off of drift and spread velocities
 def growth_rate_man(minions, majions, theta, file0, u, vd, vr, karr, omegarr):

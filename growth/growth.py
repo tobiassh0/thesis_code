@@ -2,20 +2,21 @@
 def TGROWTH():
 	sim_loc = getSimulation('/storage/space2/phrmsf/traceT/old/traceT_highres_0_01')
 	ind = list_sdf(sim_loc)
-	nval = int(1e6)
+	nval = int(2e6)
 	
-	theta = 89.
+	theta = 89.0 # deg
 	minions = 'Alphas'
 	majions = 'Deuterons'
 	wcyca = getCyclotronFreq(sdfread(0),minions)
-	omegaall = wcyca*np.linspace(1,25,nval)
+	omegaall = wcyca*np.linspace(1,15,nval)
 	vA = getAlfvenVel(sdfread(0))
 	print(vA)
 	_,kall,_ = coldplasmadispersion(sdfread(0),omegaall)
 	emin = 3.5E6
 	v0 = np.sqrt(2*emin*const.qe/getMass(minions))
 	val = 0.001
-	u = 0.98*vA #v0*np.sin(pitch_angle)
+	pitch_angle = 50.42 * const.PI/180
+	u = v0*np.sin(pitch_angle) #0.98*vA
 	vd = np.sqrt(v0**2 - u**2) #v0*np.cos(pitch_angle)
 	vr = v0/1000
 	w2, gamma2 = growth_rate_man(minions, majions, theta, sdfread(0), u, vd, vr, kall, omegaall)
@@ -59,7 +60,7 @@ if __name__=='__main__':
 	nval = int(1e6)
 	theta = 89.
 	n0 = 1e19
-	xib = 1e-3
+	xib = 2e-3
 	nb = n0*xib	
 	ni = n0 - 2*nb # quasi-neutrality
 	if ni + 2*nb != n0:
@@ -70,7 +71,7 @@ if __name__=='__main__':
 	vA = B0/np.sqrt(const.mu0*rho0)
 	emin = 3.5e6 * const.qe
 	v0 = np.sqrt(2*emin/getMass('Alphas'))
-	u = v0*np.cos(-0.646)
+	u = v0*np.cos(0.658689545)
 	print(u/v0,u/vA)
 	wce = const.qe*B0/const.me
 	wcycb = 2*const.qe*B0/getMass('Alphas')
@@ -80,8 +81,9 @@ if __name__=='__main__':
 	wpi = np.sqrt((ni*(const.qe)**2)/(getMass('Deuterons')*const.e0))
 	wcyc = [wcycb,wcyci]
 	wp = [wpb,wpi]
-	omegaall = wpb*np.linspace(0,25,nval)
+	omegaall = wpb*np.linspace(0,15,nval)
 	_,kall,_=coldplasmadispersion_analytical(omegaall,wpf=[wpe,wpb,wpi],wcf=[wce,wcycb,wcyci],theta=theta)
-	plt.plot(kall,omegaall/wcycb) ; plt.show()
+	#plt.plot(kall,omegaall/wcycb) ; plt.show()
 	wprime, gprime = growth_rates_analytical_all(vA,theta,v0,u,kall,omegaall,val=1/1000,wcyc=wcyc,wp=wp)
 	plt.plot(wprime,gprime,color='k') ; plt.show()
+	
