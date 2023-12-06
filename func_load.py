@@ -10,6 +10,8 @@ import my_constants as const
 import numpy as np
 import sdf
 import pickle
+import matplotlib as mpl
+mpl.use('TkAgg')
 import matplotlib.pyplot as plt
 #plt.style.use('classic')
 #plt.tight_layout()

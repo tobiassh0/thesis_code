@@ -1203,15 +1203,19 @@ def getMagneticAngle(d0):
 	# returns the angle (1d if in z-x plane or 2d if in z-x-y volume)
 	# returns the angle in degrees
 #	d0 = sdfread(0)
+	Btot = getMeanField3D(d0, 'Magnetic_Field_B')
 	try:
 		Bx = getMeanquantity(d0, 'Magnetic_Field_Bx')
 		By = getMeanquantity(d0, 'Magnetic_Field_By')
-		Btot = getMeanField3D(d0, 'Magnetic_Field_B')
 		phi_x, phi_y = np.arccos(Bx/Btot), np.arccos(By/Btot)
 	except:
-		phi_x = float(input('B0 angle to xhat [deg]::'))*(const.PI/180)
+		Bz = getMeanquantity(d0, 'Magnetic_Field_Bz')
+		if Btot == Bz: #90 deg
+			phi_x = const.PI/2
+		else:
+			phi_x = float(input('B0 angle to xhat [deg]::'))*(const.PI/180)
 		phi_y = const.PI/2
-	return phi_x, phi_y # will return 90 degrees for phi_y most of the time
+	return phi_x, phi_y # will return 90 degrees for phi_y # hard-coded
 
 def coldplasmadispersion_analytical(omegas,wpf=[None,None,None],wcf=[None,None,None],theta=None):
 	# Assumes one of the species is always electrons (harcoded)
@@ -2210,7 +2214,28 @@ def integrate(data,dt):
 	return csum
 
 # Home function for calculating power spectrum (call when in the relevant dir)
-def power(wnorm,wklims=[None,None],wkmax=[None,None],norm_omega=r'$\Omega_D$',quantity='Magnetic_Field_Bz',plot=False,read=True,outp=True):
+def power(wnorm,wklims=[None,None],wkmax=[None,None],norm_omega=r'$\Omega_D$',quantity='Magnetic_Field_Bz',plot=False,\
+				read=True,dump=True,outp=True):
+	"""
+	Power spectrum function to calculate, plot and output the values of the power spectra in (omega,k) space for a generic field quantity
+	In:
+		wnorm			: frequency to normalise by
+		wklims		: the total extent in w,k space (nyquist frequencies)
+		wkmax			: the maximum plotting area to summate over in w,k space
+		norm_omega	: the normalisation omega label
+		quantity		: field quantity to take the FT2d and power spectrum of
+		plot			: flag to determine whether you want to plot and save the figure
+		read			: flag to determine if user wants to read already dumped files
+		dump			: flag on whether user wants to dumpfiles of freqs and log10_power
+		outp			: flag to determine if you return the freqs and power
+	Out:
+		omegas		: frequencies (un-normalised)
+		log10_power : log base 10 of calculated power 
+		OR 
+		None,None
+	"""	
+	# TODO: replace wnorm and norm_omega with a norm_species which can then read a normalisation freq and label so is consistent
+#	wnorm = getCyclotronFreq(sdfread(0),norm_species)	
 	wlim_prime,klim_prime=wklims
 	wmax,kmax=wkmax
 	if read:
@@ -2231,8 +2256,9 @@ def power(wnorm,wklims=[None,None],wkmax=[None,None],norm_omega=r'$\Omega_D$',qu
 			raise SystemExit
 		print('Calculating power...')
 		log10_power,omegas=powerspectrum(FT_2d,wnorm,[wlim_prime,klim_prime],[0,wmax,0,kmax])
-		dumpfiles(log10_power,'log10_power')
-		dumpfiles(omegas,'omegas_power')
+		if dump:
+			dumpfiles(log10_power,'log10_power')
+			dumpfiles(omegas,'omegas_power')
 	
 	if plot:
 		print('Plotting Power...')
@@ -2255,7 +2281,7 @@ def power(wnorm,wklims=[None,None],wkmax=[None,None],norm_omega=r'$\Omega_D$',qu
 	if outp: 
 		return omegas, log10_power
 	else: 
-		del omegas; del log10_power ; return None
+		del omegas; del log10_power ; return None, None
 
 
 def BatchStartStop(ind_lst,default=700):
