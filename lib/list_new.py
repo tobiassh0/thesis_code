@@ -1364,24 +1364,45 @@ def powerspectrum_k(trans,wlim,klim,harmonicmin,harmonicmax,kmodelow,kmodehigh):
 	return np.log10(power_k), wavenumbers
 	
 # Plots the change in field energy densities from their mean value
-def getEnergies(energy_quant,fieldquant,nt,dump=True):
-	F0 = np.zeros(len(energy_quant))
-	for i in range(len(energy_quant)):
-		if energy_quant[i] == 'Magnetic_Field_Bz':
-			F0[i] = getQuantity1d(sdfread(0), 'Magnetic_Field_Bz')
-
-	Energies = np.zeros((len(fieldquant),nt))
-	Energies_mat = np.zeros((len(fieldquant),nt,len(getGrid(sdfread(0))[0]))) # energies, time, space
-	for t in range(0,nt):
-		if t%(nt//20)==0: print(str(round(100*t/nt))+'...%') # print every 5%
-		d = sdfread(t)
-		for s in range(len(fieldquant)):
-			if 'Field' in fieldquant[s]:
-				Energies_mat[s,t,:] = (getQuantity1d(d,fieldquant[s])-F0[s])**2
-				Energies[s,t] = np.mean(Energies_mat[s,t,:])#(getQuantity1d(d,fieldquant[s])-F0[s])**2)
-			else:
-				Energies_mat[s,t,:], Energies[s,t] = getTotalKineticEnergyDen(d,fieldquant[s])
-
+def getEnergies(energy_quant,fieldquant,nt,read=False,dump=True):
+	"""
+	Reads, dumps or calculates the energy matrix (T,X) or spatially mean energy (T) for all of the field
+	and species components.
+		In:
+			energy_quant 	: names of saved files (i.e. 'Deuterons_KEdens')
+			fieldquant		: the names of each field and species in their full forms (i.e. 'Magnetic_Field_Bz' or 'Deuterons')
+			nt					: the number of files (in time) to plot/read/calculate the energies
+			read				: boolean flag whether you want to read or calculate 
+			dump 				: boolean of whether to dump files
+		Out:
+			
+	"""
+	if read:
+		Energies = np.zeros((len(fieldquant),nt))
+		Energies_mat = np.zeros((len(fieldquant),nt,len(getGrid(sdfread(0))[0]))) # energies, time, space
+		for s in range(len(energy_quant)):
+			Energies_mat[s,:,:] = read_pkl(energy_quant[s]+'matrix')
+			Energies[s,:] = read_pkl(energy_quant[s])
+#		except:
+#			print('# ERROR # :: Can\'t read energies, likely incorrect [nt] value')
+#			raise SystemExit
+	else:
+		F0 = np.zeros(len(energy_quant))
+		for i in range(len(fieldquant)):
+			if fieldquant[i] == 'Magnetic_Field_Bz':
+				F0[i] = getMeanquantity(sdfread(0), 'Magnetic_Field_Bz')
+		Energies = np.zeros((len(fieldquant),nt))
+		Energies_mat = np.zeros((len(fieldquant),nt,len(getGrid(sdfread(0))[0]))) # energies, time, space
+		for t in range(0,nt):
+			if t%(nt//20)==0: print(str(round(100*t/nt))+'...%') # print every 5%
+			d = sdfread(t)
+			for s in range(len(fieldquant)):
+				if 'Field' in fieldquant[s]:
+					Energies_mat[s,t,:] = (getQuantity1d(d,fieldquant[s])-F0[s])**2
+					Energies[s,t] = np.mean(Energies_mat[s,t,:])#(getQuantity1d(d,fieldquant[s])-F0[s])**2)
+				else:
+					Energies_mat[s,t,:], Energies[s,t] = getTotalKineticEnergyDen(d,fieldquant[s])
+			
 	## energy_quant and fieldquant should be the same length 
 	if dump:
 		for i in range(len(energy_quant)):
@@ -2156,7 +2177,7 @@ def energies(sim_loc,frac=1,plot=False,leg=True,integ=False,linfit=False,electro
 	# Calculate
 	print(energy_quant)
 	if set([i+'.pkl' for i in energy_quant]).issubset(set(os.listdir(os.getcwd()))):
-		print('All energy -pkl- files present.')		
+		print('All energy -pkl- files present.')
 	else:
 		energy_data_mat, energy_data = getEnergies(energy_quant,fieldquant,n,dump=True) # mat,_ = getEnergies()
 #		for i in range(energy_data.shape[0]):
@@ -2166,27 +2187,27 @@ def energies(sim_loc,frac=1,plot=False,leg=True,integ=False,linfit=False,electro
 		print('Plotting energies...')
 		colors=['b','cyan','g','r','m','orange','k','salmon','lightgreen'] # will only use all of them if there are 3 +ve and 1 -ve species ## assuming no extra field values
 		tnorm=2*const.PI/getCyclotronFreq(d0,min_species) # last species
-		
 		mean_to = 10
 		dt = (times[-1]-times[0])/len(times)
 		print('### dt :: ',dt)
 
+		# figure size
 		left, bottom, width, height = [0.5,0.15,0.3,0.22]
-#		ax2 = fig.add_axes([left,bottom,width,height]) # inset of zoomed in portion of energy dens
+		#ax2 = fig.add_axes([left,bottom,width,height]) # inset of zoomed in portion of energy dens
 		for i in range(0,len(energy_quant)): # loops over all species given in energy_mult
 			Energy=read_pkl(energy_quant[i])
 			mean_Energy=np.mean(Energy[:mean_to])
 			energy_plot = (Energy-mean_Energy)*Energy_mult[i]
 			ax.plot(times[::frac]/tnorm,energy_plot[::frac],label=names[i],color=colors[i])
-#			ax2.plot(times[::frac]/tnorm,energy_plot[::frac],color=colors[i])
-#			ax2.set_xlim(0,0.1)
+			#ax2.plot(times[::frac]/tnorm,energy_plot[::frac],color=colors[i])
+			#ax2.set_xlim(0,0.1)
 			if integ:
 				csum += integrate(energy_plot,dt) # integral of each species, sums over all species
 			if linfit:
 				thresh = times/tnorm < 1
 				A = np.vstack([times[thresh]/tnorm, np.ones(len(times[thresh]/tnorm))]).T
 				m, c = np.linalg.lstsq(A, energy_plot[thresh], rcond=None)[0]
-				#	m = np.mean(np.gradient(Energy[thresh],times[thresh]/tnorm))
+				#m = np.mean(np.gradient(Energy[thresh],times[thresh]/tnorm))
 				print(m)
 				Energy = Energy-(m*times/tnorm+c)
 				ax.plot(times/tnorm,Energy,label=labels[i]+'  '+' m='+str(m//1),color=colors[i])
@@ -2199,7 +2220,7 @@ def energies(sim_loc,frac=1,plot=False,leg=True,integ=False,linfit=False,electro
 			ax.legend(ncol=1,loc='best',fontsize=14,labelspacing=0.1,borderpad=0.1) # change ncol to make legend span multiple columns
 		ax.set_xlim(0,max(times/tnorm))
 		ax.axhline(0,color='darkgrey',linestyle='--')
-#		ax.set_xlim(0,0.1)
+		#ax.set_xlim(0,0.1)
 		plotting(fig,ax,'energy_densities') # check to see if can save in .jpeg or .png (Orac is old)
 		print('Plot saved.')
 		plt.clf()

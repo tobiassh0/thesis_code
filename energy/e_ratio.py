@@ -93,7 +93,7 @@ for sim in sim_lst:
 		# particles
 		try:
 			pw = getQuantity1d(d0,'Particles_Weight_'+species[i])
-			Nparts[i] = 1#len(pw)*np.mean(pw) # real No. particles = np. simulated * weight per particle
+			Nparts[i] = 1 #len(pw)*np.mean(pw) # real No. particles = No. simulated * weight per particle
 			nspec = getMeanquantity(d0,'Derived_Number_Density_'+species[i])
 		except:
 			nspec = 1
@@ -131,18 +131,18 @@ for sim in sim_lst:
 #print('meangrowth [wcD] :: ',2*const.PI*meangrowth/wcD)
 
 labels = [r'$50\%$',r'$30\%$',r'$18\%$',r'$11\%$',r'$5\%$',r'$1\%$',r'$0\%$']
-labels = [r'$50\%$',r'$11\%$',r'$1\%$',r'$0\%$']
-axfield[1].legend(labels,loc='best',frameon=False)
-axpart[2].legend(labels,loc='best')#,frameon=False)
-labels = [r'Deuterons',r'Tritons',r'Alphas']
-labels = [r'$\Delta E_D$'+' '+'['+r'$keV$'+']',r'$\Delta E_{T}$'+' '+'['+r'$keV$'+']',r'$\Delta E_\alpha$'+' '+'['+r'$MeV$'+']']
+clabels = [r'$50\%$',r'$11\%$',r'$1\%$',r'$0\%$']
+axfield[1].legend(clabels,loc='best',frameon=False)
+axpart[2].legend(clabels,loc='best')#,frameon=False)
+slabels = [r'Deuterons',r'Tritons',r'Alphas']
+ylabels = [r'$\Delta E_D$'+' '+'['+r'$keV$'+']',r'$\Delta E_{T}$'+' '+'['+r'$keV$'+']',r'$\Delta E_\alpha$'+' '+'['+r'$MeV$'+']']
 
 for i in range(len(axfield)):
 	axfield[i].set_xlabel(r'$t/\tau_{cD}$',fontsize=20)
 #	axfield[i].set_xlabel(r'Time $t$'+'  '+r'$[\tau_{cD}]$',**tnrfont)
 for j in range(len(axpart)): 
-	axpart[j].set_ylabel(labels[j],**tnrfont) # +' '+'['+r'$keV$'+']'
-#	axpart[j].annotate(labels[j],xy=(0.75,0.8),xytext=None,xycoords='axes fraction',ha='left',**tnrfont)
+	axpart[j].set_ylabel(ylabels[j],**tnrfont) # +' '+'['+r'$keV$'+']'
+#	axpart[j].annotate(slabels[j],xy=(0.75,0.8),xytext=None,xycoords='axes fraction',ha='left',**tnrfont)
 
 
 ## 4-page EPS
