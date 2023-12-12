@@ -14,17 +14,17 @@ def CompareNxM_energy(sims,labels,tmax=7,colors=None,mean_to=10,frac=1):
 	# try 3, then 2 then 1x1 (i.e. single sim). If none of the above then opt for the least difference of 2 or 3
 	try:
 		M = N = 1.0
-		n = np.array([3.0,2.0])
+		n = np.array([3,2])
 		for ni in n:
-			m = len(sims)/ni
+			m = int(len(sims))/ni
 			print(m)
-			if m%1==0.0:
+			if m%1==0:
 				M = m ; N = ni
 				break
 			else: 
-				M = 1.0 # single column
+				M = 1 # single column
 	except:
-		N = M = 1.0 # single sim/image
+		N = M = 1 # single sim/image
 	
 	# check if self-defined or whether to use rainbow
 	if not colors:
