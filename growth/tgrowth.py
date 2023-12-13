@@ -6,7 +6,7 @@ def growth_rate():
 	ne = 1e19
 	xi2 = 0.0
 	xi3 = 10**(-4)
-	theta = 89.0*(const.PI/180) # deg
+	theta = 89.0*(const.PI/180) # rad
 
 	# species masses, charges and densities
 	Z1 = 1; Z2 = 1; Z3 = 2
@@ -38,11 +38,18 @@ def growth_rate():
 	wpi = np.sqrt((n1*(Z1*const.qe)**2)/(m1*const.e0))
 	wpe = np.sqrt((ne*(const.qe)**2)/(const.me*const.e0))
 
-	# cold plasma dispersion
+	## frequencies can be defined in two ways
+	# (1) cold plasma dispersion
 	nval = int(5e5)
-	omegas = wca*np.linspace(0,20,nval)
-	k1, k2, k3 = coldplasmadispersion_analytical(omegas,wpf=[wpe,wpa,wpi],wcf=[wce,wca,wci],theta=theta)
-	
+#	omegas = wca*np.linspace(0,20,nval)	
+#	k1, k2, k3 = coldplasmadispersion_analytical(omegas,wpf=[wpe,wpa,wpi],wcf=[wce,wca,wci],theta=theta)
+
+	# 	(2) freq of EM wave 
+	k2 = (wca/vA)*np.arange(0,20,nval)
+	kpara = k2 * np.cos(theta)
+	kperp = k2 * np.sin(theta)
+	omegas = (0.5*vA**2)*(k2**2 + kpara**2 + (k*kpara*vA/wci)**2 + ((k**2 + kpara**2 + (k*kpara*vA/wci)**2)**2 - (2*k*kpara)**2)**0.5)
+		
 	# velocity and energies
 	Emin = (3.5 * 10**6)*const.qe # minority energy
 	v3 = np.sqrt(2*Emin/m3) # minority velocity
@@ -52,8 +59,8 @@ def growth_rate():
 	vr = v3/100 # para spread
 
 	# wavenumbers
-	kpara = k2 * np.sin(theta)
-	kperp = k2 * np.cos(theta)
+	kpara = k2 * np.cos(theta)
+	kperp = k2 * np.sin(theta)
 	Npara = kpara*vA/omegas
 	Nperp = kperp*vA/omegas
 #	larr = (omegas/wca)//1 # find nearest harmonic as array
@@ -83,7 +90,7 @@ def growth_rate():
 		# gamma #
 		g1 = ((wpa**2)/(wpi**2))*((wci**4)/((wci+(omegas[i]-wci)*Npara[i]**2)*(wci-(omegas[i]+wci)*Npara[i]**2)))
 		g2 = ((l*wca/(kpara[i]*vr))*Ml - 2*((u**2)/(vr**2))*eetal*Nl)
-		g3 = (np.sqrt(const.PI)/(2*omegas[i])) * np.exp(-1*eetal**2)
+		g3 = (np.sqrt(const.PI)/(2*omegas[i])) * np.exp(-1*(eetal**2))
 		gamma[i] = g1 * g2 * g3
 		
 	plt.scatter(omegas/wca,gamma/wca)		
