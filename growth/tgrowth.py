@@ -1,6 +1,6 @@
 
 
-def growth_rate():
+def growth_rate(nval=int(5e5)):
 	# initial conditions
 	B0 = 2.1
 	ne = 1e19
@@ -40,16 +40,15 @@ def growth_rate():
 
 	## frequencies can be defined in two ways
 	# (1) cold plasma dispersion
-	nval = int(5e5)
-#	omegas = wca*np.linspace(0,20,nval)	
-#	k1, k2, k3 = coldplasmadispersion_analytical(omegas,wpf=[wpe,wpa,wpi],wcf=[wce,wca,wci],theta=theta)
+	# omegas = wca*np.linspace(0,20,nval)	
+	# k1, k2, k3 = coldplasmadispersion_analytical(omegas,wpf=[wpe,wpa,wpi],wcf=[wce,wca,wci],theta=theta)
 
-	# 	(2) freq of EM wave 
-	k2 = (wca/vA)*np.arange(0,20,nval)
+	# (2) freq of EM wave 
+	k2 = (wca/vA)*np.linspace(0,20,nval)
 	kpara = k2 * np.cos(theta)
 	kperp = k2 * np.sin(theta)
-	omegas = (0.5*vA**2)*(k2**2 + kpara**2 + (k*kpara*vA/wci)**2 + ((k**2 + kpara**2 + (k*kpara*vA/wci)**2)**2 - (2*k*kpara)**2)**0.5)
-		
+	omegas = (0.5*vA**2)*(k2**2 + kpara**2 + (k2*kpara*vA/wci)**2 + ((k2**2 + kpara**2 + (k2*kpara*vA/wci)**2)**2 - (2*k2*kpara)**2)**0.5)
+
 	# velocity and energies
 	Emin = (3.5 * 10**6)*const.qe # minority energy
 	v3 = np.sqrt(2*Emin/m3) # minority velocity
@@ -94,9 +93,11 @@ def growth_rate():
 		gamma[i] = g1 * g2 * g3
 		
 	plt.scatter(omegas/wca,gamma/wca)		
+	plt.yscale('log')
 	plt.ylabel('gamma/wca')
 	plt.xlabel('w/wca')
 	plt.show()
+	return omegas, gamma
 
 
 
@@ -105,6 +106,7 @@ if __name__=='__main__':
 	from func_load import *
 	omega, gamma = growth_rate()
 	sys.exit()
+
 	# load example sim (densities etc.)
 	sim_loc = getSimulation('/storage/space2/phrmsf/traceT/old/traceT_highres_0_01')
 	ind = list_sdf(sim_loc)

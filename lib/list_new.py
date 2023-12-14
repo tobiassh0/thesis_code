@@ -436,28 +436,60 @@ def getIonlabel(species):
 			raise SystemExit
 	else: 
 		return labels.get(species)
-	
+
+def getFreqLabel(species):
+	labels = {
+		'Electrons': r'$f_{ce}$',
+		'FElectrons': r'$f_{ce}$', # fast electrons
+		'Left_Electrons': r'$f_{ce}$',
+		'Right_Electrons': r'$f_{ce}$', 
+		'Protons': r'$f_{cp}$', 
+		'PProtons': r'$f_{cp}$', 
+		'Alphas': r'$f_{c\alpha}$', 
+		'Alpha': r'$f_{c\alpha}$', 	
+		'Deuterons': r'$f_{cD}$',
+		'Deutrons': r'$f_{cD}$', # sometimes misspelled
+		'Tritium': r'$f_{cT}$',
+		'Tritons': r'$f_{cT}$',
+		'Helium3': r'$f_{cHe3}$', 
+		'He3': r'$f_{cHe}$',
+		'Borons': r'$f_{cB11}$',
+		'Boron': r'$f_{cB11}$',
+		'B11': r'$f_{cB11}$',
+		'Ions': r'$f_{ci}$',
+		'Ion': r'$f_{ci}$'
+		}
+	if species not in labels:
+		if species == '':
+			print('No maj2 species, no Freq label provided')
+		else:
+			print('Species [{}] label is not in dictionary, check name passed for spelling mistakes'.format(species))
+			raise SystemExit
+	else: 
+		return labels.get(species)
+
 def getOmegaLabel(species):
-	labels = {'Electrons': r'$\Omega_e$',
-	'FElectrons': r'$\Omega_e$', # fast electrons
-	'Left_Electrons': r'$\Omega_e$',
-	'Right_Electrons': r'$\Omega_e$', 
-	'Protons': r'$\Omega_p$', 
-	'PProtons': r'$\Omega_p$', 
-	'Alphas': r'$\Omega_\alpha$', 
-	'Alpha': r'$\Omega_\alpha$', 	
-	'Deuterons': r'$\Omega_D$',
-	'Deutrons': r'$\Omega_D$', # sometimes misspelled
-	'Tritium': r'$\Omega_T$',
-	'Tritons': r'$\Omega_T$',
-	'Helium3': r'$\Omega_{He3}$', 
-	'He3': r'$\Omega_{He}$',
-	'Borons': r'$\Omega_{B11}$',
-	'Boron': r'$\Omega_{B11}$',
-	'B11': r'$\Omega_{B11}$',
-	'Ions': r'$\Omega_i$',
-	'Ion': r'$\Omega_i$'}
-	
+	labels = {
+		'Electrons': r'$\Omega_e$',
+		'FElectrons': r'$\Omega_e$', # fast electrons
+		'Left_Electrons': r'$\Omega_e$',
+		'Right_Electrons': r'$\Omega_e$', 
+		'Protons': r'$\Omega_p$', 
+		'PProtons': r'$\Omega_p$', 
+		'Alphas': r'$\Omega_\alpha$', 
+		'Alpha': r'$\Omega_\alpha$', 	
+		'Deuterons': r'$\Omega_D$',
+		'Deutrons': r'$\Omega_D$', # sometimes misspelled
+		'Tritium': r'$\Omega_T$',
+		'Tritons': r'$\Omega_T$',
+		'Helium3': r'$\Omega_{He3}$', 
+		'He3': r'$\Omega_{He}$',
+		'Borons': r'$\Omega_{B11}$',
+		'Boron': r'$\Omega_{B11}$',
+		'B11': r'$\Omega_{B11}$',
+		'Ions': r'$\Omega_i$',
+		'Ion': r'$\Omega_i$'
+		}
 	if species not in labels:
 		if species == '':
 			print('No maj2 species, no Omega label provided')
@@ -1304,7 +1336,7 @@ def coldplasmadispersion(file0,omegas,theta=None):
 	R = R - tr
 	L = L - tl
 	P = P - tp
-
+	del tr, tl, tp
 	S = 0.5*(R+L) ; D = 0.5*(R-L)
 	C = P*R*L
 	B = R*L*(sin**2) + P*S*(1.0 +cos**2)
@@ -2733,6 +2765,11 @@ def plotKernel(kGangle, kernel='scharr'):
 	return None
 
 def checkallFields(ind_lst,quantities,quant):
+	"""
+		Function to determine if all of the fields are present throughout the index list, i.e.
+		field energies can be read across all files. If all fields aren't present, then just use
+		the field quantity provided via quant.
+	"""
 	allFields = True
 	for i in range(0,ind_lst[-1]):
 		if set(getFields(i)) != set(quantities):

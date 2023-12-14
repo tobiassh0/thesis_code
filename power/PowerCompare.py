@@ -1,7 +1,7 @@
 
 # compares the power spectral density of multiple sims, recalcualtes power spectra to make consistent # TODO change this
 def power_compare(sims,labels=[None],normspecies='Deuterons',wkmax=[25,40],quantity='Magnetic_Field_Bz',colors=None,\
-						xlims=[0,None],ylims=[None,None],leg=True,width=10,height=5):
+						xlims=[0,None],ylims=[None,None],leg=True,width=10,height=5,freqlabel=False,omegalabel=False):
 	"""
 		Compare the power spectra densities (PSD) of multiple sims through frequencies normalised to the normspecies.
 		
@@ -15,9 +15,15 @@ def power_compare(sims,labels=[None],normspecies='Deuterons',wkmax=[25,40],quant
 			x&ylims		 : limits in x and y to plot, allows for a "zoomed in" version of the same spectra
 			leg			 : boolean, legend on/off
 			width/height : width and height of the figure (useful for zoomed plots)
+			freqlabel	 : boolean to determine whether to plot as f/f_cminspec
+			omegalabel	 : boolean to determine whether to plot as \omega/\Omega_minspec
 		Out: 
 			Plots and saves the PSD comparison (on log scale). Returns "None"	
 	"""	
+	if omegalabel == freqlabel:
+		print('# ERROR # : trying to set ylabel as omega and freq')
+		raise SystemExit
+
 	wmax,kmax = wkmax
 	xmin,xmax = xlims
 	ymin,ymax = ylims
@@ -60,14 +66,19 @@ def power_compare(sims,labels=[None],normspecies='Deuterons',wkmax=[25,40],quant
 		psd = power[thresh]/dw
 		
 		# plot
-		ax.plot(omegas,psd,label=labels[i],color=colors[i])#,alpha=alphas[i])
+		ax.plot(omegas,np.log10(psd),label=labels[i],color=colors[i])#,alpha=alphas[i])
 		i+=1
 		os.chdir(home)	
 
 	del times
 	# formatting
-	ax.set_ylabel('PSD',**tnrfont) ; ax.set_xlabel(r'$\omega/$'+getOmegaLabel(normspecies),**tnrfont)	
-	ax.set_yscale('log')
+	ax.set_ylabel('PSD',**tnrfont) # log-scale so unitless
+	# frequency labels
+	if omegalabel:
+		ax.set_xlabel(r'$\omega/$'+getOmegaLabel(normspecies),**tnrfont)	
+	if freqlabel:
+		ax.set_xlabel(r'$f/$'+getFreqLabel(normspecies),**tnrfont)	
+	# ax.set_yscale('log')
 	ax.set_xticks(np.linspace(0,wmax,6))
 	if leg: # legend
 		ax.legend(loc='best',labelspacing=0.1,borderpad=0.1,ncol=1)
@@ -88,16 +99,17 @@ def power_compare(sims,labels=[None],normspecies='Deuterons',wkmax=[25,40],quant
 
 if __name__=='__main__':
 	from func_load import *
-	## D-T 
+	## D-T
 	os.chdir('/storage/space2/phrmsf/traceT/')
-#	sims = np.sort([i for i in os.listdir() if 'traceT' in i])
-#	# rearrange so biggest to smallest T-concentration
-#	sims = np.append(sims,sims[0])
-#	sims = sims[1:]
-#	hlabels = np.array([int(str(i[-2] + i[-1])) for i in sims])
+	# sims = np.sort([i for i in os.listdir() if 'traceT' in i])
+	# # rearrange so biggest to smallest T-concentration
+	# sims = np.append(sims,sims[0])
+	# sims = sims[1:]
+	# hlabels = np.array([int(str(i[-2] + i[-1])) for i in sims])
 	sims = ['traceT_D_50_T_50','traceT_D_89_T_11','traceT_D_99_T_01','traceT_D_100_T_00','cold_JET26148']
 	hlabels = [r'$50\%$',r'$11\%$',r'$1\%$',r'$0\%$','Cold']
-	power_compare(sims,labels=hlabels,wkmax=[25,45],normspecies='Alphas',colors=['b','g','r','darkcyan','k'])#,xlims=[10,25],leg=False,height=3)
+	power_compare(sims,labels=hlabels,wkmax=[25,45],normspecies='Alphas',colors=['b','g','r','darkcyan','k'],\
+					freqlabel=True)#,xlims=[10,25],leg=False,height=3)
 	sys.exit()
 
 	## D-He3
