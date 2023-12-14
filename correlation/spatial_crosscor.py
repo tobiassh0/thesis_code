@@ -1,10 +1,22 @@
 
-def getSpatialCorrelation(d0,F1='Magnetic_Field_Bz',F2='Electric_Field_Ex',norm=[np.sqrt(const.mult_magn_field),np.sqrt(const.mult_elec_field)],\
-								phase_res=500,plot=True):
-	# in:
-		# d0 : zeroth file
-		# F1 & F2 : names of fields you want to correlate
-		# norm : normalisations of those fields 	
+def getSpatialCorrelation(d0,F1='Magnetic_Field_Bz',F2='Electric_Field_Ex',\
+								norm=[None,None],phase_res=500,plot=True):
+	"""
+		In:
+			d0 : zeroth file
+			F1 & F2 : names of fields you want to correlate, default Bz and Ex
+			norm : normalisations of those fields (square rooted) default Bz and Ex
+			phase_res : resolution (No. points) to take spatial cross-correlation
+			plot : boolean of whether to plot data or not
+		Out:
+			dphase : array of phase shifts (rads) over which Rtdx is calculated
+			Rtdx : Spatial cross correlation matrix
+	"""
+	# default normalisations for default fields
+	if norm == [None,None]:
+		norm[0] = (const.mult_magn_field)**.5
+		norm[1] = (const.mult_elec_field)**.5
+		
 	# load fm and normalise
 	fm1 = load_batch_fieldmatrix([],F1)*norm[0]
 	fm2 = load_batch_fieldmatrix([],F2)*norm[1]
@@ -19,14 +31,16 @@ def getSpatialCorrelation(d0,F1='Magnetic_Field_Bz',F2='Electric_Field_Ex',norm=
 
 	FT1d = read_pkl('FT_1d_Magnetic_Field_Bz')
 	print(FT1d.shape)
-	karg = np.argmax(FT1d[1:,:],axis=1) # extracts out maximum wavenumber for all times
+	# extract out maximum wavenumber for all times
+	karg = np.argmax(FT1d[1:,:],axis=1) 
 	karr = np.linspace(0,kmax,FT1d.shape[1])
 	del FT1d
 	k_star = karr[karg]
 	thresh = None #k_star < 200*wcmaj/vA
 	k_star = stats.mode(k_star)[0][0] # k_star[thresh]
 	dphase = np.linspace(-2*const.PI,2*const.PI,phase_res)
-	Dx = dphase/k_star # shift between +-2pi, in terms of physical spacing
+	# shift between +-2pi, in terms of physical spacing
+	Dx = dphase/k_star
 	
 	try:
 		Rtdx = read_pkl('Rtdx_{}_{}'.format(F1,F2))

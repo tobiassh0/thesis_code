@@ -36,9 +36,6 @@ def funcnegexp(X,c0,c1,c2):
 def funcquart(X,c0,c1,c2,c3,c4):
 	return c0*X**4 + c1*X**3 + c2*X**2 + c3*X**1 + c4
 
-def extractPeaks(power, Nperwcd=1):
-	return signal.find_peaks(power,distance=Nperwcd)[0] # tune till Nperwcd encapsulates all peaks (visually)
-
 def getPowerRatios(power,peaks):
 	ratios = np.zeros(len(peaks))
 	for i in range(1,len(peaks)):
@@ -94,7 +91,7 @@ KDEs = np.zeros((xbins,Nval))
 y_d = np.linspace(-3,3,Nval)
 for i in range(xbins):
 	# instantiate and fit the KDE model
-	kde = KernelDensity(bandwidth=0.3, kernel='gaussian') # fixed bandwidth (taken from previous work on Stellar clusters)
+	kde = KernelDensity(bangetPowerRatiosdwidth=0.3, kernel='gaussian') # fixed bandwidth (taken from previous work on Stellar clusters)
 	# find values of ratiosJET that fit within a given bin
 	bin_range = [i-0.5, i+0.5]
 	val = ratiosJET[(JETfreqs[JETpeaks][:]>bin_range[0]) & (JETfreqs[JETpeaks][:]<bin_range[1])] # normalised freqs

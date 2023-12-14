@@ -1,30 +1,26 @@
 
 from func_load import *
 
-
-simloc = getSimulation('/storage/space2/phrmsf/ECRH/ECRH_JT60U_5_2')
-#FT2d = read_pkl('FT_2d_Magnetic_Field_Bz')
-times = read_pkl('times')
+## load sim
+simloc = getSimulation('/storage/space2/phrmsf/traceT/90deg')#lowres_D_He3/0_10_p_90')
 d0 = sdfread(0)
+times = read_pkl('times')
+
+## set normalisation and limits
+minspec = 'Alphas'
+wnorm = getCyclotronFreq(d0,minspec)
+vA = getAlfvenVel(d0)
 kmax = 0.5*2*const.PI/getdxyz(d0)
 wmax = 0.5*2*const.PI/getdt(times)
-wnorm = getCyclotronFreq(d0,'Protons')
-vA = getAlfvenVel(d0)
 knorm = wnorm/vA
+omegas,log10_power=power(wnorm,wklims=[wmax/wnorm,kmax/knorm],wkmax=[40,100],norm_omega=getOmegaLabel(minspec),quantity='Magnetic_Field_Bz',plot=False,read=False,dump=False,outp=True)
+dw = 2*wmax/len(times) # account for +ve and -ve wmax covered by N_t files
 
-## load and plot
-#plt.imshow(np.log10(FT2d[1:,1:]),**kwargs,extent=[0,kmax*vA/wnorm,0,wmax/wnorm])
-#plt.show()
-#
-#omegas, log10power = power(kmax*vA/wcp,wmax/wcp,60,80,wnorm,norm_omega=r'$\Omega_p$',quantity='Magnetic_Field_Bz',plot=True,read=False)
-#plt.plot(omegas/wnorm,log10power)
-#plt.show()
-
-## replot
-simloc = getSimulation('/storage/space2/phrmsf/lowres_D_He3/0_10_p_90')
-_,_=power(kmax/knorm,wmax/wnorm,40,100,wnorm,norm_omega=r'$\Omega_p$',quantity='Magnetic_Field_Bz',plot=True,read=True,outp=False)
-
-omegas = read_pkl('omegas_power')
-log10power = read_pkl('log10_power')
-plt.xlim(0,40)
-plt.plot(omegas/wnorm,log10power) ; plt.show()
+#omegas = read_pkl('omegas_power')
+power = 10**log10_power #read_pkl('log10_power')
+thresh = omegas/wnorm < 25
+plt.plot(omegas[thresh]/wnorm,power[thresh]/dw)
+plt.ylabel('PSD',**tnrfont)
+plt.yscale('log')
+plt.xlabel(r'$\omega/$'+getOmegaLabel(minspec),**tnrfont)
+plt.savefig('/home/space/phrmsf/Documents/thesis_code/power.png')
