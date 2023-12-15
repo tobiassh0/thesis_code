@@ -1,11 +1,8 @@
-
-
-def growth_rate(nval=int(5e5)):
+	
+def growth_rate(xi3=10**(-4),xi2=0.0,nval=int(1e5)):
 	# initial conditions
 	B0 = 2.1
 	ne = 1e19
-	xi2 = 0.0
-	xi3 = 10**(-4)
 	theta = 89.0*(const.PI/180) # rad
 
 	# species masses, charges and densities
@@ -40,20 +37,22 @@ def growth_rate(nval=int(5e5)):
 
 	## frequencies can be defined in two ways
 	# (1) cold plasma dispersion
-	# omegas = wca*np.linspace(0,20,nval)	
-	# k1, k2, k3 = coldplasmadispersion_analytical(omegas,wpf=[wpe,wpa,wpi],wcf=[wce,wca,wci],theta=theta)
+	omegas = wca*np.linspace(0,24,2*nval)	
+	k1, k2, k3 = coldplasmadispersion_analytical(omegas,wpf=[wpe,wpa,wpi],wcf=[wce,wca,wci],theta=theta)
 
 	# (2) freq of EM wave 
-	k2 = (wca/vA)*np.linspace(0,20,nval)
-	kpara = k2 * np.cos(theta)
-	kperp = k2 * np.sin(theta)
-	omegas = (0.5*vA**2)*(k2**2 + kpara**2 + (k2*kpara*vA/wci)**2 + ((k2**2 + kpara**2 + (k2*kpara*vA/wci)**2)**2 - (2*k2*kpara)**2)**0.5)
+	# k2 = (wca/vA)*np.linspace(0,20,nval)
+	# kpara = k2 * np.cos(theta)
+	# kperp = k2 * np.sin(theta)
+	# omegas = (0.5*vA**2)*(k2**2 + kpara**2 + (k2*kpara*vA/wci)**2 + ((k2**2 + kpara**2 + (k2*kpara*vA/wci)**2)**2 - (2*k2*kpara)**2)**0.5)
 
 	# velocity and energies
 	Emin = (3.5 * 10**6)*const.qe # minority energy
 	v3 = np.sqrt(2*Emin/m3) # minority velocity
-	u_vA = 0.98 # perp/vA ratio
-	u = u_vA * vA # perp drift
+	# u_vA = 0.98 # uperp/vA
+	# u = u_vA * vA # perp drift
+	# u = v3 * np.cos(-0.646)
+	u = v3 * np.cos(0.22*const.PI) # as per traceT sims
 	vd = np.sqrt(v3**2 - u**2) # para drift
 	vr = v3/100 # para spread
 
@@ -92,19 +91,21 @@ def growth_rate(nval=int(5e5)):
 		g3 = (np.sqrt(const.PI)/(2*omegas[i])) * np.exp(-1*(eetal**2))
 		gamma[i] = g1 * g2 * g3
 		
-	plt.scatter(omegas/wca,gamma/wca)		
-	plt.yscale('log')
-	plt.ylabel('gamma/wca')
+	plt.plot(omegas/wca,np.log10(gamma/wca))		
+	plt.ylabel('log10(gamma/wca)')
 	plt.xlabel('w/wca')
-	plt.show()
+	plt.ylim(-6,4)
+	os.chdir('/storage/space2/phrmsf/traceT/growth_rates')
+	plt.savefig('{}_{}_{}_{}_growthrates.png'.format(B0,ne,xi2,xi3))
+	plt.clf()
 	return omegas, gamma
 
 
 
-	
 if __name__=='__main__':
 	from func_load import *
-	omega, gamma = growth_rate()
+	for txi2 in [0.01,0.05,0.11,0.5]:
+		omega, gamma = growth_rate(xi2=txi2)
 	sys.exit()
 
 	# load example sim (densities etc.)
