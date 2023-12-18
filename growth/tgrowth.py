@@ -1,15 +1,39 @@
-	
-def growth_rate(xi3=10**(-4),xi2=0.0,nval=int(1e5)):
-	# initial conditions
-	B0 = 2.1
-	ne = 1e19
-	theta = 89.0*(const.PI/180) # rad
 
+def growth_rate_manual(minspec='Alphas',majions='Deuterons',maj2ions='Tritons',wmax=25,theta_deg=89,xi3=10**(-4),xi2=0.0,\
+					B0=2.1,ne=1e19,pitchangle=0.69115,_Emin=3.5,vspread=1/100,nval=int(1e5),plot=False):
+	"""
+	Plots the linear growth rate, from eqs. (29) and (8) in Refs. (R. Dendy et al., 1994) and (K. G. McClements et al., 1995) respectively. 
+	Doesn't load a sim value, instead uses user-defined inputs for the initial conditions and plasma freqs.
+		In:
+			minspec 		: minority species
+			majions 		: 1st bulk ion species
+			maj2ions		: 2nd bulk ion species
+			wmax 			: maximum frequency, as normalised to the minspec cyclotron freq 
+			theta_deg 	: angle between magnetic field and x-hat (in degrees)
+			xi3			: minority species concentration
+			xi2			: 2nd bulk ion species concentration
+			B0				: magnetic field strength (Tesla)
+			ne				: electron number density
+			pitchangle	: the cosine of the pitch angle, default of 0.22*PI radians (as opposed to -0.646)
+			_Emin			: the energy of the minority species (in units of MeV)
+			vspread		: the thermal spread (vr/v3) of the parallel component 
+			nval			: number of valuation points to calculate (aim for dw < 0.01 Omega_c,minspec)
+			plot			: boolean to determine whether to plot data
+		Out:
+			omega 	: frequencies calculated for positive growth rates 
+			gamma		: positive growth rates (gamma<0 replaced with 0)
+	"""
+	# initial conditions
+	# B0 = 2.1
+	# ne = 1e19
+	theta = theta_deg*(const.PI/180) # rad
+	del theta_deg
+	
 	# species masses, charges and densities
-	Z1 = 1; Z2 = 1; Z3 = 2
-	minions = 'Alphas'
-	majions = 'Deuterons'
-	maj2ions= 'Tritons' 
+	Z1 = getChargeNum(majions) ; Z2 = getChargeNum(maj2ions); Z3 = getChargeNum(minions)
+	# majions = 'Deuterons'
+	# maj2ions= 'Tritons' 
+	# minions = 'Alphas'
 	m1 = getMass(majions)
 	m2 = getMass(maj2ions)
 	m3 = getMass(minions)
@@ -17,6 +41,7 @@ def growth_rate(xi3=10**(-4),xi2=0.0,nval=int(1e5)):
 	n2 = xi2*ne
 	n3 = xi3*ne
 	
+	# checking quasi-neutrality
 	if ne != (n1*Z1 + n2*Z2 + n3*Z3): # @assert quasi-neutrality
 		print('Quasi-neutrality not maintained')
 		raise SystemExit
@@ -37,24 +62,24 @@ def growth_rate(xi3=10**(-4),xi2=0.0,nval=int(1e5)):
 
 	## frequencies can be defined in two ways
 	# (1) cold plasma dispersion
-	omegas = wca*np.linspace(0,24,2*nval)	
+	omegas = wca*np.linspace(0,wmax,2*nval)	
 	k1, k2, k3 = coldplasmadispersion_analytical(omegas,wpf=[wpe,wpa,wpi],wcf=[wce,wca,wci],theta=theta)
 
-	# (2) freq of EM wave 
+	# (2) freq of EM wave, eq. () from ()
 	# k2 = (wca/vA)*np.linspace(0,20,nval)
 	# kpara = k2 * np.cos(theta)
 	# kperp = k2 * np.sin(theta)
 	# omegas = (0.5*vA**2)*(k2**2 + kpara**2 + (k2*kpara*vA/wci)**2 + ((k2**2 + kpara**2 + (k2*kpara*vA/wci)**2)**2 - (2*k2*kpara)**2)**0.5)
 
 	# velocity and energies
-	Emin = (3.5 * 10**6)*const.qe # minority energy
+	Emin = (_Emin * 10**6)*const.qe # minority energy
 	v3 = np.sqrt(2*Emin/m3) # minority velocity
 	# u_vA = 0.98 # uperp/vA
 	# u = u_vA * vA # perp drift
 	# u = v3 * np.cos(-0.646)
-	u = v3 * np.cos(0.22*const.PI) # as per traceT sims
+	u = v3 * np.cos(pitchangle) # as per traceT sims
 	vd = np.sqrt(v3**2 - u**2) # para drift
-	vr = v3/100 # para spread
+	vr = v3*vspread # para spread
 
 	# wavenumbers
 	kpara = k2 * np.cos(theta)
@@ -90,14 +115,18 @@ def growth_rate(xi3=10**(-4),xi2=0.0,nval=int(1e5)):
 		g2 = ((l*wca/(kpara[i]*vr))*Ml - 2*((u**2)/(vr**2))*eetal*Nl)
 		g3 = (np.sqrt(const.PI)/(2*omegas[i])) * np.exp(-1*(eetal**2))
 		gamma[i] = g1 * g2 * g3
-		
-	plt.plot(omegas/wca,np.log10(gamma/wca))		
-	plt.ylabel('log10(gamma/wca)')
-	plt.xlabel('w/wca')
-	plt.ylim(-6,4)
-	os.chdir('/storage/space2/phrmsf/traceT/growth_rates')
-	plt.savefig('{}_{}_{}_{}_growthrates.png'.format(B0,ne,xi2,xi3))
-	plt.clf()
+	
+	if plot:		
+		plt.plot(omegas/wca,np.log10(gamma/wca))		
+		plt.ylabel('log10(gamma/wca)')
+		plt.xlabel('w/wca')
+		plt.ylim(-6,4)
+		os.chdir('/storage/space2/phrmsf/traceT/growth_rates')
+		plt.savefig('{}_{}_{}_{}_growthrates.png'.format(B0,ne,xi2,xi3))
+		plt.clf()
+
+	# positive growth rates
+	gamma[gamma<0] = 0
 	return omegas, gamma
 
 
@@ -105,7 +134,7 @@ def growth_rate(xi3=10**(-4),xi2=0.0,nval=int(1e5)):
 if __name__=='__main__':
 	from func_load import *
 	for txi2 in [0.01,0.05,0.11,0.5]:
-		omega, gamma = growth_rate(xi2=txi2)
+		omega, gamma = growth_rate_manual(xi2=txi2)
 	sys.exit()
 
 	# load example sim (densities etc.)

@@ -126,7 +126,8 @@ def multi_empirical_growths(sim_lst,labels,majions,minions,Emin=3.5e6,theory_sim
 	vr = v0/1000
 	
 	# get theoretical growth rates & plot
-	posomega, posgamma = growth_rate_man(minions, majions, theta, d0, u, vd, vr, kall, omegaall)
+	# posomega, posgamma = growth_rate_theory(minions, majions, theta, d0, u, vd, vr, kall, omegaall)
+	posomega, posgamma = growth_rate_manual(minspec='Alphas',majions='Deuterons',maj2ions='Tritons',wmax=wmax,theta_deg=theta,xi3=10**(-4),xi2=0.0);
 	ax[0].plot(posomega/wcyca,posgamma/wcyca,color='k')
 	ax[0].set_ylabel(r'$\gamma_l/$'+getOmegaLabel(minions),**tnrfont)
 	ax[0].set_xlim(wmin,wmax)
@@ -170,22 +171,22 @@ def multi_empirical_growths(sim_lst,labels,majions,minions,Emin=3.5e6,theory_sim
 	
 	# x-label
 	ax[-1].set_xlabel(r'$\omega/$'+getOmegaLabel(minions),**tnrfont)
-	#plt.show()
-	fig.savefig(home+'/Bz_kt_{}_{}_{}.png'.format(wmin,wmax,dw),bbox_inches='tight')
-	fig.savefig(home+'/Bz_kt_{}_{}_{}.eps'.format(wmin,wmax,dw),bbox_inches='tight')
+	plt.show()
+	# fig.savefig(home+'/Bz_kt_{}_{}_{}.png'.format(wmin,wmax,dw),bbox_inches='tight')
+	# fig.savefig(home+'/Bz_kt_{}_{}_{}.eps'.format(wmin,wmax,dw),bbox_inches='tight')
 	return None
 
 #---------------------------------------------------------------------#
 
 if __name__=='__main__':
 	from func_load import * 
-#	os.chdir('/storage/space2/phrmsf/traceT/')
-#	sims = ['traceT_D_100_T_00','traceT_D_99_T_01','traceT_D_89_T_11']
-#	tlabels = [r'$0\%$',r'$1\%$',r'$11\%$']
-#	multi_empirical_growths(np.flip(sims),np.flip(tlabels),'Deuterons','Alphas',theory_sim=sims[0],times=[[0.5,2.0]])
+	os.chdir('/storage/space2/phrmsf/traceT/')
+	sims = ['traceT_D_100_T_00','traceT_D_99_T_01','traceT_D_89_T_11']
+	tlabels = [r'$0\%$',r'$1\%$',r'$11\%$']
+	multi_empirical_growths(np.flip(sims),np.flip(tlabels),'Deuterons','Alphas',theory_sim=sims[0],times=[[0.5,2.0]])
 
-	os.chdir('/storage/space2/phrmsf/lowres_D_He3/')
-	sims = np.sort([i for i in os.listdir() if 'p_90' in i])
-	hlabels = np.array([int(i[2:4]) for i in sims])	
-	multi_empirical_growths(sims,hlabels,'Deuterons','Protons',theory_sim=sims[0])
+#	os.chdir('/storage/space2/phrmsf/lowres_D_He3/')
+#	sims = np.sort([i for i in os.listdir() if 'p_90' in i])
+#	hlabels = np.array([int(i[2:4]) for i in sims])	
+#	multi_empirical_growths(sims,hlabels,'Deuterons','Protons',theory_sim=sims[0])
 
