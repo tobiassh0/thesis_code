@@ -65,8 +65,8 @@
 
 ## multiple empirical growth rates (for multiple time-ranges) plotted against theory 
 
-def multi_empirical_growths(sim_lst,labels,majions,minions,Emin=3.5e6,theory_sim=None,theta=89,\
-										times=[[0,0.5],[0.5,2.0]],wmin=0,wmax=25,dw=0.25,nval=int(1e6)):
+def multi_empirical_growths(sim_lst,labels,minions='Alphas',majions='Deuterons',maj2ions='Tritons',Emin=3.5e6,\
+							theory_sim=None,theta_deg=89,times=[[0,0.5],[0.5,2.0]],wmin=0,wmax=25,dw=0.25,nval=int(1e5)):
 	"""
 		Function for an n-rows plot of the [0] theoretical growth rates [1] time range 1 [2] time range 2 ... [n] time range n
 		Each time range in the times array is given as 2 values, times[n] = [tstart, tend]. Using these ranges, the growth rates
@@ -79,7 +79,7 @@ def multi_empirical_growths(sim_lst,labels,majions,minions,Emin=3.5e6,theory_sim
 			minions 		: minority ions
 			Emin 			: Minority species energy in eV
 			theory_sim 	: simulation used to calculate theoretical growth rates
-			theta 		: angle between B-field and sim domain
+			theta_deg	: angle between B-field and sim domain (degrees)
 			times 		: time array shape (n,2) which dictates time ranges to calculate empirical growth rates
 			wmin & wmax : the minimum and maximum frequencies used for plotting & growth rates
 			dw				: spacing in normalised freq to empirically calculate the growth rates
@@ -108,10 +108,8 @@ def multi_empirical_growths(sim_lst,labels,majions,minions,Emin=3.5e6,theory_sim
 	## theory
 	_=getSimulation(theory_sim)
 	d0 = sdfread(0)
-	nval = int(1e6)
 
 	# setup	
-	theta = 89.
 	wcyca = getCyclotronFreq(d0,minions)
 	wnorm = wcyca
 	omegaall = wnorm*np.linspace(wmin,wmax,nval)
@@ -127,10 +125,12 @@ def multi_empirical_growths(sim_lst,labels,majions,minions,Emin=3.5e6,theory_sim
 	
 	# get theoretical growth rates & plot
 	# posomega, posgamma = growth_rate_theory(minions, majions, theta, d0, u, vd, vr, kall, omegaall)
-	posomega, posgamma = growth_rate_manual(minspec='Alphas',majions='Deuterons',maj2ions='Tritons',wmax=wmax,theta_deg=theta,xi3=10**(-4),xi2=0.0);
+	posomega, posgamma = growth_rate_manual(minions=minions,majions=majions,maj2ions=maj2ions,wmax=wmax,theta_deg=theta_deg,xi3=10**(-4),xi2=0.0)
 	ax[0].plot(posomega/wcyca,posgamma/wcyca,color='k')
 	ax[0].set_ylabel(r'$\gamma_l/$'+getOmegaLabel(minions),**tnrfont)
 	ax[0].set_xlim(wmin,wmax)
+	ax[0].set_yscale('log')
+	ax[0].set_ylim(1e-6,1e1) # TODO; hardcoded
 	
 	# hard coded limits
 	#ax[0].set_ylim(0,2500)
@@ -158,6 +158,7 @@ def multi_empirical_growths(sim_lst,labels,majions,minions,Emin=3.5e6,theory_sim
 			ax[t].plot(omegas/wnorm,growthRatesMean/wnorm,'-o',color=colors[SimIndex])
 			SimIndex+=1
 		ax[t].set_xlim(0,wmax)
+		# ax[t].set_yscale('log')
 		ax[t].set_ylabel(r'$\gamma_s/$'+getOmegaLabel(minions),**tnrfont)
 		
 		## hard-coded formatting
@@ -172,8 +173,8 @@ def multi_empirical_growths(sim_lst,labels,majions,minions,Emin=3.5e6,theory_sim
 	# x-label
 	ax[-1].set_xlabel(r'$\omega/$'+getOmegaLabel(minions),**tnrfont)
 	plt.show()
-	# fig.savefig(home+'/Bz_kt_{}_{}_{}.png'.format(wmin,wmax,dw),bbox_inches='tight')
-	# fig.savefig(home+'/Bz_kt_{}_{}_{}.eps'.format(wmin,wmax,dw),bbox_inches='tight')
+	fig.savefig(home+'/Bz_kt_{}_{}_{}.png'.format(wmin,wmax,dw),bbox_inches='tight')
+	fig.savefig(home+'/Bz_kt_{}_{}_{}.eps'.format(wmin,wmax,dw),bbox_inches='tight')
 	return None
 
 #---------------------------------------------------------------------#
@@ -183,7 +184,7 @@ if __name__=='__main__':
 	os.chdir('/storage/space2/phrmsf/traceT/')
 	sims = ['traceT_D_100_T_00','traceT_D_99_T_01','traceT_D_89_T_11']
 	tlabels = [r'$0\%$',r'$1\%$',r'$11\%$']
-	multi_empirical_growths(np.flip(sims),np.flip(tlabels),'Deuterons','Alphas',theory_sim=sims[0],times=[[0.5,2.0]])
+	multi_empirical_growths(np.flip(sims),np.flip(tlabels),theory_sim=sims[0],times=[[0.5,2.0]])
 
 #	os.chdir('/storage/space2/phrmsf/lowres_D_He3/')
 #	sims = np.sort([i for i in os.listdir() if 'p_90' in i])

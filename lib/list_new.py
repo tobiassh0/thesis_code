@@ -1663,16 +1663,16 @@ def Chi0Calc(file0,v0,kall,omegaall,species='Deuterons',wci=None,theta=90):
 	return Chi0#, PIxx, PIxy, PIyy
 
 
-def growth_rate_manual(minspec='Alphas',majions='Deuterons',maj2ions='Tritons',wmax=25,theta_deg=89,xi3=10**(-4),xi2=0.0,\
+def growth_rate_manual(minions='Alphas',majions='Deuterons',maj2ions='Tritons',wmax=25,theta_deg=89,xi3=10**(-4),xi2=0.0,\
 					B0=2.1,ne=1e19,pitchangle=0.69115,_Emin=3.5,vspread=1/100,nval=int(1e5),plot=False):
 	"""
 	Plots the linear growth rate, from eqs. (29) and (8) in Refs. (R. Dendy et al., 1994) and (K. G. McClements et al., 1995) respectively. 
 	Doesn't load a sim value, instead uses user-defined inputs for the initial conditions and plasma freqs.
 		In:
-			minspec 		: minority species
+			minions 		: minority species
 			majions 		: 1st bulk ion species
 			maj2ions		: 2nd bulk ion species
-			wmax 			: maximum frequency, as normalised to the minspec cyclotron freq 
+			wmax 			: maximum frequency, as normalised to the minions cyclotron freq 
 			theta_deg 	: angle between magnetic field and x-hat (in degrees)
 			xi3			: minority species concentration
 			xi2			: 2nd bulk ion species concentration
@@ -1681,7 +1681,7 @@ def growth_rate_manual(minspec='Alphas',majions='Deuterons',maj2ions='Tritons',w
 			pitchangle	: the cosine of the pitch angle, default of 0.22*PI radians (as opposed to -0.646)
 			_Emin			: the energy of the minority species (in units of MeV)
 			vspread		: the thermal spread (vr/v3) of the parallel component 
-			nval			: number of valuation points to calculate (aim for dw < 0.01 Omega_c,minspec)
+			nval			: number of valuation points to calculate (aim for dw < 0.01 Omega_c,minions)
 			plot			: boolean to determine whether to plot data
 		Out:
 			omega 	: frequencies calculated for positive growth rates 
