@@ -1759,7 +1759,7 @@ def growth_rate_manual(minions='Alphas',majions='Deuterons',maj2ions='Tritons',w
 		eetal = (omegas[i]-kpara[i]*vd-l*wca)/(kpara[i]*vr)
 		za = kperp[i]*u/wca
 		Jl = spec.jv(l,za) # (order, argument)
-		Jlprime = spec.jvp(l,za)
+		Jlprime = spec.jvp(l,za) 
 		JlJlprime = Jl*Jlprime
 #		plt.scatter(za,Jl)
 
@@ -1793,17 +1793,33 @@ def growth_rate_manual(minions='Alphas',majions='Deuterons',maj2ions='Tritons',w
 	gamma[gamma<0] = 0
 	return omegas, gamma
 
-	
+
 ## Find the growth rates of the MCI in its linear phase based off of drift and spread velocities
 def growth_rate_theory(minions, majions, theta, file0, u, vd, vr, karr, omegarr):
-	# f(vpara,vperp) = (1/(2pi^1.5 u v_r)) * exp(-(vpara-vd)^2/vr^2) * delta(vperp-u)	
-	# u is perp drift
-	# vr is para thermal spread
-	# vd is para drift
-	# emin is beam energy in eV
-
-	# THIS GROWTH RATE CORRESPONDS TO EQUATIONS (8)-(10) OF MCCLEMENTS ET AL. POP 3 (2) 1996
-	# I DON'T USE EQ. (11) TO GET THE FREQUENCY, RATHER I USE THE COLD PALSMA DISPERSION RELATION
+	"""
+		Calculates the theoretical linear MCI growth rates for a velocity dispersion of minority particles
+		f(vpara,vperp) = (1/(2pi^1.5 u v_r)) * exp(-(vpara-vd)^2/vr^2) * delta(vperp-u) where;
+		- u is perp drift
+		- vr is para thermal spread
+		- vd is para drift
+		
+		This growth rate corresponds to eqs. (8)-(10) of McClements et al. 1996. It is common in these papers
+		to use frequencies corresponding to those in eq. (11), but throughout this code we use the cold plasma 
+		dispersion relation (def coldplasmadispersion())
+		In:
+			minions	: minority ion species
+			majions	: majority ion species
+			theta		: angle between magnetic field and domain (z theta x)
+			file0		: first file in the simulation 
+			u			: perp drift
+			vd			: para drift
+			vr			: para thermal spread
+			karr		: wavenumber solutions to cold plasma dispersion
+			omegas	: frequency (solutions) in cold plasma dispersion
+		Out:
+			posomega : positive frequencies
+			poasgamma: positive growth rates
+	"""
 	
 	Zmin = getChargeNum(minions)
 	Zmaj = getChargeNum(majions)
