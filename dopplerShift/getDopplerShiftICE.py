@@ -141,13 +141,13 @@ def getKernelDoppler(sims,FT2darr,normspecies,wkmax=[10,25],logthresh=1.8,kernel
 		os.chdir(home)
 	print(os.getcwd())
 	## format edge axes
-#	ax2[len(ax2)//2].set_ylabel(r'$\omega/$'+getOmegaLabel(normspecies),**tnrfont)
-#	ax2[len(ax2)//2].set_yticks([0,2,4,6,8,10]) ; ax2[len(ax2)//2].set_yticklabels([0,2,4,6,8,10])
+	# ax2[len(ax2)//2].set_ylabel(r'$\omega/$'+getOmegaLabel(normspecies),**tnrfont)
+	# ax2[len(ax2)//2].set_yticks([0,2,4,6,8,10]) ; ax2[len(ax2)//2].set_yticklabels([0,2,4,6,8,10])
 	ax2[-1].set_xticks([0,5,10,15,20]) ; ax2[-1].set_xticklabels([0,5,10,15,20])
 	ax1[-1].set_xlabel(r'$d\omega/dk$'+'  '+r'$[v_A]$',**tnrfont)
-	fig1.savefig('dw_dk_'+kernel+'_grad.png',bbox_inches='tight')
-#	ax2[-1].set_xlabel(r'$kv_A/\Omega_p$',**tnrfont)
-#	plt.show()
+	# fig1.savefig('dw_dk_'+kernel+'_grad.png',bbox_inches='tight')
+	# ax2[-1].set_xlabel(r'$kv_A/\Omega_p$',**tnrfont)
+	# plt.show()
 	fig2.savefig('FT_2d_doppler_all.png',bbox_inches='tight')
 	return np.array(dsvarr)
 
@@ -245,53 +245,97 @@ def getIntegrateDoppler(sims,FT2darr,normspecies='Protons',wkmax=[20,20],logthre
 		sys.exit()
 	return None	
 		
-def PLOTDOPPLER(hlabels,dsvarr):
-	hlabels = hlabels/100
+def PLOTDOPPLER(hlabels,dsvarr,pchange=True):
+	"""
+	Plotting the (1) Alf speed vA (2) Kernel extracted Doppler velocity and (3) the Doppler velocity
+	normalised to the 0% He3 concentration Doppler shift (i.e. vA normalisation removed)
+	In:
+		hlabels : the He3 concentration as a % (e.g. 0, 5, 10, 15 ...)
+		dsvarr 	: an array of the Doppler extracted velocities (dsv) and vA for each sim
+		pchange : boolean whether to plot percentage change (all on one plot) or with nrows
+	Out:
+		Saves the figure 
+	"""
+	hlabels = hlabels/100 # change to actual value not %
 	dsv_vA,dsv,vA = dsvarr[:,0], dsvarr[:,1], dsvarr[:,2]
-	fig,axs=plt.subplots(figsize=(4,8),nrows=3,sharex=True)
-	fig.subplots_adjust(hspace=0.1)
-	##	vA
-	axs[0].scatter(hlabels,vA/const.c,color='k')
-	axs[0].set_ylabel(r'$v_A/c$',**tnrfont)
-	axs[0].set_ylim(0.0265,0.031)
-	# fit linear curve
-	params, params_err = ODR_fit(x=hlabels,y=vA/const.c)
-	axs[0].plot(hlabels,func_linear(params,hlabels),color='r',linestyle='--')
-	top = (params[0] + params_err[0], params[1] + params_err[1])
-	bottom = (params[0] - params_err[0], params[1] - params_err[1])
-	axs[0].fill_between(hlabels,hlabels*top[0]+top[1],hlabels*bottom[0]+bottom[1],color='r',alpha=1/3)
-	# pearsons cross cor
-	r = np.corrcoef(hlabels,vA/const.c)[0,1]
-	axs[0].annotate(r'$r={}$'.format(np.around(r,3)),xy=(0.03,0.85),xycoords='axes fraction',ha='left',va='bottom',fontsize=18)
-	## v_dop
-	axs[1].scatter(hlabels,abs(dsv),color='k')
-	axs[1].set_ylabel(r'$|v_{dop}/v_A|$',**tnrfont)
-	axs[1].set_ylim(0.118,0.138)
-	# fit linear curve
-	params, params_err = ODR_fit(x=hlabels,y=abs(dsv))
-	axs[1].plot(hlabels,func_linear(params,hlabels),color='r',linestyle='--')
-	top = (params[0] + params_err[0], params[1] + params_err[1])
-	bottom = (params[0] - params_err[0], params[1] - params_err[1])
-	axs[1].fill_between(hlabels,hlabels*top[0]+top[1],hlabels*bottom[0]+bottom[1],color='r',alpha=1/3)
-	# pearsons cross cor
-	r = np.corrcoef(hlabels,abs(dsv))[0,1]
-	axs[1].annotate(r'$r={}$'.format(np.around(r,3)),xy=(0.97,0.85),xycoords='axes fraction',ha='right',va='bottom',fontsize=18)
-	## v_dop %
-	axs[2].scatter(hlabels,abs(dsv_vA)/abs(dsv_vA[0]),color='k')
-	axs[2].set_ylabel(r'$|v_{dop}/v_{dop}^{(0)}|$',**tnrfont)
-	axs[2].set_xlabel(r'$\xi_{He3}$',**tnrfont)
-	axs[2].set_ylim(0.95,1.05)
-	# fit linear curve
-	params, params_err = ODR_fit(x=hlabels,y=abs(dsv_vA)/abs(dsv_vA[0]))
-	axs[2].plot(hlabels,func_linear(params,hlabels),color='r',linestyle='--')
-	top = (params[0] + params_err[0], params[1] + params_err[1])
-	bottom = (params[0] - params_err[0], params[1] - params_err[1])
-	axs[2].fill_between(hlabels,hlabels*top[0]+top[1],hlabels*bottom[0]+bottom[1],color='r',alpha=1/3)
-	# pearsons cross cor
-	r = np.corrcoef(hlabels,abs(dsv_vA)/abs(dsv_vA[0]))[0,1]
-	axs[2].annotate(r'$r={}$'.format(np.around(r,3)),xy=(0.97,0.85),xycoords='axes fraction',ha='right',va='bottom',fontsize=18)
-	axs[2].set_xlim(-0.05,0.5)
-	fig.savefig('vA_vdop_fits.png',bbox_inches='tight')
+	if pchange:
+		fig,ax=plt.subplots(figsize=(8,8/const.g_ratio))
+		# percentage change
+		ax.scatter(hlabels,vA/vA[0]-1,color='k',marker='o')
+		ax.scatter(hlabels,abs(dsv/dsv[0])-1,color='k',marker='x')
+		ax.scatter(hlabels,abs(dsv_vA)/abs(dsv_vA[0])-1,color='k',marker='s')
+		# fit linear curves
+		# va
+		params, params_err = ODR_fit(x=hlabels,y=vA/vA[0]-1)
+		ax.plot(hlabels,func_linear(params,hlabels),color='r',linestyle='--')
+		top = (params[0] + params_err[0], params[1] + params_err[1])
+		bottom = (params[0] - params_err[0], params[1] - params_err[1])
+		ax.fill_between(hlabels,hlabels*top[0]+top[1],hlabels*bottom[0]+bottom[1],color='r',alpha=1/3)
+		# vdop
+		params, params_err = ODR_fit(x=hlabels,y=abs(dsv/dsv[0])-1)
+		ax.plot(hlabels,func_linear(params,hlabels),color='r',linestyle='--')
+		top = (params[0] + params_err[0], params[1] + params_err[1])
+		bottom = (params[0] - params_err[0], params[1] - params_err[1])
+		ax.fill_between(hlabels,hlabels*top[0]+top[1],hlabels*bottom[0]+bottom[1],color='r',alpha=1/3)
+		# vdop %
+		params, params_err = ODR_fit(x=hlabels,y=abs(dsv_vA)/abs(dsv_vA[0])-1)
+		ax.plot(hlabels,func_linear(params,hlabels),color='r',linestyle='--')
+		top = (params[0] + params_err[0], params[1] + params_err[1])
+		bottom = (params[0] - params_err[0], params[1] - params_err[1])
+		ax.fill_between(hlabels,hlabels*top[0]+top[1],hlabels*bottom[0]+bottom[1],color='r',alpha=1/3)
+		# formatting
+		ax.set_xlim(-0.05,0.5)
+		ax.set_ylim(-0.15,0.15)
+		ax.set_xlabel(r'$\xi_{He3}$',**tnrfont)
+		ax.set_ylabel('Percentage change',**tnrfont)
+		ax.legend(labels=[r'$v_A$',r'$v_{dop}/v_A$',r'$v_{dop}$'],loc='best',fontsize=18)
+		fig.savefig('vA_vdop_fits_pchange.png',bbox_inches='tight')
+	else:
+		fig,axs=plt.subplots(figsize=(4,8),nrows=3,sharex=True)
+		fig.subplots_adjust(hspace=0.1)
+		##	vA
+		axs[0].scatter(hlabels,vA/const.c,color='k')
+		axs[0].set_ylabel(r'$v_A/c$',**tnrfont)
+		axs[0].set_ylim(0.0265,0.031)
+		# fit linear curve
+		params, params_err = ODR_fit(x=hlabels,y=vA/const.c)
+		axs[0].plot(hlabels,func_linear(params,hlabels),color='r',linestyle='--')
+		top = (params[0] + params_err[0], params[1] + params_err[1])
+		bottom = (params[0] - params_err[0], params[1] - params_err[1])
+		axs[0].fill_between(hlabels,hlabels*top[0]+top[1],hlabels*bottom[0]+bottom[1],color='r',alpha=1/3)
+		# pearsons cross cor
+		r = np.corrcoef(hlabels,vA/const.c)[0,1]
+		axs[0].annotate(r'$r={}$'.format(np.around(r,3)),xy=(0.03,0.85),xycoords='axes fraction',ha='left',va='bottom',fontsize=18)
+		## v_dop
+		axs[1].scatter(hlabels,abs(dsv),color='k')
+		axs[1].set_ylabel(r'$|v_{dop}/v_A|$',**tnrfont)
+		axs[1].set_ylim(0.118,0.138)
+		# fit linear curve
+		params, params_err = ODR_fit(x=hlabels,y=abs(dsv))
+		axs[1].plot(hlabels,func_linear(params,hlabels),color='r',linestyle='--')
+		top = (params[0] + params_err[0], params[1] + params_err[1])
+		bottom = (params[0] - params_err[0], params[1] - params_err[1])
+		axs[1].fill_between(hlabels,hlabels*top[0]+top[1],hlabels*bottom[0]+bottom[1],color='r',alpha=1/3)
+		# pearsons cross cor
+		r = np.corrcoef(hlabels,abs(dsv))[0,1]
+		axs[1].annotate(r'$r={}$'.format(np.around(r,3)),xy=(0.97,0.85),xycoords='axes fraction',ha='right',va='bottom',fontsize=18)
+		## v_dop %
+		axs[2].scatter(hlabels,abs(dsv_vA)/abs(dsv_vA[0]),color='k')
+		axs[2].set_ylabel(r'$|v_{dop}/v_{dop}^{(0)}|$',**tnrfont)
+		axs[2].set_xlabel(r'$\xi_{He3}$',**tnrfont)
+		axs[2].set_ylim(0.95,1.05)
+		# fit linear curve
+		params, params_err = ODR_fit(x=hlabels,y=abs(dsv_vA)/abs(dsv_vA[0]))
+		axs[2].plot(hlabels,func_linear(params,hlabels),color='r',linestyle='--')
+		top = (params[0] + params_err[0], params[1] + params_err[1])
+		bottom = (params[0] - params_err[0], params[1] - params_err[1])
+		axs[2].fill_between(hlabels,hlabels*top[0]+top[1],hlabels*bottom[0]+bottom[1],color='r',alpha=1/3)
+		# pearsons cross cor
+		r = np.corrcoef(hlabels,abs(dsv_vA)/abs(dsv_vA[0]))[0,1]
+		axs[2].annotate(r'$r={}$'.format(np.around(r,3)),xy=(0.97,0.85),xycoords='axes fraction',ha='right',va='bottom',fontsize=18)
+		axs[2].set_xlim(-0.05,0.5)
+		fig.savefig('vA_vdop_fits.png',bbox_inches='tight')
+	## 
 	plt.show()
 	return None
 	
