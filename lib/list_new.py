@@ -2637,7 +2637,7 @@ def map_k_growth(sim_loc,normspecies='Alphas',omega_min=0,omega_max=50,domega=0.
 	## FT1d & extract data at karr points
 	FT1d = read_pkl('FT_1d_Magnetic_Field_Bz')
 	harmonics = FT1d.shape[1]*(k2/klim)
-	# loop through harmonics, then loop through time window to acquire multiple growth rates for a given k-mode
+	## loop through harmonics, then loop through time window to acquire multiple growth rates for a given k-mode
 	[t0,t1] = [tstart_frac*tnorm,tend_frac*tnorm]
 	t1_2 = (t1+t0)/2
 	dt = dt_frac*tnorm
@@ -2645,15 +2645,15 @@ def map_k_growth(sim_loc,normspecies='Alphas',omega_min=0,omega_max=50,domega=0.
 	nmax = (t1+t0)/(2*dt) ; narr = np.arange(nmin,nmax+1,1)
 	growthRates = np.zeros((len(harmonics),len(narr)))	
 	for i in range(len(harmonics)):
-#		data = np.mean((FT1d[1:,round(harmonics[i])-1:round(harmonics[i])+1]),axis=1)
+		# data = np.mean((FT1d[1:,round(harmonics[i])-1:round(harmonics[i])+1]),axis=1)
 		data = (FT1d[1:,round(harmonics[i])])
-		# extract peaks in data
+		## extract peaks in data
 		peaks = extractPeaks(data,Nperw=10)
 		datapeak = data[peaks]
 		time_dummy = times[peaks]
-#		indexpeak = np.ones(len(datapeak))*i
-#		axs.scatter(indexpeak,time_dummy/tnorm,datapeak)
-		# fit data over multiple times
+		# indexpeak = np.ones(len(datapeak))*i
+		# axs.scatter(indexpeak,time_dummy/tnorm,datapeak)
+		## fit data over multiple times
 		for n in range(len(narr)):
 			try:
 				thresh = (time_dummy > t1_2-narr[n]*dt) & (time_dummy < t1_2+narr[n]*dt)
@@ -2667,7 +2667,7 @@ def map_k_growth(sim_loc,normspecies='Alphas',omega_min=0,omega_max=50,domega=0.
 				continue
 	growthRatesMean = np.mean(growthRates,axis=1)
 	growthRatesSTD = np.std(growthRates,axis=1)
-	if plot:
+	if plot: # plot boolean
 		thresh = growthRatesMean > 0
 		growthRatesMean = growthRatesMean[thresh]
 		omegas = omegas[thresh]

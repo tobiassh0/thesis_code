@@ -342,11 +342,13 @@ def PLOTDOPPLER(hlabels,dsvarr,pchange=True):
 if __name__ == '__main__':
 	from func_load import *
 	import scipy
+	# D-He3
 	quantity='Magnetic_Field_Bz'
 	os.chdir('/storage/space2/phrmsf/lowres_D_He3/')
 	home = os.getcwd()
 	sims = np.sort([i for i in os.listdir() if 'p_90' in i])
 	hlabels = np.array([int(i[2:4]) for i in sims])
+	# collect all FT2d (needed for Doppler shifts)
 	FT2darr = []
 	for sim in sims:
 		_=getSimulation(sim)
@@ -357,7 +359,7 @@ if __name__ == '__main__':
 	plt.clf()
 	PLOTDOPPLER(hlabels,dsvarr)
 	sys.exit()
-	## line integrate
+	# line integrate
 	sim=getSimulation('/storage/space2/phrmsf/lowres_D_He3/0_38_p_90')
 	sims=[sim]
 	FT2d = [read_pkl('FT_2d_'+quantity)]
