@@ -265,19 +265,19 @@ def PLOTDOPPLER(hlabels,dsvarr,pchange=True):
 		ax.scatter(hlabels,abs(dsv/dsv[0])-1,color='k',marker='x')
 		ax.scatter(hlabels,abs(dsv_vA)/abs(dsv_vA[0])-1,color='k',marker='s')
 		# fit linear curves
-		# va
+			# va
 		params, params_err = ODR_fit(x=hlabels,y=vA/vA[0]-1)
 		ax.plot(hlabels,func_linear(params,hlabels),color='r',linestyle='--')
 		top = (params[0] + params_err[0], params[1] + params_err[1])
 		bottom = (params[0] - params_err[0], params[1] - params_err[1])
 		ax.fill_between(hlabels,hlabels*top[0]+top[1],hlabels*bottom[0]+bottom[1],color='r',alpha=1/3)
-		# vdop
+			# vdop
 		params, params_err = ODR_fit(x=hlabels,y=abs(dsv/dsv[0])-1)
 		ax.plot(hlabels,func_linear(params,hlabels),color='r',linestyle='--')
 		top = (params[0] + params_err[0], params[1] + params_err[1])
 		bottom = (params[0] - params_err[0], params[1] - params_err[1])
 		ax.fill_between(hlabels,hlabels*top[0]+top[1],hlabels*bottom[0]+bottom[1],color='r',alpha=1/3)
-		# vdop %
+			# vdop %
 		params, params_err = ODR_fit(x=hlabels,y=abs(dsv_vA)/abs(dsv_vA[0])-1)
 		ax.plot(hlabels,func_linear(params,hlabels),color='r',linestyle='--')
 		top = (params[0] + params_err[0], params[1] + params_err[1])

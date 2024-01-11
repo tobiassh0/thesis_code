@@ -2614,67 +2614,6 @@ def extractPeaks(data,Nperw=1,prominence=0.3):
 	# tune till Nperw encapsulates all peaks (visually)
 	return signal.find_peaks(data,distance=Nperw,prominence=prominence)[0]
 
-# calculate the growth of k-modes for various time spacings
-def map_k_growth(sim_loc,normspecies='Alphas',omega_min=0,omega_max=50,domega=0.25,dt_frac=0.5,\
-					tstart_frac=0.5,tend_frac=2.0,theta=89.,color='k',plot=False):
-	## define sim
-	sim_loc = getSimulation(sim_loc)
-	d0 = sdfread(0)
-	## normalisation
-	vA = getAlfvenVel(d0)	
-	wnorm = getCyclotronFreq(d0,normspecies)
-	klim = 0.5*2*const.PI/getdxyz(d0)
-	times = read_pkl('times') ; tnorm = 2*const.PI/wnorm
-	T = times[-1]/tnorm
-	
-	## cold plasma disp
-	omegas = wnorm*np.arange(int(omega_min),int(omega_max),domega)
-	species = getIonSpecies(d0)	
-	_,k2,_ = coldplasmadispersion(d0, omegas, theta=theta) 
-	#k2 = omegas/(vA*np.sqrt(1+np.cos(86.3*const.PI/180.)**2))
-	thresh = k2 > 0
-	k2 = k2[thresh] ; omegas = omegas[thresh]
-	## FT1d & extract data at karr points
-	FT1d = read_pkl('FT_1d_Magnetic_Field_Bz')
-	harmonics = FT1d.shape[1]*(k2/klim)
-	## loop through harmonics, then loop through time window to acquire multiple growth rates for a given k-mode
-	[t0,t1] = [tstart_frac*tnorm,tend_frac*tnorm]
-	t1_2 = (t1+t0)/2
-	dt = dt_frac*tnorm
-	nmin = 1
-	nmax = (t1+t0)/(2*dt) ; narr = np.arange(nmin,nmax+1,1)
-	growthRates = np.zeros((len(harmonics),len(narr)))	
-	for i in range(len(harmonics)):
-		# data = np.mean((FT1d[1:,round(harmonics[i])-1:round(harmonics[i])+1]),axis=1)
-		data = (FT1d[1:,round(harmonics[i])])
-		## extract peaks in data
-		peaks = extractPeaks(data,Nperw=10)
-		datapeak = data[peaks]
-		time_dummy = times[peaks]
-		# indexpeak = np.ones(len(datapeak))*i
-		# axs.scatter(indexpeak,time_dummy/tnorm,datapeak)
-		## fit data over multiple times
-		for n in range(len(narr)):
-			try:
-				thresh = (time_dummy > t1_2-narr[n]*dt) & (time_dummy < t1_2+narr[n]*dt)
-				timefit = time_dummy[thresh]
-				datafit = datapeak[thresh]
-				popt, pcov = curve_fit(lambda t,b,c: np.exp(b*t)+c,timefit,datafit,maxfev=5000) # exponential fitting
-				b,c = popt
-				fitted = np.exp(b*timefit) + c
-				growthRates[i,n] = 2*const.PI*b # not normalised
-			except:
-				continue
-	growthRatesMean = np.mean(growthRates,axis=1)
-	growthRatesSTD = np.std(growthRates,axis=1)
-	if plot: # plot boolean
-		thresh = growthRatesMean > 0
-		growthRatesMean = growthRatesMean[thresh]
-		omegas = omegas[thresh]
-		plt.plot(omegas/wnorm,growthRatesMean/wnorm,'o-',color=color)
-		plt.savefig('growth_kmodes.png')
-	return omegas, growthRatesMean, growthRatesSTD
-
 ## Calculates the growth rates from the gradients of the energy densities for a quantity
 def grad_energydens(simloc,normspecies='Deuterons',quant='Magnetic_Field_Bz',mean_to=10,N=300,conv2=True):
 	times = read_pkl('times')
