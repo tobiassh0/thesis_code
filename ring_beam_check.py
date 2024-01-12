@@ -36,6 +36,7 @@ if __name__=='__main__':
 	os.chdir(home)
 	fig.savefig('hist_p.png')
 	sys.exit()
+	
 	# # D-T
 	# os.chdir('/storage/space2/phrmsf/traceT')
 	# sims = [i for i in os.listdir() if 'traceT' in i]
@@ -45,6 +46,7 @@ if __name__=='__main__':
 	# tlabels = np.array([int(i[-2:]) for i in sims])
 	# thresh = tlabels >= 18
 	# check_rb(sims[thresh],labels=tlabels[thresh],minspec='Alphas')
+	
 	# # Fast electrons
 	# os.chdir('/storage/space2/phrmsf/ECRH')
 	# sims = np.sort([i for i in os.listdir() if 'ECRH_JT60U_' in i and 'images' not in i])
