@@ -6,11 +6,11 @@ def power_compare(sims,labels=[None],normspecies='Deuterons',wkmax=[25,40],quant
 		Compare the power spectra densities (PSD) of multiple sims through frequencies normalised to the normspecies.
 		
 		In:
-			sims			 : the list of simulations for power spectra you want to compare
+			sims		 : the list of simulations for power spectra you want to compare
 			labels		 : labels of each sim to put in the legend (see "leg" flag)
 			normspecies	 : species which you want to normalise frequencies to
-			wkmax			 : frequency and wavenumber maxima you want to calc the power spectra over
-			quantity		 : FT_2d quantity to load (defaults to dBz --> see batch_load for FT_2d calc)
+			wkmax	  	 : frequency and wavenumber maxima you want to calc the power spectra over [wmax, kmax]
+			quantity	 : FT_2d quantity to load (defaults to dBz --> see batch_load for FT_2d calc)
 			colors		 : color array of sims, defaults to plt.cm.rainbow 
 			x&ylims		 : limits in x and y to plot, allows for a "zoomed in" version of the same spectra
 			leg			 : boolean, legend on/off
@@ -92,7 +92,6 @@ def power_compare(sims,labels=[None],normspecies='Deuterons',wkmax=[25,40],quant
 	else:
 		ax.set_xlim(xmin,xmax)
 		fig.savefig('power_compare_{}_{}.png'.format(xmin,xmax),bbox_inches='tight')	
-	
 	#plt.show()
 	return None
 
@@ -107,9 +106,9 @@ if __name__=='__main__':
 	# sims = sims[1:]
 	# hlabels = np.array([int(str(i[-2] + i[-1])) for i in sims])
 	sims = ['traceT_D_50_T_50','traceT_D_89_T_11','traceT_D_99_T_01','traceT_D_100_T_00','cold_JET26148']
-	hlabels = [r'$50\%$',r'$11\%$',r'$1\%$',r'$0\%$','Cold']
+	hlabels = [r'$50\%$',r'$11\%$',r'$1\%$',r'$0\%$','Baseline']
 	power_compare(sims,labels=hlabels,wkmax=[25,45],normspecies='Alphas',colors=['b','g','r','darkcyan','k'],\
-					freqlabel=True)#,xlims=[10,25],leg=False,height=3)
+					freqlabel=True,xlims=[0,25])#,leg=False,height=3)
 	sys.exit()
 
 	## D-He3
