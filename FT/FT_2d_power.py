@@ -49,7 +49,7 @@ def getFT2d_and_Power(sim,kmax=30,wmax=20):
 
 width_FT2d = 3
 
-sim_lst = ['traceT_0_00','traceT_D_99_T_01','traceT_D_89_T_11','traceT_0_50']
+sim_lst = ['traceT_D_100_T_00','traceT_D_99_T_01','traceT_D_89_T_11','traceT_D_50_T_50']
 kmax = 50; wmax = 30
 fig = plt.figure(figsize=(11,6))
 #fig.suptitle("Spatiotemporal Fourier transforms and power spectra")
@@ -75,8 +75,8 @@ gs1 = GridSpec(2, 5, left=0.05, right=0.49, wspace=0., hspace=0.05)# right spaci
 FT2d,power0,omegas,wcyc = getFT2d_and_Power(sim_lst[0],kmax=kmax,wmax=wmax)
 ax1 = fig.add_subplot(gs1[0, :width_FT2d])
 im0=ax1.imshow(np.log10(FT2d),**kwargs,cmap='magma',extent=[0,kmax,0,wmax],vmin=-2,vmax=6)
-ax1.plot([k1[0],k2[0]],[w1[0],w2[0]],color='k',linestyle='--')
-ax1.text(k_MCI[0],w_MCI[0]-2,r'$v_{gr}/v_A=$'+'{}'.format(np.around(v_gr[0],2)),ha='left',va='top',**tnrfont)
+# ax1.plot([k1[0],k2[0]],[w1[0],w2[0]],color='k',linestyle='--')
+# ax1.text(k_MCI[0],w_MCI[0]-2,r'$v_{gr}/v_A=$'+'{}'.format(np.around(v_gr[0],2)),ha='left',va='top',**tnrfont)
 #power
 ax2 = fig.add_subplot(gs1[0, width_FT2d:],sharey=ax1)
 ax2.plot(power0,omegas/wcyc)
@@ -89,8 +89,8 @@ ax2.text(10**4.2,2.5,r'$0\%$',**tnrfont) # data coordinates
 FT2d,power,omegas,wcyc = getFT2d_and_Power(sim_lst[2],kmax=kmax,wmax=wmax)
 ax3 = fig.add_subplot(gs1[1, :width_FT2d],sharey=ax1)
 im11=ax3.imshow(np.log10(FT2d),**kwargs,cmap='magma',extent=[0,kmax,0,wmax],vmin=-2,vmax=6)
-ax3.plot([k1[2],k2[2]],[w1[2],w2[2]],color='k',linestyle='--')
-ax3.text(k_MCI[2],w_MCI[2]-2,r'$v_{gr}/v_A=$'+'{}'.format(np.around(v_gr[2],2)),ha='left',va='top',**tnrfont)
+# ax3.plot([k1[2],k2[2]],[w1[2],w2[2]],color='k',linestyle='--')
+# ax3.text(k_MCI[2],w_MCI[2]-2,r'$v_{gr}/v_A=$'+'{}'.format(np.around(v_gr[2],2)),ha='left',va='top',**tnrfont)
 #power
 ax4 = fig.add_subplot(gs1[1, width_FT2d:],sharex=ax2,sharey=ax1)
 ax4.plot(power,omegas/wcyc)
@@ -107,8 +107,8 @@ gs2 = GridSpec(2, 5, left=0.51, right=0.98, wspace=0., hspace=0.05)
 FT2d,power,omegas,wcyc = getFT2d_and_Power(sim_lst[1],kmax=kmax,wmax=wmax)
 ax5 = fig.add_subplot(gs2[0, :width_FT2d],sharey=ax1)
 im1=ax5.imshow(np.log10(FT2d),**kwargs,cmap='magma',extent=[0,kmax,0,wmax],vmin=-2,vmax=6)
-ax5.plot([k1[1],k2[1]],[w1[1],w2[1]],color='k',linestyle='--')
-ax5.text(k_MCI[1],w_MCI[1]-2,r'$v_{gr}/v_A=$'+'{}'.format(np.around(v_gr[1],2)),ha='left',va='top',**tnrfont)
+# ax5.plot([k1[1],k2[1]],[w1[1],w2[1]],color='k',linestyle='--')
+# ax5.text(k_MCI[1],w_MCI[1]-2,r'$v_{gr}/v_A=$'+'{}'.format(np.around(v_gr[1],2)),ha='left',va='top',**tnrfont)
 #power
 ax6 = fig.add_subplot(gs2[0, width_FT2d:],sharex=ax2,sharey=ax1)
 ax6.plot(power,omegas/wcyc)
@@ -121,8 +121,8 @@ ax6.text(10**4.2,2.5,r'$1\%$',**tnrfont) # data coordinates
 FT2d,power,omegas,wcyc = getFT2d_and_Power(sim_lst[3],kmax=kmax,wmax=wmax)
 ax7 = fig.add_subplot(gs2[1, :width_FT2d],sharey=ax1)
 im50=ax7.imshow(np.log10(FT2d),**kwargs,cmap='magma',extent=[0,kmax,0,wmax],vmin=-2,vmax=6)
-ax7.plot([k1[3],k2[3]],[w1[3],w2[3]],color='k',linestyle='--')
-ax7.text(k_MCI[3],w_MCI[3]-2,r'$v_{gr}/v_A=$'+'{}'.format(np.around(v_gr[3],2)),ha='left',va='top',**tnrfont)
+# ax7.plot([k1[3],k2[3]],[w1[3],w2[3]],color='k',linestyle='--')
+# ax7.text(k_MCI[3],w_MCI[3]-2,r'$v_{gr}/v_A=$'+'{}'.format(np.around(v_gr[3],2)),ha='left',va='top',**tnrfont)
 #power
 ax8 = fig.add_subplot(gs2[1, width_FT2d:],sharex=ax2,sharey=ax1)
 ax8.plot(power,omegas/wcyc)
