@@ -287,7 +287,7 @@ def PLOTDOPPLER(hlabels,dsvarr,pchange=True):
 		ax.set_xlim(-0.05,0.5)
 		ax.set_ylim(-0.15,0.15)
 		ax.set_xlabel(r'$\xi_{He3}$',**tnrfont)
-		ax.set_ylabel('Percentage change',**tnrfont)
+		ax.set_ylabel('Fractional change',**tnrfont)
 		ax.legend(labels=[r'$v_A$',r'$v_{dop}/v_A$',r'$v_{dop}$'],loc='best',fontsize=18)
 		fig.savefig('vA_vdop_fits_pchange.png',bbox_inches='tight')
 	else:

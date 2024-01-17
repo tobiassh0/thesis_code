@@ -15,8 +15,8 @@ def power_compare(sims,labels=[None],normspecies='Deuterons',wkmax=[25,40],quant
 			x&ylims		 : limits in x and y to plot, allows for a "zoomed in" version of the same spectra
 			leg			 : boolean, legend on/off
 			width/height : width and height of the figure (useful for zoomed plots)
-			freqlabel	 : boolean to determine whether to plot as f/f_cminspec
-			omegalabel	 : boolean to determine whether to plot as \omega/\Omega_minspec
+			freqlabel	 : (default False) boolean to determine whether to plot as f/f_cminspec
+			omegalabel	 : (default False) boolean to determine whether to plot as \omega/\Omega_minspec 
 		Out: 
 			Plots and saves the PSD comparison (on log scale). Returns "None"	
 	"""	
@@ -85,8 +85,8 @@ def power_compare(sims,labels=[None],normspecies='Deuterons',wkmax=[25,40],quant
 	# axis limits
 	if ymin != None: # y-limits
 		ax.set_ylim(ymin,ymax)
-	if not xmin: # x-limits
-		print(' xmin is None ')		
+	if xmax == None: # x-limits
+		print(' xmax is None ')		
 		ax.set_xlim(0,wmax)
 		fig.savefig('power_compare_{}_{}.png'.format(xmin,wmax),bbox_inches='tight')	
 	else:
@@ -105,14 +105,17 @@ if __name__=='__main__':
 	# sims = np.append(sims,sims[0])
 	# sims = sims[1:]
 	# hlabels = np.array([int(str(i[-2] + i[-1])) for i in sims])
-	sims = ['traceT_D_50_T_50','traceT_D_89_T_11','traceT_D_99_T_01','traceT_D_100_T_00','cold_JET26148']
-	hlabels = [r'$50\%$',r'$11\%$',r'$1\%$',r'$0\%$','Baseline']
-	power_compare(sims,labels=hlabels,wkmax=[25,45],normspecies='Alphas',colors=['b','g','r','darkcyan','k'],\
-					freqlabel=True,xlims=[0,25])#,leg=False,height=3)
-	sys.exit()
+	##
+	# sims = ['traceT_D_50_T_50','traceT_D_89_T_11','traceT_D_99_T_01','traceT_D_100_T_00','cold_JET26148']
+	# hlabels = [r'$50\%$',r'$11\%$',r'$1\%$',r'$0\%$','Baseline']
+	# power_compare(sims,labels=hlabels,wkmax=[25,45],normspecies='Alphas',colors=['b','g','r','darkcyan','k'],\
+	# 				freqlabel=True,xlims=[0,25])#,leg=False,height=3)
+	# sys.exit()
 
 	## D-He3
 	os.chdir('/storage/space2/phrmsf/lowres_D_He3/')
 	sims = np.sort([i for i in os.listdir() if 'p_90' in i])
+	sims = sims[1:] # remove 0%
 	hlabels = np.array([int(i[2:4]) for i in sims])	
-	power_compare(sims,labels=hlabels,wkmax=[25,45],normspecies='Protons')
+	power_compare(sims,labels=hlabels,wkmax=[20,45],normspecies='Protons',xlims=[0,20],\
+					omegalabel=True)#,leg=False,height=3)

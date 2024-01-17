@@ -79,10 +79,10 @@ im0=ax1.imshow(np.log10(FT2d),**kwargs,cmap='magma',extent=[0,kmax,0,wmax],vmin=
 # ax1.text(k_MCI[0],w_MCI[0]-2,r'$v_{gr}/v_A=$'+'{}'.format(np.around(v_gr[0],2)),ha='left',va='top',**tnrfont)
 #power
 ax2 = fig.add_subplot(gs1[0, width_FT2d:],sharey=ax1)
-ax2.plot(power0,omegas/wcyc)
+ax2.plot(np.log10(power0),omegas/wcyc)
 ax2.set_ylim(0,wmax)
-ax2.set_xscale('log')
-ax2.text(10**4.2,2.5,r'$0\%$',**tnrfont) # data coordinates
+# ax2.set_xscale('log')
+ax2.text(4.2,2.5,r'$0\%$',**tnrfont) # data coordinates
 
 # 11%
 #FT2d 
@@ -93,10 +93,10 @@ im11=ax3.imshow(np.log10(FT2d),**kwargs,cmap='magma',extent=[0,kmax,0,wmax],vmin
 # ax3.text(k_MCI[2],w_MCI[2]-2,r'$v_{gr}/v_A=$'+'{}'.format(np.around(v_gr[2],2)),ha='left',va='top',**tnrfont)
 #power
 ax4 = fig.add_subplot(gs1[1, width_FT2d:],sharex=ax2,sharey=ax1)
-ax4.plot(power,omegas/wcyc)
+ax4.plot(np.log10(power),omegas/wcyc)
 ax4.set_ylim(0,wmax)
-ax4.set_xscale('log')
-ax4.text(10**4.2,2.5,r'$11\%$',**tnrfont) # data coordinates
+# ax4.set_xscale('log')
+ax4.text(4.2,2.5,r'$11\%$',**tnrfont) # data coordinates
 
 #===================================#
 
@@ -111,10 +111,10 @@ im1=ax5.imshow(np.log10(FT2d),**kwargs,cmap='magma',extent=[0,kmax,0,wmax],vmin=
 # ax5.text(k_MCI[1],w_MCI[1]-2,r'$v_{gr}/v_A=$'+'{}'.format(np.around(v_gr[1],2)),ha='left',va='top',**tnrfont)
 #power
 ax6 = fig.add_subplot(gs2[0, width_FT2d:],sharex=ax2,sharey=ax1)
-ax6.plot(power,omegas/wcyc)
+ax6.plot(np.log10(power),omegas/wcyc)
 ax6.set_ylim(0,wmax)
-ax6.set_xscale('log')
-ax6.text(10**4.2,2.5,r'$1\%$',**tnrfont) # data coordinates
+# ax6.set_xscale('log')
+ax6.text(4.2,2.5,r'$1\%$',**tnrfont) # data coordinates
 
 # 50%
 #FT2d
@@ -125,10 +125,10 @@ im50=ax7.imshow(np.log10(FT2d),**kwargs,cmap='magma',extent=[0,kmax,0,wmax],vmin
 # ax7.text(k_MCI[3],w_MCI[3]-2,r'$v_{gr}/v_A=$'+'{}'.format(np.around(v_gr[3],2)),ha='left',va='top',**tnrfont)
 #power
 ax8 = fig.add_subplot(gs2[1, width_FT2d:],sharex=ax2,sharey=ax1)
-ax8.plot(power,omegas/wcyc)
+ax8.plot(np.log10(power),omegas/wcyc)
 ax8.set_ylim(0,wmax)
-ax8.set_xscale('log')
-ax8.text(10**4.2,2.5,r'$50\%$',**tnrfont) # data coordinates
+# ax8.set_xscale('log')
+ax8.text(4.2,2.5,r'$50\%$',**tnrfont) # data coordinates
 
 
 #===================================#
@@ -141,8 +141,8 @@ ax_ignorey = [ax2,ax4,ax5,ax6,ax7,ax8]
 ignorey(ax_ignorey)
 
 # power tick labels
-vals_power=np.array([10,1e2,1e3,1e4,1e5],dtype=float)
-labels_power=[r'$10^1$',r'$10^2$',r'$10^3$',r'$10^4$',r'$10^5$']
+vals_power=np.array([1,2,3,4,5],dtype=float)
+labels_power=[r'$1$',r'$2$',r'$3$',r'$4$',r'$5$']
 print(labels_power)
 #ax2.set_xticklabels(vals_power)
 ax4.set_xticks(vals_power)
