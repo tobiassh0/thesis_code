@@ -261,5 +261,5 @@ class Simulation():
 
 if __name__ == '__main__':
 	#simloc = '/storage/space2/phrmsf/ECRH/ECRH_JT60U_6'#lowres_D_He3/0_05_p_90'
-	simloc = '/storage/space2/phrmsf/lowres_D_He3/hatch_pattern' #lowres_D_He3/energy_protons/15MEV' #traceT/90deg'
+	simloc = '/storage/space2/phrmsf/lowres_D_He3/0_05_cold' #lowres_D_He3/energy_protons/15MEV' #traceT/90deg'
 	Simulation(simloc)
