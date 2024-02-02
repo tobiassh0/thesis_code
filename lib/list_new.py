@@ -1173,8 +1173,7 @@ def get_batch_fieldmatrix(index_list,quantities=['Magnetic_Field_Bz'],quantity='
 
 def loadFm(arr):
 	ind, quantity = arr
-	return read_pkl('batch_'+str(ind)+'_fieldmatrix_Magnetic_Field_Bz')
-
+	return read_pkl('batch_'+str(ind)+'_fieldmatrix_'+quantity)
 
 def getFm(arr):
 	ind, quantities = arr
