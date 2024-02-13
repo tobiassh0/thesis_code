@@ -3,7 +3,7 @@ from func_load import *
 
 from scipy.interpolate import interp2d
 
-sim_lst = ['traceT_0_00','traceT_D_99_T_01','traceT_D_89_T_11','traceT_0_50']
+sim_lst = ['traceT_D_100_T_00','traceT_D_99_T_01','traceT_D_89_T_11','traceT_D_50_T_50']
 FTs=[]
 PowAllk=[]
 PowAllt=[]
@@ -14,7 +14,7 @@ labels=[r'$0\%$',r'$1\%$',r'$11\%$',r'$50\%$']
 for i in range(len(sim_lst)):
 	## setup
 	print(sim_lst[i])
-	simLoc = getSimulation('/storage/space2/phrmsf/'+sim_lst[i])
+	simLoc = getSimulation('/storage/space2/phrmsf/traceT/'+sim_lst[i])
 	FT_1d = read_pkl('FT_1d_Magnetic_Field_Bz')
 	times = read_pkl('times')
 	dt = times[-1]/len(times)
@@ -55,6 +55,9 @@ for i in range(len(sim_lst)):
 
 #axs[len(axs)-1].set_xlabel(r'$k\lambda_{De}$',fontsize=22)
 axs[len(axs)-1].set_xlabel(r'$kv_A/\Omega_D$',fontsize=22)#\lambda_{De}
+for ax in axs[1:]:
+	for i in range(0,14,2): # approximate (average spacing between features is 2.5333 +- 0.13) \-/ xi_T
+		ax.axvline(i,color='k',linestyle='--',linewidth=2)
 
 ## colorbar
 p00 = axs[0].get_position().get_points().flatten()
@@ -66,10 +69,10 @@ plt.colorbar(im, cax=ax0_cbar, orientation='vertical')
 #fig.text(p00[3]+0.05, (p02[3]), r'$\log(B_z)$', va='center', rotation='vertical',fontsize=20) # xlabel, top row
 
 ## save
-os.chdir('/storage/space2/phrmsf/paper/remake/')
+os.chdir('/storage/space2/phrmsf/traceT/paper/')
 fig.savefig('FT_1d_Bz_collect_w_50.png')
 fig.savefig('FT_1d_Bz_collect_w_50.eps')
-#plt.show()
+plt.show()
 
 
 
