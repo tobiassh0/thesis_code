@@ -31,6 +31,7 @@ ax8 = fig.add_subplot(gs2[1, 3:],sharex=ax2,sharey=ax1)
 
 annotate_axes(fig)
 outside_ticks(fig)
+lax = fig.axes()
 #boutside_ticks(lax)	
 #xoutside_ticks(lax)
 #ignorex(lax)
