@@ -2664,7 +2664,7 @@ def shared_area(sig1,sig2,dx=None,fitgauss=False):
 		peak = popt[1] # a,b,c 
 	else:
 		peak = np.argmax(sharea) # index
-	return sharea, peak
+	return np.array(sharea), peak
 	
 def outside_ticks(fig):
 	for i, ax in enumerate(fig.axes):

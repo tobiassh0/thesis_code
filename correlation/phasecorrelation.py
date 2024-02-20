@@ -1,8 +1,9 @@
 
+import numpy as np
 
 ## Calculates the phase correlation between two signals, sig & sig0 (only need fft)
 # returns the value of the shift corresponding to the phase difference between both arrays
-def phaseCorrelation(sig,fft_sig0,dt,tnorm,tmax=35):
+def phaseCorrelation(sig,fft_sig0,dt,tnorm,tmax=35,mat=False):
 	fft_sig = np.fft.fft(sig)
 	fft_sig_conj = np.conj(fft_sig)
 	R = (fft_sig0 * fft_sig_conj) / abs(fft_sig0 * fft_sig_conj)
@@ -10,7 +11,10 @@ def phaseCorrelation(sig,fft_sig0,dt,tnorm,tmax=35):
 	shift = dt*np.argmax(r)
 	if shift > dt*len(r)/2:
 		shift = shift-tmax*tnorm
-	return shift
+	if mat:
+		return shift, r
+	else:
+		return shift
 
 if __name__=='__main__':
 	import numpy as np
