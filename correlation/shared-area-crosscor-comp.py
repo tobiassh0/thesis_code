@@ -36,7 +36,7 @@ print(ax.shape)
 
 # raw data
 x = np.linspace(0,10,1000)
-xcv = np.linspace(-x[-1],x[-1],2*len(x)-1)
+xcc = np.linspace(-x[-1]/2,x[-1]/2,len(x))
 dx = x[-1]/len(x)
 # offsets (delta x) between curves
 x1 = 1 ; x2 = 6
@@ -47,10 +47,11 @@ for i in range(ax.shape[0]):
 	y2 = np.exp(-(x-x2)**2) + np.random.uniform(-yfloor[i],yfloor[i],len(x))# + yfloor[i]
 	ax[i,0].plot(x,y1,color='r')
 	ax[i,0].plot(x,y2,color='b')
-	# Conv
-	CV = np.convolve(y1,y2,mode='full')
-	ax[i,1].plot(xcv,np.flip(CV)/np.max(CV))
-	ax[i,1].axvline(xcv[np.argmax(np.flip(CV))],color='k',linestyle='--')
+	ax[i,0].locator_params(axis='y',nbins=5)
+	# Cross corr
+	CC = np.correlate(y1,y2,mode='same')
+	ax[i,1].plot(xcc,np.flip(CC)/np.max(CC))
+	ax[i,1].axvline(xcc[np.argmax(np.flip(CC))],color='k',linestyle='--')
 	# SA
 	SA,peak = shared_area(y1,y2,dx=dx,fitgauss=True)
 	SAoff = 0
@@ -68,10 +69,11 @@ for i in range(ax.shape[0]):
 		ignorex([ax[i,0],ax[i,1],ax[i,2]])
 
 ax[0,1].set_ylim(-1.2,1.2)
+ax[0,1].set_xlim(-x[-1]/2,x[-1]/2)
 ax[-1,0].set_xlabel(r'$t$',**tnrfont)
 ax[-1,1].set_xlabel(r'$\tau$',**tnrfont)
 ax[-1,2].set_xlabel(r'$\tau$',**tnrfont)
 ax[2,0].set_ylabel('Data',**tnrfont)
 
-fig.savefig('/home/space/phrmsf/Documents/thesis_images/shared_area/shared-area-cv_sa.png',bbox_inches='tight')
-# plt.show()
+plt.show()
+fig.savefig('/home/space/phrmsf/Documents/thesis_images/shared_area/shared-area-cc_sa.png',bbox_inches='tight')

@@ -2643,12 +2643,16 @@ def grad_energydens(simloc,normspecies='Deuterons',quant='Magnetic_Field_Bz',mea
 
 # shared-area between two signals
 def shared_area(sig1,sig2,dx=None,fitgauss=False):
+	"""
+		if fitgauss=True, peak returned is valuein units of array x, if dx provided
+	"""
 	lx = len(sig1)
 	if lx!=len(sig2): 
 		print('## ERROR ## :: Both signals need the same length')
 		raise SystemExit
 	if not dx:
-		dx = sig1[-1]/lx
+		dx = 1 # placeholder
+	x = np.linspace(0,dx*lx,lx) # in units of x when dx!=None
 	rolled = np.zeros(lx)
 	sharea=[]
 	for i in range(lx):
@@ -2658,13 +2662,21 @@ def shared_area(sig1,sig2,dx=None,fitgauss=False):
 		rolled[c1] = rsig1[c1]
 		rolled[c2] = sig2[c2]
 		sharea.append(np.sum(rolled*dx))
+	sharea = np.array(sharea)
+	# add offset so sharea>0 for all positions	
+	area_offset = 0
+	try:
+		negative_area = np.abs(sharea[sharea<0])
+		area_offset = np.max(negative_area)
+	except:
+		None
+	sharea = sharea + area_offset # can then normalise to the maximum
 	if fitgauss:
-		x = np.linspace(0,lx,lx)
-		popt, pcov = curve_fit(lambda x,a,b,c: np.exp(a*(x-b)**2)+c,x,sharea,maxfev=10000) # exponential fitting
-		peak = popt[1] # a,b,c 
+		popt, pcov = curve_fit(lambda x,a,b,c: np.exp(a*(x-b)**2)+c,x,sharea,maxfev=50000) # exponential fitting
+		peak = popt[1] # a,b,c
 	else:
-		peak = np.argmax(sharea) # index
-	return np.array(sharea), peak
+		peak = x[np.argmax(sharea)] # units of x
+	return sharea, peak
 	
 def outside_ticks(fig):
 	for i, ax in enumerate(fig.axes):
