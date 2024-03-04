@@ -4,7 +4,8 @@ from func_load import *
 # Plots and shows the experiment vs theory plot for the ratio between two species change in energy density
 # Also has the ability to plot du per-particle ratio (per species) through time for each simulation (nrows) -- will need to un-comment these lines
 def majIons_edens_ratio(sims,species=['Deuterons','Tritons'],time_norm=r'$\tau_{cD}$',ylabel=r'$[\Delta u_1/\Delta u_2]_{max}$',\
-								xlabel=r'$(\xi_1/\xi_2)(m_2/m_1)(q_1/q_2)^2$',tmax=6.1,labels=[None],lims=((0,1),(0,1)),identify=False,through_time=False,plot=True):
+								xlabel=r'$(\xi_1/\xi_2)(m_2/m_1)(q_1/q_2)^2$',tmax=6.1,labels=[None],lims=((0,1),(0,1)),\
+								identify=False,through_time=False,plot=True):
 	"""
 		Function to find the ratio between energy densities of two species (specified) across a range of simulations (specified) and plot it 
 		either via a 1:1 correlation (through_time=False) or through time for each simulation (through_time=True). Is able to identify each
@@ -33,14 +34,13 @@ def majIons_edens_ratio(sims,species=['Deuterons','Tritons'],time_norm=r'$\tau_{
 			colors = cm.rainbow(np.linspace(0,1,len(sims)))
 		else:
 			colors = ['b']*len(sims)
-			labels = [None]*len(sims)
+			# labels = [None]*len(sims)
 		if not through_time:
 			fig,ax=plt.subplots(figsize=(6,4))
 			ax.plot(lims[0],lims[0],color='darkgray',linestyle='--') # 1:1 line
 		else:
-			fig,ax=plt.subplots(nrows=len(sims),figsize=(8,3*len(sims)))		
+			fig,ax=plt.subplots(figsize=(8,6))	
 	home = os.getcwd()
-	maxduarr=np.zeros((len(sims),len(species)))
 	xiarr=np.zeros((len(sims),len(species)))
 	# mass and charge should be constant throughout sims (same species being analysed)
 	marr = [getMass(sp) for sp in species]
@@ -60,6 +60,7 @@ def majIons_edens_ratio(sims,species=['Deuterons','Tritons'],time_norm=r'$\tau_{
 		xi1,xi2,_=getConcentrationRatios(d0)
 		xi2_xi1 = xi2/xi1
 		xiarr[j,:]=np.array([xi1,xi2])
+		duarr=[]
 		print(sims[j])
 		print('Secondary conc.:: ',xi2)
 		for i in range(len(species)):
@@ -71,29 +72,29 @@ def majIons_edens_ratio(sims,species=['Deuterons','Tritons'],time_norm=r'$\tau_{
 			timespart = timespart[thresh]
 			du = (Energypart[thresh]-meanEnergypart)
 			maxdu[i] = np.max(du)
-			maxduarr[j,i]=maxdu[i]
+			duarr.append(du)
+		duarr = np.array(duarr) # size (species, thresh time)
 		if plot:
 			if not through_time:
 				ax.scatter((xi1/xi2)*(marr[1]/marr[0])*((qarr[0]/qarr[1])**2),maxdu[0]/maxdu[1],color=colors[c],label=labels[c])
 				xy = ((xi1/xi2)*(marr[1]/marr[0])*((qarr[0]/qarr[1])**2),maxdu[0]/maxdu[1])
-	#			ax.annotate(str(labels[c]),xy=xy,xycoords='data',xytext=(.5,0),textcoords='offset fontsize',fontsize=16,fontname='Times New Roman')
-			else:	## through time for each sim
-				ax[c].plot(timespart/tcD,np.abs((xi2_xi1)*maxduarr[j,1]/maxduarr[j,0]))
-				ax[c].annotate(str(labels[c])+'%',(times[-1]/tc1-2,1e2),xycoords='data',**tnrfont)
-				ax[c].set_ylim(1e-3,1e3)
-				ax[c].axhline(marr[0]/marr[1],linestyle='--',color='k')
-				ax[c].set_yscale('log')
+				# ax.annotate(str(labels[c]),xy=xy,xycoords='data',xytext=(.5,0),textcoords='offset fontsize',fontsize=16,fontname='Times New Roman')
+			else:	# through time for each sim
+				ax.plot(timespart/tc1,np.abs((1/xi2_xi1)*duarr[1]/duarr[0]),color=colors[c],label=str(labels[c])+'%')
+				# ax[c].annotate(str(labels[c])+'%',xy=(0.9,0.85),xycoords='axes fraction',**tnrfont)
+				ax.set_ylim(1e-3,1e3)
+				ax.set_xlim(0,tmax)
+				ax.axhline(marr[0]/marr[1],linestyle='--',color='k')
+				ax.set_yscale('log')
 		os.chdir(home)
 		c+=1
 	if plot:
 		if through_time:
 			if identify:
-				for c in range(len(sims)):
-					ax[c].annotate(labels[c],xy=(0.9,0.9), xycoords='axes fraction')
-			midax = len(ax)//2
-			ax[int(midax)].set_ylabel(r'$\left(\frac{\xi_1}{\xi_2}\right)\left|\frac{\Delta u_1(t)}{\Delta u_2(t)}\right|$',fontsize=24)
-			ax[-1].set_xlabel(r'Time,  '+time_norm,**tnrfont)
-			fig.savefig('du_ratio_vs_time.png')
+				plt.legend(loc='best')#,ncol=len(labels))
+			ax.set_ylabel(ylabel,fontsize=24)
+			ax.set_xlabel(xlabel+time_norm,**tnrfont)
+			fig.savefig('du_ratio_vs_time.png',bbox_inches='tight')
 		else:
 			if identify:
 				import matplotlib as mpl
@@ -106,16 +107,31 @@ def majIons_edens_ratio(sims,species=['Deuterons','Tritons'],time_norm=r'$\tau_{
 			ax.set_xlim(lims[0]) ; ax.set_ylim(lims[1])
 			fig.savefig(name,bbox_inches='tight')
 			plt.show()
-	return maxduarr, xiarr, marr, qarr
+	return duarr, xiarr, marr, qarr
 
 if __name__=='__main__':
 	from func_load import *	
 	import matplotlib.cm as cm
-	os.chdir('/storage/space2/phrmsf/lowres_D_He3/')
-	sims = np.sort([i for i in os.listdir() if 'p_90' in i])
-	hlabels = np.array([int(i[2:4]) for i in sims])
-	ylabel=r'$[\Delta u_{D}/\Delta u_{He3}]_{max}$'
-	xlabel=r'$(\xi_{D}/\xi_{He3})(m_{He3}/m_{D})(q_{D}/q_{He3})^2$'
-	_,_,_,_=majIons_edens_ratio(sims,species=['Deuterons','He3'],time_norm=r'$\tau_{cD}$',labels=hlabels,\
-										 xlabel=xlabel,ylabel=ylabel,lims=((0,10),(0,10)),identify=False,plot=True)
+	# D-T
+	os.chdir('/storage/space2/phrmsf/traceT/')
+	sims = np.sort([i for i in os.listdir() if 'traceT' in i])
+	sims = sims[1:]#np.append(sims,sims[0])[1:] # move 0% tritium to end
+	hlabels = np.array([int(i[-2:]) for i in sims])
+	# # max du 
+	# ylabel=r'$[\Delta u_{T}/\Delta u_{D}]_{max}$'
+	# xlabel=r'$(\xi_{T}/\xi_{D})(m_{D}/m_{T})(q_{T}/q_{D})^2$'
+	# through time
+	ylabel=r'$\left(\frac{\xi_D}{\xi_T}\right)\left|\frac{\Delta u_T(t)}{\Delta u_D(t)}\right|$'
+	xlabel=r'Time,  '
+	_,_,_,_=majIons_edens_ratio(sims,species=['Deuterons','Tritons'],time_norm=r'$\tau_{cD}$',labels=hlabels,\
+										 xlabel=xlabel,ylabel=ylabel,lims=((0,1),(0,1)),identify=True,plot=True,through_time=True)
 	
+	# # D-He3
+	# os.chdir('/storage/space2/phrmsf/lowres_D_He3/')
+	# sims = np.sort([i for i in os.listdir() if 'p_90' in i])[1:]
+	# print(sims)
+	# hlabels = np.array([int(i[2:4]) for i in sims])
+	# ylabel=r'$[\Delta u_{D}/\Delta u_{He3}]_{max}$'
+	# xlabel=r'$(\xi_{D}/\xi_{He3})(m_{He3}/m_{D})(q_{D}/q_{He3})^2$'
+	# _,_,_,_=majIons_edens_ratio(sims,species=['Deuterons','He3'],time_norm=r'$\tau_{cD}$',labels=hlabels,\
+	# 									 xlabel=xlabel,ylabel=ylabel,lims=((0,10),(0,10)),identify=False,plot=True)
