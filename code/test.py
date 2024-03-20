@@ -1,7 +1,9 @@
 
 from func_load import *
 import correlation.cross_correlation as cc
+import lib.frequencies as freq
 
+print(freq.CyclotronFreq(2.1,1,getMass('Deuterons')))
 x = np.linspace(0,10,100)
 sig1 = np.exp(-(x-1)**2)
 sig2 = np.exp(-(x-5)**2)

@@ -1,5 +1,5 @@
 #from func_load import *
-from list_new import *
+from lib.list_new import *
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.ndimage.filters import gaussian_filter

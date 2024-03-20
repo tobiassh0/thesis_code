@@ -26,8 +26,8 @@ import multiprocessing as mp ## parallelisation
 #from scipy.ndimage.filters import gaussian_filter
 
 ## 
-from bispectral_analysis import *
-import my_constants as const
+from lib.bispectral_analysis import *
+import lib.my_constants as const
 ## 
 
 #plt.rcParams['text.usetex'] = True
@@ -1249,10 +1249,17 @@ def getMagneticAngle(d0):
 	return phi_x, phi_y # will return 90 degrees for phi_y # hard-coded
 
 def coldplasmadispersion_analytical(omegas,wpf=[None,None,None],wcf=[None,None,None],theta=None):
-	# Assumes one of the species is always electrons (harcoded)
-	# angle between B & x-hat
-	# returns:
-			# k1, k2, k3 solutions (not-normalised)	
+	"""
+		Cold plasma dispersion as eq. (34) pg. 9 of Stix 1992 Waves in Plasmas
+		Analytical description
+		IN:
+			omegas : array of frequencies to calculate dispersion (k) for
+			wpf : arrays of plasma frequencies (electron, species1, species2, ..., speciesN)
+			wcf : arrays of cyclotron frequencies (electron, species1, species2, ..., speciesN)
+			theta : angle between wavevector and magnetic field
+		OUT:
+			n1, n2, n3 (n4) : Un-normalised solutions to dispersion, based on four solutions of n^2 \propto B pm F (++, +-, -+, (--))
+	"""
 	if not theta: 
 		theta = 89.0*(const.PI/180) # assume an angle
 	sin = np.sin(theta) ; cos = np.cos(theta)
@@ -1260,8 +1267,6 @@ def coldplasmadispersion_analytical(omegas,wpf=[None,None,None],wcf=[None,None,N
 	# setup electron plasma and cyc freq
 	wpf=np.array(wpf)
 	wcf=np.array(wcf)
-	wpe,wpb,wpi = wpf
-	wce,wcb,wci = wcf
 	# setup components	
 	l = len(omegas)
 	R=np.ones(l); P=np.ones(l); L=np.ones(l); S=np.zeros(l); D=np.zeros(l) 

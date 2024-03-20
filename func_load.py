@@ -3,9 +3,9 @@ import os, sys
 path = os.getcwd()+'/lib'
 sys.path.append(path)
 
-from list_new import *
-from bispectral_analysis import *
-import my_constants as const
+from lib.list_new import *
+from lib.bispectral_analysis import *
+import lib.my_constants as const
 # other packages
 import numpy as np
 import sdf
