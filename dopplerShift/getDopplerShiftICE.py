@@ -8,8 +8,11 @@
 #	plt.plot(x,yds,color='k',alpha=1-i/30)
 #plt.show()
 
+from func_load import *
+import matplotlib.pyplot as plt
+
 def getKernelDoppler(sims,FT2darr,normspecies,wkmax=[10,25],logthresh=1.8,kernel='custom',dwdkrange=(-0.5,0.5),labels=[None],\
-							theta=86.3,plot=True):
+							theta=86.3,plot=False,home=None):
 	"""
 	Uses the kernel method (see list_new.py and this link [https://pyimagesearch.com/2021/05/12/image-gradients-with-opencv-sobel-and-scharr/]) 
 	to find the gradients within the image. Uses a custom/modified Scharr kernel which is more sensitive to 
@@ -30,19 +33,20 @@ def getKernelDoppler(sims,FT2darr,normspecies,wkmax=[10,25],logthresh=1.8,kernel
 			array of sims provided. 
 			dsvarr:		an array of all doppler velocities in units of vA (per sim)
 	"""	
-	home = os.getcwd()
-	# load sim & FT2d 
+	if not home: home = os.getcwd()
+	# load sim & FT2d
 	l = len(sims)
 	if l == 1: l+=1
-	fig1,ax1=plt.subplots(nrows=l,figsize=(6,4*len(sims)))
-	fig2,ax2=plt.subplots(nrows=3,ncols=l//3,figsize=(8,5))
-	fig2.subplots_adjust(hspace=0.1,wspace=0.1)
-	ax2 = ax2.ravel()
+	if plot:
+		fig1,ax1=plt.subplots(nrows=l,figsize=(6,4*len(sims)))
+		fig2,ax2=plt.subplots(nrows=3,ncols=l//3,figsize=(8,5))
+		fig2.subplots_adjust(hspace=0.1,wspace=0.1)
+		ax2=ax2.ravel()
 	dsvarr=[] # 1d array of gradient in units of m/s per sim
 	for i in range(len(sims)):
 		## calc gradients in image
 		# setup
-		sim_loc = getSimulation(sims[i])	
+		sim_loc = getSimulation(home+sims[i])	
 		d0 = sdfread(0)
 		times = read_pkl('times')
 		vA = getAlfvenVel(d0)
@@ -61,17 +65,18 @@ def getKernelDoppler(sims,FT2darr,normspecies,wkmax=[10,25],logthresh=1.8,kernel
 		wmax = wkmax[0]*wnorm ; kmax = wkmax[1]*knorm
 		FT2d = np.log10(FT2d[:int(nw*wmax/wlim),:int(nk*kmax/klim)])
 		(nw,nk) = FT2d.shape
-		
+
 		# threshold FT2d
 		tFT2d= FT2d.copy() # copy arr
 		tFT2d[FT2d < logthresh] = 0
 		ttFT2d = tFT2d.copy()
 		ttFT2d[FT2d > logthresh] = 1
-		FT2d = ttFT2d # replace old FT2d 
-		del ttFT2d # destroy temp arr
-		
+		FT2d = ttFT2d # overwrite old FT2d 
+		del ttFT2d # delete temp arr
+		plt.imshow(FT2d,aspect='auto',origin='lower',extent=[0,wkmax[0],0,wkmax[1]])
+
 		# Kernel gradient map
-		_,kGangle = Kernel(FT2d,kernel=kernel) # scharr or sobel
+		_,kGangle = Kernel(FT2d,kernel=kernel) # list_new func : kernel = 'scharr' or 'sobel'
 
 		# gradients as angles
 		kGangle = kGangle[1:-1,1:-1]# remove abberations around edge
@@ -90,20 +95,26 @@ def getKernelDoppler(sims,FT2darr,normspecies,wkmax=[10,25],logthresh=1.8,kernel
 		dwdk = dwdk[dwdk!=0]
 
 		# normalise & thresh
-		dw_dk = dwdk * (dw/dk)/vA # TODO: correction factor?
+		dw_dk = dwdk * (dw/dk)/vA # normalised to vA
 		#thresh = (np.abs(dw_dk) < dwdkrange[1])
 		#dw_dk = dw_dk[thresh]
 		print(kernel+' kernel mean :: ',np.mean(dw_dk))
 		print(kernel+' kernel medi :: ',np.median(dw_dk))
 
 		# calc histogram
+		#ax1[i].hist(counts,bins=bins) dw_dk
+		counts,bins=np.histogram(dw_dk,bins=1000,density=True,range=dwdkrange)
+		dsv = bins[np.argmax(counts)] # doppler shift velocity, in units of vA
+		dsvarr.append([dsv*vA,dsv,vA])
+		print(kernel+' kernel max :: ', dsv)
+		karr = np.linspace(0,10,100)
+		for i in range(20):
+			plt.plot(karr,i+karr*dsv,color='k')
+		plt.show()
+
 		if plot:
 			# plot hist
 			counts,bins,_=ax1[i].hist(dw_dk,bins=1000,density=True,range=dwdkrange) # np.log10
-			#ax1[i].hist(counts,bins=bins) dw_dk
-			dsv = bins[np.argmax(counts)] # doppler shift velocity, in units of vA
-			dsvarr.append([dsv*vA,dsv,vA])
-			print(kernel+' kernel max :: ', dsv)
 			ax1[i].set_ylabel('Normalised count',**tnrfont)
 			#dsva.append([dsv,vA])
 
@@ -112,7 +123,7 @@ def getKernelDoppler(sims,FT2darr,normspecies,wkmax=[10,25],logthresh=1.8,kernel
 			del tFT2d
 			kx = np.linspace(0,20,100)*knorm
 			kperp = np.sin(theta*const.PI/180)
-			uperp = 0.9; upara = 6.076 
+			uperp = 0.9; upara = 6.076
 			dsth = -(kperp*uperp)# + kpara*upara)
 #			print(dsv,(dsth+1))
 			# doppler shifted line 
@@ -138,17 +149,17 @@ def getKernelDoppler(sims,FT2darr,normspecies,wkmax=[10,25],logthresh=1.8,kernel
 			if i%3==0:
 				ax2[i].set_ylabel(r'$\omega/$'+getOmegaLabel(normspecies),**tnrfont)
 				ax2[i].set_yticks([0,2,4,6,8,10]) ; ax2[i].set_yticklabels([0,2,4,6,8,10])
-		os.chdir(home)
-	print(os.getcwd())
-	## format edge axes
-	# ax2[len(ax2)//2].set_ylabel(r'$\omega/$'+getOmegaLabel(normspecies),**tnrfont)
-	# ax2[len(ax2)//2].set_yticks([0,2,4,6,8,10]) ; ax2[len(ax2)//2].set_yticklabels([0,2,4,6,8,10])
-	ax2[-1].set_xticks([0,5,10,15,20]) ; ax2[-1].set_xticklabels([0,5,10,15,20])
-	ax1[-1].set_xlabel(r'$d\omega/dk$'+'  '+r'$[v_A]$',**tnrfont)
-	# fig1.savefig('dw_dk_'+kernel+'_grad.png',bbox_inches='tight')
-	# ax2[-1].set_xlabel(r'$kv_A/\Omega_p$',**tnrfont)
-	# plt.show()
-	fig2.savefig('FT_2d_doppler_all.png',bbox_inches='tight')
+
+	if plot:
+		## format edge axes
+		# ax2[len(ax2)//2].set_ylabel(r'$\omega/$'+getOmegaLabel(normspecies),**tnrfont)
+		# ax2[len(ax2)//2].set_yticks([0,2,4,6,8,10]) ; ax2[len(ax2)//2].set_yticklabels([0,2,4,6,8,10])
+		ax2[-1].set_xticks([0,5,10,15,20]) ; ax2[-1].set_xticklabels([0,5,10,15,20])
+		ax1[-1].set_xlabel(r'$d\omega/dk$'+'  '+r'$[v_A]$',**tnrfont)
+		# fig1.savefig('dw_dk_'+kernel+'_grad.png',bbox_inches='tight')
+		# ax2[-1].set_xlabel(r'$kv_A/\Omega_p$',**tnrfont)
+		# plt.show()
+		fig2.savefig(home+'/FT_2d_doppler_all.png',bbox_inches='tight')
 	return np.array(dsvarr)
 
 
@@ -344,18 +355,18 @@ if __name__ == '__main__':
 	import scipy
 	# D-He3
 	quantity='Magnetic_Field_Bz'
-	os.chdir('/storage/space2/phrmsf/lowres_D_He3/')
-	home = os.getcwd()
-	sims = np.sort([i for i in os.listdir() if 'p_90' in i])
+	home = '/storage/space2/phrmsf/lowres_D_He3/'
+	sims = np.sort([i for i in os.listdir(home) if 'p_90' in i])
 	hlabels = np.array([int(i[2:4]) for i in sims])
 	# collect all FT2d (needed for Doppler shifts)
 	FT2darr = []
 	for sim in sims:
-		_=getSimulation(sim)
+		_=getSimulation(home+sim)
 		FT2darr.append(read_pkl('FT_2d_'+quantity))
-		os.chdir(home)
+	os.chdir('..')
 	# kernel
-	dsvarr = getKernelDoppler(sims,FT2darr,labels=hlabels,normspecies='Protons')
+	sims = [home+sim for sim in sims]
+	dsvarr = getKernelDoppler(sims,FT2darr,labels=hlabels,normspecies='Protons',plot=True)
 	plt.clf()
 	PLOTDOPPLER(hlabels,dsvarr)
 	sys.exit()

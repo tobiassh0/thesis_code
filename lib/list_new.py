@@ -1256,7 +1256,7 @@ def coldplasmadispersion_analytical(omegas,wpf=[None,None,None],wcf=[None,None,N
 			omegas : array of frequencies to calculate dispersion (k) for
 			wpf : arrays of plasma frequencies (electron, species1, species2, ..., speciesN)
 			wcf : arrays of cyclotron frequencies (electron, species1, species2, ..., speciesN)
-			theta : angle between wavevector and magnetic field
+			theta : angle between wavevector and magnetic field [rad]
 		OUT:
 			n1, n2, n3 (n4) : Un-normalised solutions to dispersion, based on four solutions of n^2 \propto B pm F (++, +-, -+, (--))
 	"""

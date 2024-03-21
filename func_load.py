@@ -3,6 +3,17 @@ import os, sys
 path = os.getcwd()+'/lib'
 sys.path.append(path)
 
+# def f():
+# 	global list_new
+# 	global bispectral_analysis
+# 	global my_constants
+# 	global numpy
+# 	global sdf
+# 	global pickle
+# 	global matplotlib
+# 	global scipy
+# 	global multiprocessing
+
 from lib.list_new import *
 from lib.bispectral_analysis import *
 import lib.my_constants as const
