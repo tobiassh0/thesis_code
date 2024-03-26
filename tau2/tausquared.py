@@ -6,7 +6,7 @@ from sklearn.neighbors import KernelDensity
 
 def loadJETdata():
 	print('loading JET data')
-	JETdata = np.loadtxt('JET26148_ICE_POWER.txt',delimiter=',')
+	JETdata = np.loadtxt('/home/space/phrmsf/Documents/thesis_code/power/JET26148_ICE_POWER.txt',delimiter=',')
 	JETpower, JETfreqs = JETdata[:,1], JETdata[:,0] # 2 columns, N rows
 	wnorm = 2*const.PI*17E6
 	JETfreqs = 2*const.PI*JETfreqs*1e6/(wnorm) # convert MHz to wcD
@@ -91,14 +91,14 @@ KDEs = np.zeros((xbins,Nval))
 y_d = np.linspace(-3,3,Nval)
 for i in range(xbins):
 	# instantiate and fit the KDE model
-	kde = KernelDensity(bangetPowerRatiosdwidth=0.3, kernel='gaussian') # fixed bandwidth (taken from previous work on Stellar clusters)
+	kde = KernelDensity(bandwidth=0.3, kernel='gaussian') # fixed bandwidth (taken from previous work on Stellar clusters)
 	# find values of ratiosJET that fit within a given bin
 	bin_range = [i-0.5, i+0.5]
 	val = ratiosJET[(JETfreqs[JETpeaks][:]>bin_range[0]) & (JETfreqs[JETpeaks][:]<bin_range[1])] # normalised freqs
 	pp = (JETfreqs[JETpeaks][:]>bin_range[0]) & ((JETfreqs[JETpeaks][:]<bin_range[1]))
 	J = (JETfreqs[JETpeaks])
 #	print((J[pp]))
-	val = [[i] for i in val] # make N dimensional with N = len(val)
+	val = [[j] for j in val] # make N dimensional with N = len(val)
 	kde.fit(val)
 	# score_samples returns the log of the probability density
 	logprob = kde.score_samples(y_d[:, None])
@@ -112,7 +112,7 @@ for i in range(xbins):
 print('total KDE sum here:',np.sum(KDEs*(y_d[-1]-y_d[0])/len(y_d))) # makes sure prob along given freq bin sums to 1
 
 ## load sim data
-sims = ['traceT_0_00','traceT_D_99_T_01','traceT_D_95_T_05','traceT_D_89_T_11','traceT_D_82_T_18','traceT_D_70_T_30','traceT_0_50']
+sims = ['traceT_D_100_T_00','traceT_D_99_T_01','traceT_D_95_T_05','traceT_D_89_T_11','traceT_D_82_T_18','traceT_D_70_T_30','traceT_D_50_T_50']
 c = 0
 markers=['x','o','^','d','>','2','*']
 labels = [r'$0\%$',r'$1\%$',r'$5\%$',r'$11\%$',r'$18\%$',r'$30\%$',r'$50\%$']
@@ -121,7 +121,7 @@ tau2_arrs=[]
 tau2bar=[]
 skip=0
 for sim in sims:
-	sim_loc = getSimulation('/storage/space2/phrmsf/'+sim)
+	sim_loc = getSimulation('/storage/space2/phrmsf/traceT/'+sim)
 	omegas, power = loadSimData(wlim=maxJETfreqs)
 	wcD = getCyclotronFreq(sdfread(0),'Deuterons')
 	if sim in ['traceT_0_00','traceT_0_11','traceT_0_01']:
@@ -160,30 +160,30 @@ colors = ['cyan','r','k','g','orange','orchid','b']
 #plt.show()
 #fig.savefig('/storage/space2/phrmsf/dump/tau_squared.eps',bbox_inches='tight')
 
-### show tau2_Npeak per Mu
-#print(tau2_Npeak)
-#print(len(tau2bar))
-#Mu = [0,1,5,11,18,30,50]
-##plt.scatter(Mu,tau2_Npeak,color='k')
-##plt.ylabel(r'$\tau^2/N_{peaks}$',fontsize=20)
-#print(tau2bar)
-#plt.ylabel(r'$\bar{\tau_i^2} /N_{peaks}$',fontsize=20)
-#plt.xlabel(r'$\mu$'+'  '+'[%]',fontsize=20)
-##popt, pcov = curve_fit(funcparabola,Mu,tau2_Npeak)
-##popt, pcov = curve_fit(funcnegexp,Mu,tau2bar,bounds=([-1,5,-5],[0,20,10]),maxfev=10000)
-#popt, pcov = curve_fit(funcquart,Mu,tau2bar,maxfev=10000)#,bounds=([-1,5,-5],[0,20,10]),maxfev=10000)
-#perr = np.sqrt(np.diag(pcov))
-#print(popt,perr)
-#muarr = np.arange(-10,60,0.1)
-##ytau = funcnegexp(muarr,popt[0],popt[1],popt[2])
-#ytau = funcquart(muarr,popt[0],popt[1],popt[2],popt[3],popt[4])
-#plt.plot(muarr,ytau,color='k',linestyle='--')
-#plt.xlim(-10,60) ; plt.ylim(1.8,2.6)
-#plt.fill_between(muarr,ytau-perr[-1],ytau+perr[-1],color='lightcoral')#,alpha=0.5)
-#plt.scatter(Mu,tau2bar,color='k')
-#fig.savefig('/storage/space2/phrmsf/paper/tau2bar_Mu_fit_quart.eps'.format(skip),bbox_inches='tight')
-#fig.savefig('/storage/space2/phrmsf/paper/tau2bar_Mu_fit_quart.png'.format(skip),bbox_inches='tight')
-#plt.show()
+## show tau2_Npeak per Mu
+print(tau2_Npeak)
+print(len(tau2bar))
+Mu = [0,1,5,11,18,30,50]
+#plt.scatter(Mu,tau2_Npeak,color='k')
+#plt.ylabel(r'$\tau^2/N_{peaks}$',fontsize=20)
+print(tau2bar)
+plt.ylabel(r'$\bar{\tau^2} /N_{peaks}$',fontsize=20)
+plt.xlabel(r'$\xi_2$'+'  '+'[%]',fontsize=20)
+#popt, pcov = curve_fit(funcparabola,Mu,tau2_Npeak)
+#popt, pcov = curve_fit(funcnegexp,Mu,tau2bar,bounds=([-1,5,-5],[0,20,10]),maxfev=10000)
+popt, pcov = curve_fit(funcquart,Mu,tau2bar,maxfev=10000)#,bounds=([-1,5,-5],[0,20,10]),maxfev=10000)
+perr = np.sqrt(np.diag(pcov))
+print(popt,perr)
+muarr = np.arange(-10,60,0.1)
+#ytau = funcnegexp(muarr,popt[0],popt[1],popt[2])
+ytau = funcquart(muarr,popt[0],popt[1],popt[2],popt[3],popt[4])
+plt.plot(muarr,ytau,color='k',linestyle='--')
+plt.xlim(-1,55) ; plt.ylim(2.5,5.0)
+plt.fill_between(muarr,ytau-perr[-1],ytau+perr[-1],color='lightcoral')#,alpha=0.5)
+plt.scatter(Mu,tau2bar,color='k')
+# fig.savefig('/storage/space2/phrmsf/paper/tau2bar_Mu_fit_quart.eps'.format(skip),bbox_inches='tight')
+# fig.savefig('/storage/space2/phrmsf/paper/tau2bar_Mu_fit_quart.png'.format(skip),bbox_inches='tight')
+plt.show()
 
 #### show tau2 contribution per peak
 #tau2_arrs = np.array(tau2_arrs,dtype='object')
@@ -257,7 +257,7 @@ for j in range(2,ttau2_arrs.shape[1]):
 ax.set_xlabel(r'$PPR(i)$',fontsize=20)
 ax.set_ylabel(r'$\mu$'+'  '+r'$[\%]$',fontsize=20)
 ax.set_zlabel(r'$\tau_i^2/N_{peaks}$',fontsize=20)
-ax.set_zlim(zmin,zmax)
+# ax.set_zlim(zmin,zmax)
 ax.set_ylim(-0.1,55)
 ax.view_init(elev=15, azim=-145)
 plt.show()
