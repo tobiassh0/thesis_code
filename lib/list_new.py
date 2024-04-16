@@ -1233,7 +1233,7 @@ def getMagneticAngle(d0):
 	# get the angle the magnetic field makes to the x and y directions
 	# returns the angle (1d if in z-x plane or 2d if in z-x-y volume)
 	# returns the angle in degrees
-#	d0 = sdfread(0)
+	# d0 = sdfread(0)
 	Btot = getMeanField3D(d0, 'Magnetic_Field_B')
 	try:
 		Bx = getMeanquantity(d0, 'Magnetic_Field_Bx')
@@ -1380,7 +1380,7 @@ def powerspectrum(trans,wnorm,wklims=[None,None],wkmax=[0,None,0,None]):
 	for i in range(wstart,wstop):
 		power[i-wstart] = np.sum((trans[i,kstart:kstop])**2) #positive k only
 		omegas[i-wstart] = (i+wstart)*dw
-#	omegas = (wlim*wnorm)*np.linspace((wstart/trans.shape[0]),(wstop/trans.shape[0]),len(power))
+	# omegas = (wlim*wnorm)*np.linspace((wstart/trans.shape[0]),(wstop/trans.shape[0]),len(power))
 	return np.log10(power), omegas #notice it returns the log of the power and un-normalised (rad/s) omegas
 
 # Same as the Fourier power obtained in powerspectrum() but this summates in k instead
@@ -1419,9 +1419,9 @@ def getEnergies(energy_quant,fieldquant,nt,read=False,dump=True):
 		for s in range(len(energy_quant)):
 			Energies_mat[s,:,:] = read_pkl(energy_quant[s]+'matrix')
 			Energies[s,:] = read_pkl(energy_quant[s])
-#		except:
-#			print('# ERROR # :: Can\'t read energies, likely incorrect [nt] value')
-#			raise SystemExit
+		# except:
+		# 	print('# ERROR # :: Can\'t read energies, likely incorrect [nt] value')
+		# 	raise SystemExit
 	else:
 		F0 = np.zeros(len(energy_quant))
 		for i in range(len(fieldquant)):
@@ -1531,7 +1531,7 @@ def LowerHybridMassEffective(file0,wpe,wce,n_e):
 	w_PI2 = (n_e*const.qe**2)/(m_eff*const.e0)
 	w_CI2 = (const.qe*getMeanField3D(file0,'Magnetic_Field_B')/m_eff)**2
 	W_LH = 1/np.sqrt((1/w_PI2)+1/(wce*np.sqrt(w_CI2)))
-#	W_LH = (((w_PI2)+(w_CI2))/(1+((wpe**2)/(wce**2))))**.5	
+	# W_LH = (((w_PI2)+(w_CI2))/(1+((wpe**2)/(wce**2))))**.5	
 	return W_LH # not normalised
 
 def getUpperHybrid(wce,wpe):
@@ -1619,7 +1619,7 @@ def getFreq_Wavenum(file0,maj_species,min_species,Zmaj,Zmin):
 
 
 def Chi0Calc(file0,v0,kall,omegaall,species='Deuterons',wci=None,theta=90):
-#	Adapted from appendix A in ref. https://aip.scitation.org/doi/10.1063/1.860304 ; eqns [A.6], [A.8] and [A.16]
+	# Adapted from appendix A in ref. https://aip.scitation.org/doi/10.1063/1.860304 ; eqns [A.6], [A.8] and [A.16]
 	# IN # 
 		# v0 : perpendicular birth energy of minority species 
 		# kall : real k2 solutions to the cold plasma dispersion
@@ -1754,7 +1754,7 @@ def growth_rate_manual(minions='Alphas',majions='Deuterons',maj2ions='Tritons',w
 	kperp = k2 * np.sin(theta)
 	Npara = kpara*vA/omegas
 	Nperp = kperp*vA/omegas
-#	larr = (omegas/wca)//1 # find nearest harmonic as array
+	# larr = (omegas/wca)//1 # find nearest harmonic as array
 
 	# growth rates
 	gamma = np.zeros(len(omegas))
@@ -1765,7 +1765,7 @@ def growth_rate_manual(minions='Alphas',majions='Deuterons',maj2ions='Tritons',w
 		Jl = spec.jv(l,za) # (order, argument)
 		Jlprime = spec.jvp(l,za) 
 		JlJlprime = Jl*Jlprime
-#		plt.scatter(za,Jl)
+		# plt.scatter(za,Jl)
 
 		# Ml term #
 		ml1 = 2*l*(omegas[i]/wci)*((Jlprime**2) + (1/(za**2))*(l**2 - za**2)*(Jl**2))
@@ -1878,8 +1878,8 @@ def growth_rate_theory(minions, majions, theta, file0, u, vd, vr, karr, omegarr)
 		gterm2 = ((l*wcycmin/(kpara*vr))*ml-((2*u**2)/(vr**2)*eetal*nl))
 		gterm3 = (np.sqrt(const.PI)/(2*w))*np.exp(-1*eetal**2)
 		gammas[i] = gterm1*gterm2*gterm3
-#		if (w/wcycmin)//1 == 17 and gterm3 != 0:
-#			print(gterm1,gterm2,gterm3,wcycmin)
+		# if (w/wcycmin)//1 == 17 and gterm3 != 0:
+		# 	print(gterm1,gterm2,gterm3,wcycmin)
 		#################################################################################		
 	
 	####### Want gamma > 0 only ###########
@@ -1928,7 +1928,7 @@ def dist_fn(index_list,xyz,species):
 	del d
 
 	nval = 1000
-#	bins = 750
+	# bins = 750
 	fig,ax=plt.subplots(figsize=(8,5))
 	print('Plotting KDEs...')
 	for v_arr in v:
@@ -1967,10 +1967,10 @@ def getBicoh(karea, warea, signal, dt, T , L, wnorm, knorm, nfft, noverlap, wind
 	]
 	
 	area = Path(verts, codes)
-#	try:
-#		bicoh = read_pkl('Bicohmat_karea_{}_warea_{}'.format(karea,warea))
-#		extent1 = [0, karea, 0, karea]
-#	except:
+	# try:
+	# 	bicoh = read_pkl('Bicohmat_karea_{}_warea_{}'.format(karea,warea))
+	# 	extent1 = [0, karea, 0, karea]
+	# except:
 	extent1 = [0, karea, 0, karea]
 	if bispectrum:
 		bispec,bicoh=bispectrum2D(signal, dt, L, T, area, nfft, noverlap, norm=[knorm,wnorm], window=window, bispectrum=bispectrum) 	
@@ -2012,8 +2012,8 @@ def calcNewColdDisp(in_klimprime,Te,Ti):
 	c = const.c
 	mi = getMass(ion_species)
 	m_min = getMass(min_ions)
-#	Ti = 1E3 * eV_to_K # keV ==> K
-#	Te = 1E3 * eV_to_K # keV ==> K
+	# Ti = 1E3 * eV_to_K # keV ==> K
+	# Te = 1E3 * eV_to_K # keV ==> K
 	print(Te, Ti)
 	Eth_e = Te * const.kb # Joules
 	theta, _ = getMagneticAngle(file0)
@@ -2035,7 +2035,7 @@ def calcNewColdDisp(in_klimprime,Te,Ti):
 	Ve = np.sqrt(2*Eth_e/me) # electron thermal speed
 
 	w_LH_new = np.sqrt((w_LH**2) * (1 + (np.cos(theta)**2)*(mi/me)))
-#	plt.axhline(w_LH_new/w_ci, color='k', alpha=0.5, linestyle='--')
+	# plt.axhline(w_LH_new/w_ci, color='k', alpha=0.5, linestyle='--')
 
 	W1 = 3*(Ti/Te)*(1+(w_pe**2)/((c*k)**2)) + (w_pe**2)/(2*(k*c)**2) + 9/2 - (15+21*(w_pe/k*c)**2)/(4*(1+(w_pe/k*c)**2)**2)
 	W2 = (-3*((w_pe/(k*c))**2) + (1-6*(w_pe/k*c)**2)/(4*(1+(w_pe/k*c)**2)**2)) * (mi/me) * (np.cos(theta))**2
@@ -2043,10 +2043,10 @@ def calcNewColdDisp(in_klimprime,Te,Ti):
 	W = W1 + W2 + W3
 
 	omega = np.sqrt((w_LH_new**2)/(1+(w_pe/(k*c))**2)*(1 + ((mi/me)*np.cos(theta)**2)/((1 + (w_pe/(k*c))**2)) + W*(k*Ve/w_ce)**2))
-#	plt.plot(k/knorm,omega/w_ci, color='k', linestyle='-')
-#	plt.ylabel('w/w_ci',fontsize=18)
-#	plt.xlabel('kv_A/w_ci',fontsize=18)
-#	plt.show()
+	# plt.plot(k/knorm,omega/w_ci, color='k', linestyle='-')
+	# plt.ylabel('w/w_ci',fontsize=18)
+	# plt.xlabel('kv_A/w_ci',fontsize=18)
+	# plt.show()
 	return k, omega, w_LH_new
 
 
@@ -2068,7 +2068,7 @@ def calcPowerICE(FT_2d, wlim, klim, wcyc, va, kwidth, wmax, kmax):
 	FT_2d = FT_2d[1:,1:] # remove first lines 
 	print(nw,nk,cellim)
 	kwidth = nk*kwidth/klim
-#	plt.imshow(np.log10(FT_2d),aspect='auto',interpolation='nearest',cmap='magma',origin='lower')
+	# plt.imshow(np.log10(FT_2d),aspect='auto',interpolation='nearest',cmap='magma',origin='lower')
 	power = []
 	kcell=[]
 	for i in range(FT_2d.shape[0]): # range over w
@@ -2080,7 +2080,7 @@ def calcPowerICE(FT_2d, wlim, klim, wcyc, va, kwidth, wmax, kmax):
 				FT_sorted = np.sort(FT_2d[i,:])
 				kcell[-1] = np.where(FT_2d[i,:]==FT_sorted[-2])
 				kcell[-1] = (kcell[-1])[0] # find second largest value
-#		plt.scatter(kcell[-1],i,color='k',s=10)
+		# plt.scatter(kcell[-1],i,color='k',s=10)
 		krange_min = kcell[-1] - kwidth
 		krange_max = kcell[-1] + kwidth
 		print(krange_max, krange_min)
@@ -2088,8 +2088,8 @@ def calcPowerICE(FT_2d, wlim, klim, wcyc, va, kwidth, wmax, kmax):
 			krange_min = 0
 		if krange_max > nk*kmax/klim:
 			krange_max = cellim[1]-2
-#		plt.scatter(krange_max,i,color='red',s=10)	
-#		plt.scatter(krange_min,i,color='blue',s=10)
+		# plt.scatter(krange_max,i,color='red',s=10)	
+		# plt.scatter(krange_min,i,color='blue',s=10)
 		power.append(np.sum(FT_2d[i,int(krange_min):int(krange_max)]**2))
 
 	omegas=np.linspace(0,wmax,FT_2d.shape[0])
@@ -2313,8 +2313,8 @@ def energies(sim_loc,frac=1,plot=False,leg=True,integ=False,linfit=False,electro
 		print('All energy -pkl- files present.')
 	else:
 		energy_data_mat, energy_data = getEnergies(energy_quant,fieldquant,n,dump=True) # mat,_ = getEnergies()
-#		for i in range(energy_data.shape[0]):
-#			dumpfiles(energy_data[i,:],energy_quant[i])
+		# for i in range(energy_data.shape[0]):
+		# 	dumpfiles(energy_data[i,:],energy_quant[i])
 
 	if plot:
 		print('Plotting energies...')
@@ -2389,7 +2389,7 @@ def power(wnorm,wklims=[None,None],wkmax=[None,None],norm_omega=r'$\Omega_D$',qu
 		None,None
 	"""	
 	# TODO: replace wnorm and norm_omega with a norm_species which can then read a normalisation freq and label so is consistent
-#	wnorm = getCyclotronFreq(sdfread(0),norm_species)	
+	#	wnorm = getCyclotronFreq(sdfread(0),norm_species)	
 	wlim_prime,klim_prime=wklims
 	wmax,kmax=wkmax
 	if read:
@@ -2436,7 +2436,6 @@ def power(wnorm,wklims=[None,None],wkmax=[None,None],norm_omega=r'$\Omega_D$',qu
 		return omegas, log10_power
 	else: 
 		del omegas; del log10_power ; return None, None
-
 
 def BatchStartStop(ind_lst,default=700):
 	if len(ind_lst) < default: # choose
@@ -2488,7 +2487,6 @@ def signedCurv(fx,dx):
 def paraVelocity(INDEX):
 	index, species, mSpec = INDEX
 	return np.sqrt(2*getQuantity1d(sdfread(index),'Derived_Average_Particle_Energy_'+species)/mSpec)
-
 
 # quote "cigarette plots", which show the distribution of velocity/energy normalised to the  
 def ciggies(sim_loc,species_lst=['Deuterons','Alphas'],nval=10000,para=False,eload=True,vload=False,logo=False):
@@ -2833,7 +2831,7 @@ def checkallFields(ind_lst,quantities,quant):
 	return quantities
 
 def getSpectrogram(fieldmatrix,times,majspec='Deuterons',minspec='Alphas',nfo=[10,2],cellfreq=1,clim=(None,None),plot=True,cbar=True):
-## in 
+	## in 
 	# fieldmatrix :
 	# times : 
 	# majspec : 
