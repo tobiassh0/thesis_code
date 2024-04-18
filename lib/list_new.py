@@ -640,7 +640,7 @@ def getPerpParaVel(d, species):
 #	v_perp = np.sqrt(vperp_x**2 + vperp_y**2) ; v_para = np.sqrt(vpara_x**2 + vpara_y**2)
 #	return v_perp, v_para
 
-def ODR_fit(x,y,sx=None,sy=None,beta0=[1,0],curve='linear'):
+def ODR_fit(x,y,sx=[],sy=[],beta0=[1,0],curve='linear'):
 	"""
 	fit a linear/quadratic function based off of the ODR approach in the scipy package
 	(https://docs.scipy.org/doc/scipy/reference/odr.html)
@@ -663,9 +663,9 @@ def ODR_fit(x,y,sx=None,sy=None,beta0=[1,0],curve='linear'):
 		print('## ERROR ## :: curve function has not been defined')
 
 	# check if errors are present, use std otherwise
-	if not sx:
+	if sx == []:
 		sx = np.std(x)
-	if not sy:
+	if sy == []:
 		sy = np.std(y)
 
 	# fit ODR line of best fit with errors
