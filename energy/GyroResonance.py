@@ -88,9 +88,6 @@ def majIons_edens_ratio(sims,species=['Deuterons','Tritons'],time_norm=r'$\tau_{
 				ax.set_yscale('log')
 		os.chdir(home)
 		c+=1
-
-	plt.show()
-	sys.exit()
 	if plot:
 		if through_time:
 			if identify:
