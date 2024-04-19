@@ -152,7 +152,7 @@ def gyro_time_compare(home,sims,identify_indmat,identify_markersmat,species=['De
 		colors = ['k']*len(sims)
 		alphas = [1]*len(identify_ind[0])
 	else:
-		fig,ax=plt.subplots(figsize=(10,6))
+		fig,ax=plt.subplots(figsize=(6,4))
 		ax.plot([0,10],[0,10],color='darkgrey',linestyle='--',linewidth=0.5,zorder=0)
 		colors = plt.cm.rainbow(np.linspace(0,1,len(sims)))
 		alphas = [1]*len(identify_ind[0]) #np.linspace(0.5,1,len(identify_ind[0]))
@@ -178,20 +178,23 @@ def gyro_time_compare(home,sims,identify_indmat,identify_markersmat,species=['De
 						zorder=1,facecolor=colors[i],edgecolor='none',s=30,alpha=alphas[j])
 		# plt.axhline((const.me_to_He3/const.me_to_mD)*(1/4),color='k')
 		os.chdir('..')
-	if multipanel: xoff = 0.075 ; yoff = -0.01
+	if multipanel: 
+		xoff = 0.075 ; yoff = -0.01
+		fig.supylabel(r'$\Delta u_D(t)/\Delta u_{He3}(t)$',x=xoff,**tnrfont)
+		fig.supxlabel(r'$(\xi_{D}/\xi_{He3})(m_{He3}/m_D)(q_D/q_{He3})^2$',y=yoff,**tnrfont)
 	else: 
 		xoff = 0.05 ; yoff = -0.05
+		ax.set_ylabel(r'$\Delta u_D(t)/\Delta u_{He3}(t)$',**tnrfont)
+		ax.set_xlabel(r'$(\xi_{D}/\xi_{He3})(m_{He3}/m_D)(q_D/q_{He3})^2$',**tnrfont)
 		# axcopy = copy.copy(ax)
 		# axinset = zoomed_inset_axes(ax, 0.25, loc=1)
 		# axinset.add_artist(axcopy)
 		# axinset.set_xlim(0.05,0.4)
 		# axinset.set_ylim(-0.15,0.4)
-	fig.supylabel(r'$\Delta u_D(t)/\Delta u_{He3}(t)$',x=xoff,**tnrfont)
-	fig.supxlabel(r'$(\xi_{D}/\xi_{He3})(m_{He3}/m_D)(q_D/q_{He3})^2$',y=yoff,**tnrfont)
 	plt.xlim(0,7)
 	plt.ylim(-1,22)
-	fig.savefig('gyro_resonance__{}.png'.format(figname),bbox_inches='tight')
-	# plt.show()
+	# plt.show() ; sys.exit()
+	fig.savefig('gyro_resonance_{}.png'.format(figname),bbox_inches='tight')
 	return None
 
 if __name__=='__main__':
@@ -219,14 +222,12 @@ if __name__=='__main__':
 	# labels = ['0']
 
 	# energy comparison
-	# # random times
-	# identify_ind = np.random.randint(10,11900,size=(len(sims),8)) # number of sims (panels), number of points to take
 	# linear times
 	identify_ind = [np.linspace(100,12000,8,dtype=int) for i in range(len(sims))]
 	identify_markers = [['o','s','v','^','<','>','X','D'] for i in range(len(sims))]
-	# identify_markers = [['x']*len(identify_ind) for i in range(len(sims))]
-	energy_compare(sims,labels,colors=['b','g','r','orange','m'],tmax=10,figname='time_scatter',identify_mat=[False,False,True,True,False],\
-					identify_indmat=identify_ind,identify_markersmat=identify_markers)
+	# # identify_markers = [['x']*len(identify_ind) for i in range(len(sims))]
+	# energy_compare(sims,labels,colors=['b','g','r','orange','m'],tmax=10,figname='time_scatter',identify_mat=[False,False,True,True,False],\
+	# 				identify_indmat=identify_ind,identify_markersmat=identify_markers)
 
 	# Gyro-resonance at times specified
 	gyro_time_compare(home,sims,identify_indmat=identify_ind,identify_markersmat=identify_markers,\
