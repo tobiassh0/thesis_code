@@ -39,7 +39,7 @@ def majIons_edens_ratio(sims,species=['Deuterons','Tritons'],time_norm=r'$\tau_{
 			fig,ax=plt.subplots(figsize=(6,4))
 			ax.plot(lims[0],lims[0],color='darkgray',linestyle='--') # 1:1 line
 		else:
-			fig,ax=plt.subplots(figsize=(8,6))	
+			fig,ax=plt.subplots(figsize=(6,6))	
 	home = os.getcwd()
 	xiarr=np.zeros((len(sims),len(species)))
 	# mass and charge should be constant throughout sims (same species being analysed)
@@ -88,6 +88,9 @@ def majIons_edens_ratio(sims,species=['Deuterons','Tritons'],time_norm=r'$\tau_{
 				ax.set_yscale('log')
 		os.chdir(home)
 		c+=1
+
+	plt.show()
+	sys.exit()
 	if plot:
 		if through_time:
 			if identify:
@@ -112,26 +115,27 @@ def majIons_edens_ratio(sims,species=['Deuterons','Tritons'],time_norm=r'$\tau_{
 if __name__=='__main__':
 	from func_load import *	
 	import matplotlib.cm as cm
-	# D-T
-	os.chdir('/storage/space2/phrmsf/traceT/')
-	sims = np.sort([i for i in os.listdir() if 'traceT' in i])
-	sims = sims[1:]#np.append(sims,sims[0])[1:] # move 0% tritium to end
-	hlabels = np.array([int(i[-2:]) for i in sims])
-	# # max du 
-	# ylabel=r'$[\Delta u_{T}/\Delta u_{D}]_{max}$'
-	# xlabel=r'$(\xi_{T}/\xi_{D})(m_{D}/m_{T})(q_{T}/q_{D})^2$'
-	# through time
-	ylabel=r'$\left(\frac{\xi_D}{\xi_T}\right)\left|\frac{\Delta u_T(t)}{\Delta u_D(t)}\right|$'
-	xlabel=r'Time,  '
-	_,_,_,_=majIons_edens_ratio(sims,species=['Deuterons','Tritons'],time_norm=r'$\tau_{cD}$',labels=hlabels,\
-										 xlabel=xlabel,ylabel=ylabel,lims=((0,1),(0,1)),identify=True,plot=True,through_time=True)
 	
-	# # D-He3
-	# os.chdir('/storage/space2/phrmsf/lowres_D_He3/')
-	# sims = np.sort([i for i in os.listdir() if 'p_90' in i])[1:]
-	# print(sims)
-	# hlabels = np.array([int(i[2:4]) for i in sims])
-	# ylabel=r'$[\Delta u_{D}/\Delta u_{He3}]_{max}$'
-	# xlabel=r'$(\xi_{D}/\xi_{He3})(m_{He3}/m_{D})(q_{D}/q_{He3})^2$'
-	# _,_,_,_=majIons_edens_ratio(sims,species=['Deuterons','He3'],time_norm=r'$\tau_{cD}$',labels=hlabels,\
-	# 									 xlabel=xlabel,ylabel=ylabel,lims=((0,10),(0,10)),identify=False,plot=True)
+	# # D-T
+	# os.chdir('/storage/space2/phrmsf/traceT/')
+	# sims = np.sort([i for i in os.listdir() if 'traceT' in i])
+	# sims = sims[1:]#np.append(sims,sims[0])[1:] # move 0% tritium to end
+	# hlabels = np.array([int(i[-2:]) for i in sims])
+	# # # max du 
+	# # ylabel=r'$[\Delta u_{T}/\Delta u_{D}]_{max}$'
+	# # xlabel=r'$(\xi_{T}/\xi_{D})(m_{D}/m_{T})(q_{T}/q_{D})^2$'
+	# # through time
+	# ylabel=r'$\left(\frac{\xi_D}{\xi_T}\right)\left|\frac{\Delta u_T(t)}{\Delta u_D(t)}\right|$'
+	# xlabel=r'Time,  '
+	# _,_,_,_=majIons_edens_ratio(sims,species=['Deuterons','Tritons'],time_norm=r'$\tau_{cD}$',labels=hlabels,\
+	# 									 xlabel=xlabel,ylabel=ylabel,lims=((0,1),(0,1)),identify=True,plot=True,through_time=True)
+	
+	# D-He3
+	os.chdir('/storage/space2/phrmsf/lowres_D_He3/')
+	sims = np.sort([i for i in os.listdir() if 'p_90' in i])[1:]
+	print(sims)
+	hlabels = np.array([int(i[2:4]) for i in sims])
+	ylabel=r'$[\Delta u_{D}/\Delta u_{He3}]_{max}$'
+	xlabel=r'$(\xi_{D}/\xi_{He3})(m_{He3}/m_{D})(q_{D}/q_{He3})^2$'
+	_,_,_,_=majIons_edens_ratio(sims,species=['Deuterons','He3'],time_norm=r'$\tau_{cD}$',labels=hlabels,\
+										 xlabel=xlabel,ylabel=ylabel,lims=((0,10),(0,10)),identify=False,plot=True,through_time=True)
