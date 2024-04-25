@@ -1435,7 +1435,7 @@ def getEnergies(energy_quant,fieldquant,nt,read=False,dump=True):
 			for s in range(len(fieldquant)):
 				if 'Field' in fieldquant[s]:
 					Energies_mat[s,t,:] = (getQuantity1d(d,fieldquant[s])-F0[s])**2
-					Energies[s,t] = np.mean(Energies_mat[s,t,:])#(getQuantity1d(d,fieldquant[s])-F0[s])**2)
+					Energies[s,t] = np.mean(Energies_mat[s,t,:]) # mean Delta field energy at given time 
 				else:
 					Energies_mat[s,t,:], Energies[s,t] = getTotalKineticEnergyDen(d,fieldquant[s])
 			
