@@ -1,6 +1,67 @@
 
 from func_load import *
 
+def PlotGyroResonance(duarr,sims,species,through_time=False):
+	xiarr=np.zeros((len(sims),len(species)))
+
+	for j in range(len(sims)):
+		_=getSimulation(sims[j])
+		d0 = sdfread(0)
+		xi1,xi2,_=getConcentrationRatios(d0)
+		xi2_xi1 = xi2/xi1
+		xiarr[j,:]=np.array([xi1,xi2])
+		duarr=[]
+		print(sims[j])
+		print('Secondary conc.:: ',xi2)
+		for i in range(len(species)):
+			Energypart = read_pkl(species[i]+'_KEdens')/(1000*const.qe) # keV/m^3
+			meanEnergypart = np.mean(Energypart[:mean_to])
+			Energypart = np.convolve(Energypart,np.ones(N)/N,mode='valid')
+			timespart = np.linspace(0,max(times),len(Energypart))
+			thresh = timespart/tc1 < tmax
+			timespart = timespart[thresh]
+			du = (Energypart[thresh]-meanEnergypart)
+			maxdu[i] = np.max(du)
+			duarr.append(du)
+			tduarr[j,i,:] = du
+		duarr = np.array(duarr) # size (species, thresh time)
+		if plot:
+			if not through_time:
+				ax.scatter((xi1/xi2)*(marr[1]/marr[0])*((qarr[0]/qarr[1])**2),maxdu[0]/maxdu[1],color=colors[c],label=labels[c])
+				xy = ((xi1/xi2)*(marr[1]/marr[0])*((qarr[0]/qarr[1])**2),maxdu[0]/maxdu[1])
+				# ax.annotate(str(labels[c]),xy=xy,xycoords='data',xytext=(.5,0),textcoords='offset fontsize',fontsize=16,fontname='Times New Roman')
+			else:	# through time for each sim
+				ax.plot(timespart/tc1,np.abs((1/xi2_xi1)*tduarr[i,1,:]/tduarr[i,0,:]),color=colors[c],label=str(labels[c])+'%')
+				# ax.plot(timespart/tc1,np.abs((1/xi2_xi1)*duarr[1]/duarr[0]),color=colors[c],label=str(labels[c])+'%')
+				# # ax[c].annotate(str(labels[c])+'%',xy=(0.9,0.85),xycoords='axes fraction',**tnrfont)
+				ax.set_ylim(1e-3,1e3)
+				ax.set_xlim(0,tmax)
+				ax.axhline(marr[0]/marr[1],linestyle='--',color='k')
+				ax.set_yscale('log')
+		os.chdir(home)
+		c+=1
+	if plot:
+		if through_time:
+			if identify:
+				plt.legend(loc='best')#,ncol=len(labels))
+			ax.set_ylabel(ylabel,fontsize=24)
+			ax.set_xlabel(xlabel+time_norm,**tnrfont)
+			fig.savefig('du_ratio_vs_time.png',bbox_inches='tight')
+		else:
+			if identify:
+				import matplotlib as mpl
+				mpl.rc('font',family='Times New Roman')
+				ax.legend(loc='best',fontsize=16)
+				name = 'du_peak_vs_theory_label.png'
+			else:
+				name = 'du_peak_vs_theory.png'
+			ax.set_ylabel(ylabel,**tnrfont) ; ax.set_xlabel(xlabel,**tnrfont)
+			ax.set_xlim(lims[0]) ; ax.set_ylim(lims[1])
+			fig.savefig(name,bbox_inches='tight')
+			plt.show()
+		
+	pass
+
 # Plots and shows the experiment vs theory plot for the ratio between two species change in energy density
 # Also has the ability to plot du per-particle ratio (per species) through time for each simulation (nrows) -- will need to un-comment these lines
 def majIons_edens_ratio(sims,species=['Deuterons','Tritons'],time_norm=r'$\tau_{cD}$',ylabel=r'$[\Delta u_1/\Delta u_2]_{max}$',\
@@ -24,7 +85,11 @@ def majIons_edens_ratio(sims,species=['Deuterons','Tritons'],time_norm=r'$\tau_{
 			through_time	: determines whether you plot a through_time or 1:1 du ratio (default False)
 			plot				: boolean determining whether the 
 		params out:
-			None, plots the respective figures 
+			duarr	: array of change in energy densities through time of 
+			xiarr	: 
+			marr	: 
+			qarr	: 
+			+ plots the respective figures 
 	"""	
 	mean_to = 10
 	N=50
@@ -45,6 +110,8 @@ def majIons_edens_ratio(sims,species=['Deuterons','Tritons'],time_norm=r'$\tau_{
 	# mass and charge should be constant throughout sims (same species being analysed)
 	marr = [getMass(sp) for sp in species]
 	qarr = [getChargeNum(sp) for sp in species]
+	tduarr = np.zeros((len(sims),len(species),len(times)))
+
 	for j in range(len(sims)):
 		sim_loc = getSimulation(sims[j])
 		times = read_pkl('times')
@@ -73,6 +140,7 @@ def majIons_edens_ratio(sims,species=['Deuterons','Tritons'],time_norm=r'$\tau_{
 			du = (Energypart[thresh]-meanEnergypart)
 			maxdu[i] = np.max(du)
 			duarr.append(du)
+			tduarr[j,i,:] = du
 		duarr = np.array(duarr) # size (species, thresh time)
 		if plot:
 			if not through_time:
@@ -80,8 +148,9 @@ def majIons_edens_ratio(sims,species=['Deuterons','Tritons'],time_norm=r'$\tau_{
 				xy = ((xi1/xi2)*(marr[1]/marr[0])*((qarr[0]/qarr[1])**2),maxdu[0]/maxdu[1])
 				# ax.annotate(str(labels[c]),xy=xy,xycoords='data',xytext=(.5,0),textcoords='offset fontsize',fontsize=16,fontname='Times New Roman')
 			else:	# through time for each sim
-				ax.plot(timespart/tc1,np.abs((1/xi2_xi1)*duarr[1]/duarr[0]),color=colors[c],label=str(labels[c])+'%')
-				# ax[c].annotate(str(labels[c])+'%',xy=(0.9,0.85),xycoords='axes fraction',**tnrfont)
+				ax.plot(timespart/tc1,np.abs((1/xi2_xi1)*tduarr[j,1,:]/tduarr[j,0,:]),color=colors[c],label=str(labels[c])+'%')
+				# ax.plot(timespart/tc1,np.abs((1/xi2_xi1)*duarr[1]/duarr[0]),color=colors[c],label=str(labels[c])+'%')
+				# # ax[c].annotate(str(labels[c])+'%',xy=(0.9,0.85),xycoords='axes fraction',**tnrfont)
 				ax.set_ylim(1e-3,1e3)
 				ax.set_xlim(0,tmax)
 				ax.axhline(marr[0]/marr[1],linestyle='--',color='k')
