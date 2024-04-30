@@ -186,23 +186,23 @@ def getdxyz(d):
 	l=getGrid(d)
 	if (len(l)==1):
 		lx = l[0]
-		dx = (lx[-1]-lx[0])/(len(lx)-1)
+		dx = (lx[-1]-lx[0])/(len(lx))
 		del lx ,l
 		return dx
 	elif (len(l)==2):
 		lx = l[0]
-		dx = (lx[-1]-lx[0])/(len(lx)-1)
+		dx = (lx[-1]-lx[0])/(len(lx))
 		ly = l[1]
-		dy = (ly[-1]-ly[0])/(len(ly)-1)
+		dy = (ly[-1]-ly[0])/(len(ly))
 		del lx, ly , l
 		return dx, dy
 	elif (len(l)==3):
 		lx = l[0]
-		dx = (lx[-1]-lx[0])/(len(lx)-1)
+		dx = (lx[-1]-lx[0])/(len(lx))
 		ly = l[1]
-		dy = (ly[-1]-ly[0])/(len(ly)-1)
+		dy = (ly[-1]-ly[0])/(len(ly))
 		lz = l[2]
-		dz = (lz[-1]-lz[0])/(len(lz)-1)
+		dz = (lz[-1]-lz[0])/(len(lz))
 		del lx, ly, lz , l
 		return dx, dy, dz
 
@@ -275,15 +275,38 @@ def batch_getSimRanges(SIM_DATA):
 	N_time_points = len(index_list)
 	return grid_length, N_grid_points, duration, N_time_points
 
-# Gets dispersion limits of a simulation for a len(filelist) < 1024
-def getDispersionlimits(files):
-	grid_length, N_grid_points, duration, N_time_points = getSimRanges(files)
-	wfrac = 2.0*const.PI/duration 		#2pi/time of sim		(2pi/T)	
-	kfrac = 2.0*const.PI/grid_length 		#2pi/length of grid 	(2pi/L)
-	klim = kfrac*0.5*N_grid_points
-	wlim = wfrac*0.5*N_time_points
-	# highest freq we can resolve # see OneNote lab-book for more info (utilises Nyquist theorem)
-	return  klim, wlim #,kfrac, wfrac
+# # Gets dispersion limits of a simulation for a len(filelist) < 1024
+# def getDispersionlimits(files):
+# 	grid_length, N_grid_points, duration, N_time_points = getSimRanges(files)
+# 	wfrac = 2.0*const.PI/duration 		#2pi/time of sim		(2pi/T)	
+# 	kfrac = 2.0*const.PI/grid_length 		#2pi/length of grid 	(2pi/L)
+# 	klim = kfrac*0.5*N_grid_points
+# 	wlim = wfrac*0.5*N_time_points
+# 	# highest freq we can resolve # see OneNote lab-book for more info (utilises Nyquist theorem)
+# 	return  klim, wlim #,kfrac, wfrac
+
+def getDispersionlimits(simloc):
+	times = read_pkl('times',message=False)
+	try:
+		files = list_sdf(simloc)
+	except:
+		files = np.arange(0,len(times),1)
+	dx = getdxyz(sdfread(0))
+	dt = getdt(times)
+	knyq = 0.5*2*const.PI/dx
+	wnyq = 0.5*2*const.PI/dt
+	# grid_length = getGridlen(sdfread(files[0]))
+	# N_grid_points = len(getGrid(sdfread(files[0]))[0])
+	# duration = times[-1] - times[0]
+	# N_time_points = len(times)
+	# wfrac = 2.0*const.PI/duration
+	# kfrac = 2.0*const.PI/grid_length
+	# knyq = kfrac*0.5*N_grid_points
+	# wnyq = wfrac*0.5*N_time_points
+	klim = [-knyq, knyq]
+	wlim = [-wnyq, wnyq]
+	return klim, wlim
+
 
 # Gets dispersion limits of a simulation for a batch-wise loaded array
 def batch_getDispersionlimits(SIM_DATA):
@@ -1495,11 +1518,14 @@ def dumpfiles(array, quant):
 		pickle.dump(array,f)
 
 ## Read pkl files
-def read_pkl(quant):
-	with open(quant+'.pkl', 'rb') as f:
+def read_pkl(quant,message=True):
+	if message:
 		print('Loading '+quant+'...')
+	# load pkl file
+	with open(quant+'.pkl', 'rb') as f:
 		array = pickle.load(f)
-	print('Done.')
+	if message:
+		print('Done.')
 	# automatically closed when loaded due to "with" statement
 	return array
 
@@ -2644,8 +2670,8 @@ def grad_energydens(simloc,normspecies='Deuterons',quant='Magnetic_Field_Bz',mea
 #	plt.xlabel(r'$t/\tau_{cD}$',fontsize=20)
 	return timesplot, gradu
 
-# shared-area between two signals
-def shared_area(sig1,sig2,dx=None,fitgauss=False):
+# shared-area between two 1d signals
+def shared_area(sig1,sig2,dx=1,fitgauss=False):
 	"""
 		if fitgauss=True, peak returned is valuein units of array x, if dx provided
 	"""
@@ -2653,9 +2679,7 @@ def shared_area(sig1,sig2,dx=None,fitgauss=False):
 	if lx!=len(sig2): 
 		print('## ERROR ## :: Both signals need the same length')
 		raise SystemExit
-	if not dx:
-		dx = 1 # placeholder
-	x = np.linspace(0,dx*lx,lx) # in units of x when dx!=None
+	x = np.linspace(0,dx*lx,lx)
 	rolled = np.zeros(lx)
 	sharea=[]
 	for i in range(lx):
@@ -2680,7 +2704,29 @@ def shared_area(sig1,sig2,dx=None,fitgauss=False):
 	else:
 		peak = x[np.argmax(sharea)] # units of x
 	return sharea, peak
-	
+
+def shared_area_2d(sig1,sig2,dx=1,dy=1):
+	if sig1.shape != sig2.shape:
+		# TODO; reshape sig2
+		print('## ERROR ## :: Both signals need to be same shape')
+		raise SystemExit
+	lx, ly = sig1.shapes
+	x = np.linspace(0,dx*lx,lx)
+	y = np.linspace(0,dy*ly,ly)
+	sharea = np.zeros(sig1.shape)
+	for i in sig1.shape[0]:
+		# roll in x
+		rxsig2 = np.roll(sig2,i,axis=0)
+		for j in sig2.shape[1]:
+			# roll in y
+			rxysig2 = np.roll(rxsig2,j,axis=1)
+			args1_s2 = np.array(sig1 > rxysig2) # sig1 greater than rolled sig2
+			args2_s1 = args1_s2 == False # opposite boolean array
+			sharea[i,j] = np.sum((sig1[args1_s2]+rxysig2[args2_s1])*dx*dy)
+	argmax = np.argmax(sharea)
+	peak = [x[argmax[0]],y[argmax[1]]]
+	return sharea, peak
+
 def outside_ticks(fig):
 	for i, ax in enumerate(fig.axes):
 		ax.tick_params(axis='both',direction='out',top=False,right=False,left=True,bottom=True)
@@ -2702,7 +2748,7 @@ def ignorey(lax):
         ax.tick_params(labelleft=False)
 
 ## Sobel and Scharr kernel on an image which will return the gradient array
-def Kernel(img,kernel='sobel',plot=True):
+def Kernel(img,kernel='sobel',plot=False):
 	# convert img to 0-255 color
 	img = 255*img/np.nanmax(img)
 	if kernel == 'scharr':
@@ -2761,9 +2807,11 @@ def Kernel(img,kernel='sobel',plot=True):
 			kGangle[i,j]= np.arctan2(kG[1],kG[0]) # radians between +- pi
 	kGangle = np.nan_to_num(kGangle,posinf=np.nan,neginf=np.nan) # change +-inf vals to nan
 	kGmag = np.nan_to_num(kGmag,posinf=np.nan,neginf=np.nan) 	 # change +-inf vals to nan		
+	if plot:
+		plotKernel(kGangle,kernel=kernel)
 	return kGmag, kGangle
 
-def plotKernel(kGangle, kernel='scharr'):
+def plotKernel(kGangle,dw,dk,vA,kernel='scharr'):
 	_,kGangle = Kernel(FT2d,kernel=kernel) # scharr or sobel
 
 	# gradients as angles

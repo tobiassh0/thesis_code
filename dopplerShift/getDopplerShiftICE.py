@@ -73,14 +73,14 @@ def getKernelDoppler(sims,FT2darr,normspecies,wkmax=[10,25],logthresh=1.8,kernel
 		ttFT2d[FT2d > logthresh] = 1
 		FT2d = ttFT2d # overwrite old FT2d 
 		del ttFT2d # delete temp arr
-		plt.imshow(FT2d,aspect='auto',origin='lower',extent=[0,wkmax[0],0,wkmax[1]])
+		# plt.imshow(FT2d,aspect='auto',origin='lower',extent=[0,wkmax[0],0,wkmax[1]])
 
 		# Kernel gradient map
 		_,kGangle = Kernel(FT2d,kernel=kernel) # list_new func : kernel = 'scharr' or 'sobel'
 
 		# gradients as angles
 		kGangle = kGangle[1:-1,1:-1]# remove abberations around edge
-#		plt.imshow(kGangle,extent=[0,wkmax[1],0,wkmax[0]],**kwargs)	; plt.show()	
+		# plt.imshow(kGangle,extent=[0,wkmax[1],0,wkmax[0]],**kwargs)	; plt.show()	
 		kGangle = kGangle.flatten()
 
 		# convert to all negative angles (easier to calc real gradient)
@@ -108,9 +108,10 @@ def getKernelDoppler(sims,FT2darr,normspecies,wkmax=[10,25],logthresh=1.8,kernel
 		dsvarr.append([dsv*vA,dsv,vA])
 		print(kernel+' kernel max :: ', dsv)
 		karr = np.linspace(0,10,100)
-		for i in range(20):
-			plt.plot(karr,i+karr*dsv,color='k')
-		plt.show()
+
+		# for i in range(20):
+		# 	plt.plot(karr,i+karr*dsv,color='k')
+		# plt.show()
 
 		if plot:
 			# plot hist
@@ -125,16 +126,16 @@ def getKernelDoppler(sims,FT2darr,normspecies,wkmax=[10,25],logthresh=1.8,kernel
 			kperp = np.sin(theta*const.PI/180)
 			uperp = 0.9; upara = 6.076
 			dsth = -(kperp*uperp)# + kpara*upara)
-#			print(dsv,(dsth+1))
+			# print(dsv,(dsth+1))
 			# doppler shifted line 
 			for j in range(0,int(wmax/wnorm),1):
 				w = wnorm*np.ones(len(kx))*j
 				# empirical
 				ww = w - (abs(dsv)*vA)*kx
 				ax2[i].plot(kx/knorm,ww/wnorm,color='white',linestyle='--')
-#				# theory
-#				tww = w - (abs(dsth+1)*vA)*kx
-#				ax2[i].plot(kx/knorm,tww/wnorm,color='white',linestyle='-.')
+				# # theory
+				# tww = w - (abs(dsth+1)*vA)*kx
+				# ax2[i].plot(kx/knorm,tww/wnorm,color='white',linestyle='-.')
 			ax2[i].set_xlim(0,20) # reduce plotting limits
 			ax2[i].set_ylim(0,10) # " " 
 			#ax2[i].set_ylabel(r'$\omega/$'+getOmegaLabel(normspecies),**tnrfont)
@@ -161,7 +162,6 @@ def getKernelDoppler(sims,FT2darr,normspecies,wkmax=[10,25],logthresh=1.8,kernel
 		# plt.show()
 		fig2.savefig(home+'/FT_2d_doppler_all.png',bbox_inches='tight')
 	return np.array(dsvarr)
-
 
 def getIntegrateDoppler(sims,FT2darr,normspecies='Protons',wkmax=[20,20],logthresh=1.8):
 	"""
@@ -226,7 +226,7 @@ def getIntegrateDoppler(sims,FT2darr,normspecies='Protons',wkmax=[20,20],logthre
 			# find image edge intercepts
 			xi = (xm/knorm-(ym/wnorm)/np.tan(angles[i])) # algebra
 			yi = (ym/wnorm-(xm/knorm)*np.tan(angles[i])) # normalised
-#			ax.plot([0,xi],[yi,0],linestyle='--',color='white')
+			# ax.plot([0,xi],[yi,0],linestyle='--',color='white')
 			# convert to pixel coordinates
 			xi*=nk/(wkmax[1]); yi*=nw/(wkmax[0])
 			x,y=np.linspace(0,xi,1000),np.linspace(0,yi,1000)

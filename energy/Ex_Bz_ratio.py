@@ -27,7 +27,7 @@ def Ex_Bz(sims,xarr,sim0=[],minspec='Protons',mean_to=10,home=None):
 
     # loop through sims and plot ratio
     fratio = np.zeros((len(sims),len(times)))
-    rxiHe3  = np.zeros((len(sims),len(times)))
+    rxarr  = np.zeros((len(sims),len(times)))
     M = 4
     N = int(len(sims)/M)
     fig,ax=plt.subplots(figsize=(10,6),ncols=M,nrows=N,sharex=True,sharey=True,layout='constrained')
@@ -53,7 +53,7 @@ def Ex_Bz(sims,xarr,sim0=[],minspec='Protons',mean_to=10,home=None):
     ax[0].locator_params(axis='x',nbins=6)
     ax[0].set_xlim(0,times[-1]/tcmin)
     fig.supxlabel(r'$t/\tau_{cp}$',**tnrfont)
-    fig.supylabel(r'$E_x^2/\Delta B_z^2$'+'  '+r'$[\epsilon_0\mu_0]$',**tnrfont)
+    fig.supylabel(r'$(E_x^2/\Delta B_z^2)\epsilon_0\mu_0$',**tnrfont)
     fig.savefig(home+'Ex_Bz_time.png',bbox_inches='tight')
 
     return fratio, rxarr
@@ -132,8 +132,8 @@ if __name__=='__main__':
     sims = sims[1:]
     xiHe3 = [float(i.split('_')[1]) for i in sims]
 
-    # fratio, rxiHe3 = Ex_Bz(sims,xarr=xiHe3,sim0=sim0)
-    fratio, rxiHe3 = f1_f2(sims,xiHe3,'Electric_Field_Ex','Magnetic_Field_Bz',sim0=sim0,home=home,\
-                            ylabel=r'$E_x^2/\Delta B_z^2$'+'  '+r'$[\epsilon_0\mu_0]$')
+    fratio, rxiHe3 = Ex_Bz(sims,xarr=xiHe3,sim0=sim0,home=home)
+    # fratio, rxiHe3 = f1_f2(sims,xiHe3,'Electric_Field_Ex','Magnetic_Field_Bz',sim0=sim0,home=home,\
+    #                         ylabel=r'$(E_x^2/\Delta B_z^2)\epsilon_0\mu_0$')
     # plt.scatter(rxiHe3,fratio,alpha=0.1)
     # plt.show()

@@ -113,15 +113,56 @@ def majIons_edens_ratio(home,sims,species=['Deuterons','Tritons'],norm_spec='Alp
 		print(sims[j])
 		print('Secondary conc.:: ',xi2)
 		for i in range(len(species)):
-			Energypart = read_pkl(species[i]+'_KEdens')/(1000*const.qe) # keV/m^3
+			Energypart = read_pkl(species[i]+'_KEdens') # /(1000*const.qe) # J/m^3
 			meanEnergypart = np.mean(Energypart[:mean_to])
 			# Energypart = np.convolve(Energypart,np.ones(N)/N,mode='valid')
 			du = (Energypart-meanEnergypart)
 			duarr[j,i,:] = du
 	if plot:
 		PlotGyroResonance(home,duarr,sims,species,norm_spec=norm_spec)
-	
+	# return array of du for each sim, species and time
 	return duarr
+
+def du_gyroratio(home,duarr,sims,species,norm_spec='Alphas',labels=''):
+	nsims, nspec, nt = duarr.shape
+	_=getSimulation(home+sims[0])
+	tcnorm = 2*const.PI/getCyclotronFreq(sdfread(0),norm_spec)
+	marr = [getMass(sp) for sp in species]
+	qarr = [getChargeNum(sp) for sp in species]
+	N = 2 ; M = 4
+	# setup figure
+	fig,ax=plt.subplots(figsize=(10,5),nrows=N,ncols=M,sharex=True,sharey=True,layout='constrained')
+	ax=ax.ravel()
+	# loop through sims
+	for i in range(nsims):
+		sim = getSimulation(home+sims[i])
+		d0 = sdfread(0)
+		times = read_pkl('times')
+		xi1,xi2,_=getConcentrationRatios(d0)
+		du0 = duarr[i,0,:]
+		du1 = duarr[i,1,:]
+		gyroratio = (xi1/xi2)*(marr[1]/marr[0])*(qarr[0]/qarr[1])**2
+		du0_rat = du0/gyroratio
+		du1_rat = du1/(1/gyroratio)
+		# plot original traces
+		ax[i].plot(times/tcnorm,du0,'r-')
+		ax[i].plot(times/tcnorm,du1,'b-')
+		# plot modified traces
+		ax[i].plot(times/tcnorm,du0_rat,color='pink',linestyle='--')
+		ax[i].plot(times/tcnorm,du1_rat,color='purple',linestyle='--')
+		ax[i].annotate(labels[i],xy=(0.5,0.95),xycoords='axes fraction',ha='center',va='top')
+	# legend
+	legend = fig.legend([r'$\Delta u_D$',r'$\Delta u_{He3}$',r'$\Delta u_{D}^\prime$',r'$\Delta u_{He3}^\prime$'],\
+						loc='upper center',ncol=4,bbox_to_anchor=(0.5,1.1),borderpad=0.1)
+	# ax[0].legend(,loc='best')
+	# limits and formatting
+	ax[0].set_ylim(-0.1,5)
+	ax[0].set_xlim(0,4.0)
+	ax[0].locator_params(axis='x',nbins=4)
+	fig.supxlabel(r'$t/\tau_{cp}$',**tnrfont)
+	fig.supylabel(r'$\Delta u$'+' '+r'$[Jm^{-3}]$',**tnrfont)
+	fig.savefig(home+'du_prime_all.pdf',bbox_inches='tight')
+	pass
 
 if __name__=='__main__':
 	from func_load import *	
@@ -154,5 +195,6 @@ if __name__=='__main__':
 	# ylabel=r'$(\Delta u_{D}/\Delta u_{He3})$' + ' ' + r'$(\xi_{He3}/\xi_D)$'
 	duarr = majIons_edens_ratio(home,sims,species=['Deuterons','He3'],norm_spec='Protons')
 	print(duarr,duarr.shape)
-	PlotGyroResonance(home,duarr,sims,species=['Deuterons','He3'],norm_spec='Protons',labels=hlabels,\
-					  ylabel=ylabel,xlabel=xlabel,lims=((0,8),(0,8)),through_time=True,identify=True,time_norm=r'$\tau_{cp}$')
+	# PlotGyroResonance(home,duarr,sims,species=['Deuterons','He3'],norm_spec='Protons',labels=hlabels,\
+	# 				  ylabel=ylabel,xlabel=xlabel,lims=((0,8),(0,8)),through_time=True,identify=True,time_norm=r'$\tau_{cp}$')
+	du_gyroratio(home,duarr,sims,species=['Deuterons','Helium3'],norm_spec='Protons',labels=hlabels)
