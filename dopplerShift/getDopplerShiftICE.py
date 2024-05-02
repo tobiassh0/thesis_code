@@ -46,7 +46,7 @@ def getKernelDoppler(sims,FT2darr,normspecies,wkmax=[10,25],logthresh=1.8,kernel
 	for i in range(len(sims)):
 		## calc gradients in image
 		# setup
-		sim_loc = getSimulation(home+sims[i])	
+		sim_loc = getSimulation(sims[i])	
 		d0 = sdfread(0)
 		times = read_pkl('times')
 		vA = getAlfvenVel(d0)
@@ -363,7 +363,7 @@ if __name__ == '__main__':
 	for sim in sims:
 		_=getSimulation(home+sim)
 		FT2darr.append(read_pkl('FT_2d_'+quantity))
-	os.chdir('..')
+	os.chdir(home)
 	# kernel
 	sims = [home+sim for sim in sims]
 	dsvarr = getKernelDoppler(sims,FT2darr,labels=hlabels,normspecies='Protons',plot=True)

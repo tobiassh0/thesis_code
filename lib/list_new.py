@@ -374,6 +374,7 @@ def getMass(species):
 	'Protons': const.me*const.me_to_mp, 
 	'Proton': const.me*const.me_to_mp, 
 	'PProtons': const.me*const.me_to_mp, 
+	'PPProtons': const.me*const.me_to_mp, 
 	'Alphas': const.me*const.me_to_malpha, 
 	'Alpha': const.me*const.me_to_malpha, 
 	'Deuterons': const.me*const.me_to_mD,
@@ -406,6 +407,7 @@ def getChargeNum(species):
 	'Right_Electrons': 1, 
 	'Protons': 1, 
 	'PProtons': 1, 
+	'PPProtons': 1, 
 	'Alphas': 2, 
 	'Alpha': 2,
 	'Deuterons': 1,
@@ -436,6 +438,7 @@ def getIonlabel(species):
 	'Right_Electrons': r'$e$', 
 	'Protons': r'$p$', 
 	'PProtons': r'$p$', # sometimes have two of the same species
+	'PPProtons': r'$p$', # sometimes have three of the same species
 	'Alphas': r'$\alpha$', 
 	'Alpha': r'$\alpha$', 	
 	'Helium4': r'$\alpha$',
@@ -468,6 +471,7 @@ def getFreqLabel(species):
 		'Right_Electrons': r'$f_{ce}$', 
 		'Protons': r'$f_{cp}$', 
 		'PProtons': r'$f_{cp}$', 
+		'PPProtons': r'$f_{cp}$', 
 		'Alphas': r'$f_{c\alpha}$', 
 		'Alpha': r'$f_{c\alpha}$', 	
 		'Deuterons': r'$f_{cD}$',
@@ -499,6 +503,7 @@ def getOmegaLabel(species):
 		'Right_Electrons': r'$\Omega_e$', 
 		'Protons': r'$\Omega_p$', 
 		'PProtons': r'$\Omega_p$', 
+		'PPProtons': r'$\Omega_p$', 
 		'Alphas': r'$\Omega_\alpha$', 
 		'Alpha': r'$\Omega_\alpha$', 	
 		'Deuterons': r'$\Omega_D$',
@@ -2671,7 +2676,7 @@ def grad_energydens(simloc,normspecies='Deuterons',quant='Magnetic_Field_Bz',mea
 	return timesplot, gradu
 
 # shared-area between two 1d signals
-def shared_area(sig1,sig2,dx=1,fitgauss=False):
+def SharedArea(sig1,sig2,dx=1,fitgauss=False):
 	"""
 		if fitgauss=True, peak returned is valuein units of array x, if dx provided
 	"""
@@ -2705,27 +2710,24 @@ def shared_area(sig1,sig2,dx=1,fitgauss=False):
 		peak = x[np.argmax(sharea)] # units of x
 	return sharea, peak
 
-def shared_area_2d(sig1,sig2,dx=1,dy=1):
-	if sig1.shape != sig2.shape:
-		# TODO; reshape sig2
-		print('## ERROR ## :: Both signals need to be same shape')
+def SharedArea2d(d1,d2,dx=1,dy=1):
+	# 2D shared area method between two datasets (matrices)
+	if d1.shape != d2.shape:
+		# TODO; reshape
 		raise SystemExit
-	lx, ly = sig1.shapes
-	x = np.linspace(0,dx*lx,lx)
-	y = np.linspace(0,dy*ly,ly)
-	sharea = np.zeros(sig1.shape)
-	for i in sig1.shape[0]:
-		# roll in x
-		rxsig2 = np.roll(sig2,i,axis=0)
-		for j in sig2.shape[1]:
-			# roll in y
-			rxysig2 = np.roll(rxsig2,j,axis=1)
-			args1_s2 = np.array(sig1 > rxysig2) # sig1 greater than rolled sig2
-			args2_s1 = args1_s2 == False # opposite boolean array
-			sharea[i,j] = np.sum((sig1[args1_s2]+rxysig2[args2_s1])*dx*dy)
-	argmax = np.argmax(sharea)
-	peak = [x[argmax[0]],y[argmax[1]]]
-	return sharea, peak
+	sa = np.zeros(d1.shape)
+	for rx in range(d1.shape[0]):
+		rxd2 = np.roll(d2,rx,axis=0)
+		for ry in range(d1.shape[1]):
+			rd2 = np.roll(rxd2,ry,axis=1)
+			argd1_d2 = d1 < rd2
+			argd2_d1 = argd1_d2 == False
+			sa[rx,ry] = np.sum((d1*argd1_d2 + rd2*argd2_d1)*dx*dy)
+	peakind = np.unravel_index(sa.argmax(),sa.shape)
+	x = np.linspace(0,dx*sa.shape[0],sa.shape[0])
+	y = np.linspace(0,dy*sa.shape[1],sa.shape[1])
+	peakval = [x[peakind[0]],y[peakind]]
+	return sa, peakind
 
 def outside_ticks(fig):
 	for i, ax in enumerate(fig.axes):
