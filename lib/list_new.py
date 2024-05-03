@@ -37,11 +37,11 @@ plt.tight_layout()
 plt.rcParams['axes.formatter.useoffset'] = False
 
 def formatting():
-	kwargs ={'interpolation':'nearest','origin':'lower','aspect':'auto'}
 	tnrfont = {'fontsize':20,'fontname':'Times New Roman'}
-	return kwargs, tnrfont
+	imkwargs = {'origin':'lower','interpolation':'none','aspect':'auto'}
+	return tnrfont, imkwargs
 
-kwargs, tnrfont = formatting()
+tnrfont, imkwargs = formatting()
 #---------------------------------------------------------------------------------------#
 #---------------------------------------------------------------------------------------#
 
@@ -186,23 +186,23 @@ def getdxyz(d):
 	l=getGrid(d)
 	if (len(l)==1):
 		lx = l[0]
-		dx = (lx[-1]-lx[0])/(len(lx)-1)
+		dx = (lx[-1]-lx[0])/(len(lx))
 		del lx ,l
 		return dx
 	elif (len(l)==2):
 		lx = l[0]
-		dx = (lx[-1]-lx[0])/(len(lx)-1)
+		dx = (lx[-1]-lx[0])/(len(lx))
 		ly = l[1]
-		dy = (ly[-1]-ly[0])/(len(ly)-1)
+		dy = (ly[-1]-ly[0])/(len(ly))
 		del lx, ly , l
 		return dx, dy
 	elif (len(l)==3):
 		lx = l[0]
-		dx = (lx[-1]-lx[0])/(len(lx)-1)
+		dx = (lx[-1]-lx[0])/(len(lx))
 		ly = l[1]
-		dy = (ly[-1]-ly[0])/(len(ly)-1)
+		dy = (ly[-1]-ly[0])/(len(ly))
 		lz = l[2]
-		dz = (lz[-1]-lz[0])/(len(lz)-1)
+		dz = (lz[-1]-lz[0])/(len(lz))
 		del lx, ly, lz , l
 		return dx, dy, dz
 
@@ -275,15 +275,38 @@ def batch_getSimRanges(SIM_DATA):
 	N_time_points = len(index_list)
 	return grid_length, N_grid_points, duration, N_time_points
 
-# Gets dispersion limits of a simulation for a len(filelist) < 1024
-def getDispersionlimits(files):
-	grid_length, N_grid_points, duration, N_time_points = getSimRanges(files)
-	wfrac = 2.0*const.PI/duration 		#2pi/time of sim		(2pi/T)	
-	kfrac = 2.0*const.PI/grid_length 		#2pi/length of grid 	(2pi/L)
-	klim = kfrac*0.5*N_grid_points
-	wlim = wfrac*0.5*N_time_points
-	# highest freq we can resolve # see OneNote lab-book for more info (utilises Nyquist theorem)
-	return  klim, wlim #,kfrac, wfrac
+# # Gets dispersion limits of a simulation for a len(filelist) < 1024
+# def getDispersionlimits(files):
+# 	grid_length, N_grid_points, duration, N_time_points = getSimRanges(files)
+# 	wfrac = 2.0*const.PI/duration 		#2pi/time of sim		(2pi/T)	
+# 	kfrac = 2.0*const.PI/grid_length 		#2pi/length of grid 	(2pi/L)
+# 	klim = kfrac*0.5*N_grid_points
+# 	wlim = wfrac*0.5*N_time_points
+# 	# highest freq we can resolve # see OneNote lab-book for more info (utilises Nyquist theorem)
+# 	return  klim, wlim #,kfrac, wfrac
+
+def getDispersionlimits(simloc):
+	times = read_pkl('times',message=False)
+	try:
+		files = list_sdf(simloc)
+	except:
+		files = np.arange(0,len(times),1)
+	dx = getdxyz(sdfread(0))
+	dt = getdt(times)
+	knyq = 0.5*2*const.PI/dx
+	wnyq = 0.5*2*const.PI/dt
+	# grid_length = getGridlen(sdfread(files[0]))
+	# N_grid_points = len(getGrid(sdfread(files[0]))[0])
+	# duration = times[-1] - times[0]
+	# N_time_points = len(times)
+	# wfrac = 2.0*const.PI/duration
+	# kfrac = 2.0*const.PI/grid_length
+	# knyq = kfrac*0.5*N_grid_points
+	# wnyq = wfrac*0.5*N_time_points
+	klim = [-knyq, knyq]
+	wlim = [-wnyq, wnyq]
+	return klim, wlim
+
 
 # Gets dispersion limits of a simulation for a batch-wise loaded array
 def batch_getDispersionlimits(SIM_DATA):
@@ -351,6 +374,7 @@ def getMass(species):
 	'Protons': const.me*const.me_to_mp, 
 	'Proton': const.me*const.me_to_mp, 
 	'PProtons': const.me*const.me_to_mp, 
+	'PPProtons': const.me*const.me_to_mp, 
 	'Alphas': const.me*const.me_to_malpha, 
 	'Alpha': const.me*const.me_to_malpha, 
 	'Deuterons': const.me*const.me_to_mD,
@@ -383,6 +407,7 @@ def getChargeNum(species):
 	'Right_Electrons': 1, 
 	'Protons': 1, 
 	'PProtons': 1, 
+	'PPProtons': 1, 
 	'Alphas': 2, 
 	'Alpha': 2,
 	'Deuterons': 1,
@@ -413,6 +438,7 @@ def getIonlabel(species):
 	'Right_Electrons': r'$e$', 
 	'Protons': r'$p$', 
 	'PProtons': r'$p$', # sometimes have two of the same species
+	'PPProtons': r'$p$', # sometimes have three of the same species
 	'Alphas': r'$\alpha$', 
 	'Alpha': r'$\alpha$', 	
 	'Helium4': r'$\alpha$',
@@ -445,6 +471,7 @@ def getFreqLabel(species):
 		'Right_Electrons': r'$f_{ce}$', 
 		'Protons': r'$f_{cp}$', 
 		'PProtons': r'$f_{cp}$', 
+		'PPProtons': r'$f_{cp}$', 
 		'Alphas': r'$f_{c\alpha}$', 
 		'Alpha': r'$f_{c\alpha}$', 	
 		'Deuterons': r'$f_{cD}$',
@@ -476,6 +503,7 @@ def getOmegaLabel(species):
 		'Right_Electrons': r'$\Omega_e$', 
 		'Protons': r'$\Omega_p$', 
 		'PProtons': r'$\Omega_p$', 
+		'PPProtons': r'$\Omega_p$', 
 		'Alphas': r'$\Omega_\alpha$', 
 		'Alpha': r'$\Omega_\alpha$', 	
 		'Deuterons': r'$\Omega_D$',
@@ -763,7 +791,7 @@ def plot1d(d,varname):
 # plot 2d fieldmatrix in the layout T,X
 def plotMatrix(matrix,name='matrix_quantity',extents=[None,None,None,None],cbar=True,cmap='jet'):
 	fig,ax=plt.subplots(figsize=(8,4))
-	im = ax.imshow(matrix,extent=extents,**kwargs,cmap=cmap)
+	im = ax.imshow(matrix,extent=extents,**imkwargs,cmap=cmap)
 	if cbar:
 		fig.colorbar(im)
 	plotting(fig,ax,name)
@@ -943,7 +971,7 @@ def plotNormHeatmap(matrix,xlabel='x',ylabel='y',cbar_label='',extent=[None,None
 
 	# plot
 	fig,ax=plt.subplots(figsize=(8,6))
-	im = plt.imshow(matrix,**kwargs,extent=extent,cmap=cmap)
+	im = plt.imshow(matrix,**imkwargs,extent=extent,cmap=cmap)
 
 	# limits and labels
 	if cbar:
@@ -1046,7 +1074,7 @@ def plot1dTransform(FT_matrix,klim,tlim,klabel=r'$v_A/\Omega_D$',wlabel=r'$\Omeg
 	trFT = np.log10(FT_matrix[:][1:])
 	extent=[0, klim, 0, tlim]
 	fig, ax = plt.subplots(figsize=(8,8))
-	im = plt.imshow(trFT,**kwargs,extent=extent,cmap=cmap,clim=clim)
+	im = plt.imshow(trFT,**imkwargs,extent=extent,cmap=cmap,clim=clim)
 	
 	ax.set_xlabel(r'$k$'+klabel,**tnrfont) #need to change when normalising 
 	ax.set_ylabel(r'$t$'+wlabel+r'$/2\pi$',**tnrfont)
@@ -1084,7 +1112,7 @@ def plot2dTransform(FFT_matrix,klim,wlim,klabel=r'$v_A/\Omega_D$',wlabel=r'$\Ome
 	ax.set_ylabel(r'$\omega/$'+wlabel,fontsize=18)
 	# ax.set_xlim(0,klim)
 	# ax.set_ylim(0,wlim)
-	im = plt.imshow(tr,**kwargs,extent=extent,cmap=cmap,clim=clim)
+	im = plt.imshow(tr,**imkwargs,extent=extent,cmap=cmap,clim=clim)
 	del tr
 	if (cbar):
 		fig.colorbar(im)
@@ -1116,7 +1144,7 @@ def plotDispersion(transmatrix, klimlow, klimup, wlimlow, wlimup, cbar=False, cl
 	if (labels):
 		plt.xlabel('Wavenumber' + r' $[\omega_{c}/V_{A}]$',fontsize='15') #need to change when normalising 
 		plt.ylabel('Frequency' + r' $[\omega_{c}]$',fontsize='15') #need to change when normalising 
-	im = plt.imshow(tr,**kwargs,extent=extent,cmap='jet',clim=clim)#, clim = (-4.0,None))
+	im = plt.imshow(tr,**imkwargs,extent=extent,cmap='jet',clim=clim)#, clim = (-4.0,None))
 	if (cbar): # off by default
 		plt.colorbar()
 	del tr
@@ -1495,11 +1523,14 @@ def dumpfiles(array, quant):
 		pickle.dump(array,f)
 
 ## Read pkl files
-def read_pkl(quant):
-	with open(quant+'.pkl', 'rb') as f:
+def read_pkl(quant,message=True):
+	if message:
 		print('Loading '+quant+'...')
+	# load pkl file
+	with open(quant+'.pkl', 'rb') as f:
 		array = pickle.load(f)
-	print('Done.')
+	if message:
+		print('Done.')
 	# automatically closed when loaded due to "with" statement
 	return array
 
@@ -2137,7 +2168,7 @@ def calcPowerICE(FT_2d, wlim, klim, wcyc, va, kwidth, wmax, kmax):
 #	tc_a = 2*const.PI/getCyclotronFreq(sdfread(0),min_species)
 #	L = getGridlen(sdfread(0))
 #	fig,ax=plt.subplots(figsize=(6,6))
-#	im = ax.imshow(np.log10(Smat),**kwargs,cmap=cmap,extent=[0,L,0,times[-1]/tc_a])
+#	im = ax.imshow(np.log10(Smat),**imkwargs,cmap=cmap,extent=[0,L,0,times[-1]/tc_a])
 #	ax.set_xlabel(r'$x$'+'  '+'[m]',fontsize=18)
 #	ax.set_ylabel(r'$t/\tau_{c\alpha}$',fontsize=18)
 #	if cbar: fig.colorbar(im, label=r'$log_{10}(\mathbf{S}_{mag})$')
@@ -2174,7 +2205,7 @@ def calcPowerICE(FT_2d, wlim, klim, wcyc, va, kwidth, wmax, kmax):
 #			vA = getAlfvenVel(d0)
 #			knorm = wnorm/vA
 #			fig,ax = plt.subplots(figsize=(8,2))
-#			ax.imshow(np.log10(FT2d),**kwargs,extent=[0,klim/knorm,0,wlim/wnorm])
+#			ax.imshow(np.log10(FT2d),**imkwargs,extent=[0,klim/knorm,0,wlim/wnorm])
 #			ax.set_xlim(0,in_klimprime)
 #			ax.set_ylim(0,wlim/wnorm)
 #			ax.set_xlabel(r'$kv_A/\Omega_D$',fontsize=18)
@@ -2586,7 +2617,7 @@ def ciggies(sim_loc,species_lst=['Deuterons','Alphas'],nval=10000,para=False,elo
 
 		# setup figure
 		fig,ax = plt.subplots(figsize=(8,8/const.g_ratio))
-		im = ax.imshow(np.log10(fSpecies.T),**kwargs,extent=extents,cmap='jet')
+		im = ax.imshow(np.log10(fSpecies.T),**imkwargs,extent=extents,cmap='jet')
 
 		# colorbar and labels
 		cbar = plt.colorbar(im)
@@ -2644,8 +2675,8 @@ def grad_energydens(simloc,normspecies='Deuterons',quant='Magnetic_Field_Bz',mea
 #	plt.xlabel(r'$t/\tau_{cD}$',fontsize=20)
 	return timesplot, gradu
 
-# shared-area between two signals
-def shared_area(sig1,sig2,dx=None,fitgauss=False):
+# shared-area between two 1d signals
+def SharedArea(sig1,sig2,dx=1,fitgauss=False):
 	"""
 		if fitgauss=True, peak returned is valuein units of array x, if dx provided
 	"""
@@ -2653,9 +2684,7 @@ def shared_area(sig1,sig2,dx=None,fitgauss=False):
 	if lx!=len(sig2): 
 		print('## ERROR ## :: Both signals need the same length')
 		raise SystemExit
-	if not dx:
-		dx = 1 # placeholder
-	x = np.linspace(0,dx*lx,lx) # in units of x when dx!=None
+	x = np.linspace(0,dx*lx,lx)
 	rolled = np.zeros(lx)
 	sharea=[]
 	for i in range(lx):
@@ -2680,7 +2709,26 @@ def shared_area(sig1,sig2,dx=None,fitgauss=False):
 	else:
 		peak = x[np.argmax(sharea)] # units of x
 	return sharea, peak
-	
+
+def SharedArea2d(d1,d2,dx=1,dy=1):
+	# 2D shared area method between two datasets (matrices)
+	if d1.shape != d2.shape:
+		# TODO; reshape
+		raise SystemExit
+	sa = np.zeros(d1.shape)
+	for rx in range(d1.shape[0]):
+		rxd2 = np.roll(d2,rx,axis=0)
+		for ry in range(d1.shape[1]):
+			rd2 = np.roll(rxd2,ry,axis=1)
+			argd1_d2 = d1 < rd2
+			argd2_d1 = argd1_d2 == False
+			sa[rx,ry] = np.sum((d1*argd1_d2 + rd2*argd2_d1)*dx*dy)
+	peakind = np.unravel_index(sa.argmax(),sa.shape)
+	x = np.linspace(0,dx*sa.shape[0],sa.shape[0])
+	y = np.linspace(0,dy*sa.shape[1],sa.shape[1])
+	peakval = [x[peakind[0]],y[peakind]]
+	return sa, peakind
+
 def outside_ticks(fig):
 	for i, ax in enumerate(fig.axes):
 		ax.tick_params(axis='both',direction='out',top=False,right=False,left=True,bottom=True)
@@ -2702,7 +2750,7 @@ def ignorey(lax):
         ax.tick_params(labelleft=False)
 
 ## Sobel and Scharr kernel on an image which will return the gradient array
-def Kernel(img,kernel='sobel',plot=True):
+def Kernel(img,kernel='sobel',plot=False):
 	# convert img to 0-255 color
 	img = 255*img/np.nanmax(img)
 	if kernel == 'scharr':
@@ -2761,9 +2809,11 @@ def Kernel(img,kernel='sobel',plot=True):
 			kGangle[i,j]= np.arctan2(kG[1],kG[0]) # radians between +- pi
 	kGangle = np.nan_to_num(kGangle,posinf=np.nan,neginf=np.nan) # change +-inf vals to nan
 	kGmag = np.nan_to_num(kGmag,posinf=np.nan,neginf=np.nan) 	 # change +-inf vals to nan		
+	if plot:
+		plotKernel(kGangle,kernel=kernel)
 	return kGmag, kGangle
 
-def plotKernel(kGangle, kernel='scharr'):
+def plotKernel(kGangle,dw,dk,vA,kernel='scharr'):
 	_,kGangle = Kernel(FT2d,kernel=kernel) # scharr or sobel
 
 	# gradients as angles
@@ -2799,7 +2849,7 @@ def plotKernel(kGangle, kernel='scharr'):
 	
 	# plot FT2d
 	fig,ax=plt.subplots(figsize=(8,6))
-	ax.imshow((FT2d),**kwargs,extent=[0,kmax/knorm,0,wmax/wnorm])
+	ax.imshow((FT2d),**imkwargs,extent=[0,kmax/knorm,0,wmax/wnorm])
 	kx = np.linspace(0,20,100)*knorm
 	# doppler shifted line 
 	for i in range(0,int(wmax/wnorm),1):
@@ -2868,7 +2918,7 @@ def getSpectrogram(fieldmatrix,times,majspec='Deuterons',minspec='Alphas',nfo=[1
 def plotSpectrogram(Spower,times,tnorm,nfft,noverlap,minspec='Alphas',clim=(None,None),cbar=True):
 	Spower = Spower[np.all(Spower!=0,axis=1)]
 	fig,ax=plt.subplots(figsize=(8,6))
-	im = ax.imshow(Spower,extent=[0,1,0,times[-1]/tnorm],**kwargs,clim=clim)
+	im = ax.imshow(Spower,extent=[0,1,0,times[-1]/tnorm],**imkwargs,clim=clim)
 	if cbar:
 		cbar = plt.colorbar(im)
 		cbar.set_label('Spectrogram Power',**tnrfont)

@@ -114,9 +114,11 @@ def energy_compare(sims,labels,tmax=7,colors=None,mean_to=10,frac=1,figname='',\
 		print(identify_indmat,identify_markersmat)
 		print(identify_mat,identify_indmat[c],identify_markersmat[c])
 		if N!=1 or M!=1: # multiple sims plot
+			axs[c].axhline(0,linestyle='--',color='darkgrey')
 			axs[c] = plot_energy_compare(axs[c],times,tcmin,labels[c],names,energy_quant,energy_mult,colors,identify=identify_mat,\
 										identify_ind=identify_indmat[c],identify_markers=identify_markersmat[c])
 		else: # single sim plot
+			axs.axhline(0,linestyle='--',color='darkgrey')
 			axs = plot_energy_compare(axs,times,tcmin,labels[0],names,energy_quant,energy_mult,colors)
 		c+=1
 		os.chdir('..')
@@ -226,8 +228,8 @@ if __name__=='__main__':
 	identify_ind = [np.linspace(100,12000,8,dtype=int) for i in range(len(sims))]
 	identify_markers = [['o','s','v','^','<','>','X','D'] for i in range(len(sims))]
 	# # identify_markers = [['x']*len(identify_ind) for i in range(len(sims))]
-	# energy_compare(sims,labels,colors=['b','g','r','orange','m'],tmax=10,figname='time_scatter',identify_mat=[False,False,True,True,False],\
-	# 				identify_indmat=identify_ind,identify_markersmat=identify_markers)
+	energy_compare(sims,labels,colors=['b','g','r','orange','m'],tmax=10,figname='time_scatter',identify_mat=[False,False,True,True,False],\
+					identify_indmat=identify_ind,identify_markersmat=identify_markers)
 
 	# Gyro-resonance at times specified
 	gyro_time_compare(home,sims,identify_indmat=identify_ind,identify_markersmat=identify_markers,\
