@@ -47,6 +47,7 @@ def getKernelDoppler(sims,FT2darr,normspecies,wkmax=[10,25],logthresh=1.8,kernel
 		## calc gradients in image
 		# setup
 		sim_loc = getSimulation(sims[i])	
+		print(sim_loc)
 		d0 = sdfread(0)
 		times = read_pkl('times')
 		vA = getAlfvenVel(d0)

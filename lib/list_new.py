@@ -37,11 +37,11 @@ plt.tight_layout()
 plt.rcParams['axes.formatter.useoffset'] = False
 
 def formatting():
-	kwargs ={'interpolation':'nearest','origin':'lower','aspect':'auto'}
 	tnrfont = {'fontsize':20,'fontname':'Times New Roman'}
-	return kwargs, tnrfont
+	imkwargs = {'origin':'lower','interpolation':'none','aspect':'auto'}
+	return tnrfont, imkwargs
 
-kwargs, tnrfont = formatting()
+tnrfont, imkwargs = formatting()
 #---------------------------------------------------------------------------------------#
 #---------------------------------------------------------------------------------------#
 
@@ -791,7 +791,7 @@ def plot1d(d,varname):
 # plot 2d fieldmatrix in the layout T,X
 def plotMatrix(matrix,name='matrix_quantity',extents=[None,None,None,None],cbar=True,cmap='jet'):
 	fig,ax=plt.subplots(figsize=(8,4))
-	im = ax.imshow(matrix,extent=extents,**kwargs,cmap=cmap)
+	im = ax.imshow(matrix,extent=extents,**imkwargs,cmap=cmap)
 	if cbar:
 		fig.colorbar(im)
 	plotting(fig,ax,name)
@@ -971,7 +971,7 @@ def plotNormHeatmap(matrix,xlabel='x',ylabel='y',cbar_label='',extent=[None,None
 
 	# plot
 	fig,ax=plt.subplots(figsize=(8,6))
-	im = plt.imshow(matrix,**kwargs,extent=extent,cmap=cmap)
+	im = plt.imshow(matrix,**imkwargs,extent=extent,cmap=cmap)
 
 	# limits and labels
 	if cbar:
@@ -1074,7 +1074,7 @@ def plot1dTransform(FT_matrix,klim,tlim,klabel=r'$v_A/\Omega_D$',wlabel=r'$\Omeg
 	trFT = np.log10(FT_matrix[:][1:])
 	extent=[0, klim, 0, tlim]
 	fig, ax = plt.subplots(figsize=(8,8))
-	im = plt.imshow(trFT,**kwargs,extent=extent,cmap=cmap,clim=clim)
+	im = plt.imshow(trFT,**imkwargs,extent=extent,cmap=cmap,clim=clim)
 	
 	ax.set_xlabel(r'$k$'+klabel,**tnrfont) #need to change when normalising 
 	ax.set_ylabel(r'$t$'+wlabel+r'$/2\pi$',**tnrfont)
@@ -1112,7 +1112,7 @@ def plot2dTransform(FFT_matrix,klim,wlim,klabel=r'$v_A/\Omega_D$',wlabel=r'$\Ome
 	ax.set_ylabel(r'$\omega/$'+wlabel,fontsize=18)
 	# ax.set_xlim(0,klim)
 	# ax.set_ylim(0,wlim)
-	im = plt.imshow(tr,**kwargs,extent=extent,cmap=cmap,clim=clim)
+	im = plt.imshow(tr,**imkwargs,extent=extent,cmap=cmap,clim=clim)
 	del tr
 	if (cbar):
 		fig.colorbar(im)
@@ -1144,7 +1144,7 @@ def plotDispersion(transmatrix, klimlow, klimup, wlimlow, wlimup, cbar=False, cl
 	if (labels):
 		plt.xlabel('Wavenumber' + r' $[\omega_{c}/V_{A}]$',fontsize='15') #need to change when normalising 
 		plt.ylabel('Frequency' + r' $[\omega_{c}]$',fontsize='15') #need to change when normalising 
-	im = plt.imshow(tr,**kwargs,extent=extent,cmap='jet',clim=clim)#, clim = (-4.0,None))
+	im = plt.imshow(tr,**imkwargs,extent=extent,cmap='jet',clim=clim)#, clim = (-4.0,None))
 	if (cbar): # off by default
 		plt.colorbar()
 	del tr
@@ -2168,7 +2168,7 @@ def calcPowerICE(FT_2d, wlim, klim, wcyc, va, kwidth, wmax, kmax):
 #	tc_a = 2*const.PI/getCyclotronFreq(sdfread(0),min_species)
 #	L = getGridlen(sdfread(0))
 #	fig,ax=plt.subplots(figsize=(6,6))
-#	im = ax.imshow(np.log10(Smat),**kwargs,cmap=cmap,extent=[0,L,0,times[-1]/tc_a])
+#	im = ax.imshow(np.log10(Smat),**imkwargs,cmap=cmap,extent=[0,L,0,times[-1]/tc_a])
 #	ax.set_xlabel(r'$x$'+'  '+'[m]',fontsize=18)
 #	ax.set_ylabel(r'$t/\tau_{c\alpha}$',fontsize=18)
 #	if cbar: fig.colorbar(im, label=r'$log_{10}(\mathbf{S}_{mag})$')
@@ -2205,7 +2205,7 @@ def calcPowerICE(FT_2d, wlim, klim, wcyc, va, kwidth, wmax, kmax):
 #			vA = getAlfvenVel(d0)
 #			knorm = wnorm/vA
 #			fig,ax = plt.subplots(figsize=(8,2))
-#			ax.imshow(np.log10(FT2d),**kwargs,extent=[0,klim/knorm,0,wlim/wnorm])
+#			ax.imshow(np.log10(FT2d),**imkwargs,extent=[0,klim/knorm,0,wlim/wnorm])
 #			ax.set_xlim(0,in_klimprime)
 #			ax.set_ylim(0,wlim/wnorm)
 #			ax.set_xlabel(r'$kv_A/\Omega_D$',fontsize=18)
@@ -2617,7 +2617,7 @@ def ciggies(sim_loc,species_lst=['Deuterons','Alphas'],nval=10000,para=False,elo
 
 		# setup figure
 		fig,ax = plt.subplots(figsize=(8,8/const.g_ratio))
-		im = ax.imshow(np.log10(fSpecies.T),**kwargs,extent=extents,cmap='jet')
+		im = ax.imshow(np.log10(fSpecies.T),**imkwargs,extent=extents,cmap='jet')
 
 		# colorbar and labels
 		cbar = plt.colorbar(im)
@@ -2849,7 +2849,7 @@ def plotKernel(kGangle,dw,dk,vA,kernel='scharr'):
 	
 	# plot FT2d
 	fig,ax=plt.subplots(figsize=(8,6))
-	ax.imshow((FT2d),**kwargs,extent=[0,kmax/knorm,0,wmax/wnorm])
+	ax.imshow((FT2d),**imkwargs,extent=[0,kmax/knorm,0,wmax/wnorm])
 	kx = np.linspace(0,20,100)*knorm
 	# doppler shifted line 
 	for i in range(0,int(wmax/wnorm),1):
@@ -2918,7 +2918,7 @@ def getSpectrogram(fieldmatrix,times,majspec='Deuterons',minspec='Alphas',nfo=[1
 def plotSpectrogram(Spower,times,tnorm,nfft,noverlap,minspec='Alphas',clim=(None,None),cbar=True):
 	Spower = Spower[np.all(Spower!=0,axis=1)]
 	fig,ax=plt.subplots(figsize=(8,6))
-	im = ax.imshow(Spower,extent=[0,1,0,times[-1]/tnorm],**kwargs,clim=clim)
+	im = ax.imshow(Spower,extent=[0,1,0,times[-1]/tnorm],**imkwargs,clim=clim)
 	if cbar:
 		cbar = plt.colorbar(im)
 		cbar.set_label('Spectrogram Power',**tnrfont)

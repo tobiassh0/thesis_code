@@ -26,7 +26,7 @@ mpl.use('TkAgg')
 import matplotlib.pyplot as plt
 #plt.style.use('classic')
 #plt.tight_layout()
-kwargs, tnrfont = formatting()
+tnrfont, imkwargs = formatting()
 
 # confirmation message
 print('Core modules imported.')
