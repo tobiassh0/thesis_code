@@ -39,7 +39,7 @@ def getKernelDoppler(sims,FT2darr,normspecies,wkmax=[10,25],logthresh=1.8,kernel
 	if l == 1: l+=1
 	if plot:
 		fig1,ax1=plt.subplots(nrows=l,figsize=(6,4*len(sims)))
-		fig2,ax2=plt.subplots(nrows=3,ncols=l//3,figsize=(8,5))
+		fig2,ax2=plt.subplots(nrows=3,ncols=l//3,figsize=(9,6),sharex=True)
 		fig2.subplots_adjust(hspace=0.1,wspace=0.1)
 		ax2=ax2.ravel()
 	dsvarr=[] # 1d array of gradient in units of m/s per sim
@@ -76,6 +76,7 @@ def getKernelDoppler(sims,FT2darr,normspecies,wkmax=[10,25],logthresh=1.8,kernel
 		del ttFT2d # delete temp arr
 		# plt.imshow(FT2d,aspect='auto',origin='lower',extent=[0,wkmax[0],0,wkmax[1]])
 
+		""" Kernel gradient estimation (empirical)
 		# Kernel gradient map
 		_,kGangle = Kernel(FT2d,kernel=kernel) # list_new func : kernel = 'scharr' or 'sobel'
 
@@ -108,60 +109,66 @@ def getKernelDoppler(sims,FT2darr,normspecies,wkmax=[10,25],logthresh=1.8,kernel
 		dsv = bins[np.argmax(counts)] # doppler shift velocity, in units of vA
 		dsvarr.append([dsv*vA,dsv,vA])
 		print(kernel+' kernel max :: ', dsv)
-		karr = np.linspace(0,10,100)
-
-		# for i in range(20):
-		# 	plt.plot(karr,i+karr*dsv,color='k')
-		# plt.show()
-
+		"""
 		if plot:
-			# plot hist
-			counts,bins,_=ax1[i].hist(dw_dk,bins=1000,density=True,range=dwdkrange) # np.log10
-			ax1[i].set_ylabel('Normalised count',**tnrfont)
-			#dsva.append([dsv,vA])
+			# # plot hist
+			# counts,bins,_=ax1[i].hist(dw_dk,bins=1000,density=True,range=dwdkrange) # np.log10
+			# ax1[i].set_ylabel('Normalised count',**tnrfont)
+			# #dsva.append([dsv,vA])
 
 			# plot FT2d
-			ax2[i].imshow((tFT2d),**kwargs,extent=[0,wkmax[1],0,wkmax[0]])
+			im = ax2[i].imshow((tFT2d),**imkwargs,extent=[0,wkmax[1],0,wkmax[0]])
 			del tFT2d
-			kx = np.linspace(0,20,100)*knorm
-			kperp = np.sin(theta*const.PI/180)
-			uperp = 0.9; upara = 6.076
-			dsth = -(kperp*uperp)# + kpara*upara)
-			# print(dsv,(dsth+1))
+			# theory doppler line
+			Ep = const.qe*14.68e6
+			up = np.sqrt(2*Ep/(const.me_to_mp*const.me))
+			uperp = 0.9*vA
+			pitch_angle = np.arcsin(uperp/up)
+			dsth = (up/vA)*np.cos(89*const.PI/180)*np.cos(pitch_angle)
+
 			# doppler shifted line 
+			kx = np.linspace(0,20,100)*knorm
 			for j in range(0,int(wmax/wnorm),1):
-				w = wnorm*np.ones(len(kx))*j
-				# empirical
-				ww = w - (abs(dsv)*vA)*kx
-				ax2[i].plot(kx/knorm,ww/wnorm,color='white',linestyle='--')
-				# # theory
-				# tww = w - (abs(dsth+1)*vA)*kx
-				# ax2[i].plot(kx/knorm,tww/wnorm,color='white',linestyle='-.')
+				w = (j*wnorm)*np.ones(len(kx))
+				# # empirical
+				# ww = w - (abs(dsv)*vA)*kx
+				# ax2[i].plot(kx/knorm,ww/wnorm,color='white',linestyle='-.')
+				# theory
+				tww = w - (abs(dsth)*vA)*kx
+				ax2[i].plot(kx/knorm,tww/wnorm,color='white',linestyle='--')
 			ax2[i].set_xlim(0,20) # reduce plotting limits
 			ax2[i].set_ylim(0,10) # " " 
 			#ax2[i].set_ylabel(r'$\omega/$'+getOmegaLabel(normspecies),**tnrfont)
 			ax2[i].plot([0,10],[0,10],color='white',linestyle='--') # vA line
-			ax2[i].set_yticks([]) ; ax2[i].set_yticklabels([])
 			ax2[i].annotate(hlabels[i],xy=(5,8.7),xycoords='data',color='white',ha='center',va='bottom')
 			if i >= 2*len(sims)//3:
 				ax2[i].set_xticks([0,5,10,15]) ; ax2[i].set_xticklabels([0,5,10,15])
-				ax2[i].set_xlabel(r'$kv_A/\Omega_p$',**tnrfont)
 			else:
 				ax2[i].set_xticks([]) ; ax2[i].set_xticklabels([])
 			if i%3==0:
-				ax2[i].set_ylabel(r'$\omega/$'+getOmegaLabel(normspecies),**tnrfont)
 				ax2[i].set_yticks([0,2,4,6,8,10]) ; ax2[i].set_yticklabels([0,2,4,6,8,10])
+			else:
+				ax2[i].set_yticks([]) ; ax2[i].set_yticklabels([])
 
 	if plot:
 		## format edge axes
+		fig2.supylabel(r'$\omega/$'+getOmegaLabel(normspecies),**tnrfont,x=0.05)
+		fig2.supxlabel(r'$kv_A/\Omega_p$',**tnrfont,y=-0.03)
+
 		# ax2[len(ax2)//2].set_ylabel(r'$\omega/$'+getOmegaLabel(normspecies),**tnrfont)
 		# ax2[len(ax2)//2].set_yticks([0,2,4,6,8,10]) ; ax2[len(ax2)//2].set_yticklabels([0,2,4,6,8,10])
 		ax2[-1].set_xticks([0,5,10,15,20]) ; ax2[-1].set_xticklabels([0,5,10,15,20])
 		ax1[-1].set_xlabel(r'$d\omega/dk$'+'  '+r'$[v_A]$',**tnrfont)
 		# fig1.savefig('dw_dk_'+kernel+'_grad.png',bbox_inches='tight')
 		# ax2[-1].set_xlabel(r'$kv_A/\Omega_p$',**tnrfont)
-		# plt.show()
+
+		# add colorbar to ax2 (FT2d)
+		p00 = ax2[0].get_position().get_points().flatten()
+		p22 = ax2[-1].get_position().get_points().flatten()
+		ax2_cbar = fig2.add_axes([p00[0], 0.97, p22[2]-p00[0], 0.02]) # [left bottom width height]
+		cbar = plt.colorbar(im, cax=ax2_cbar, orientation='horizontal')
 		fig2.savefig(home+'/FT_2d_doppler_all.png',bbox_inches='tight')
+		# plt.show()
 	return np.array(dsvarr)
 
 def getIntegrateDoppler(sims,FT2darr,normspecies='Protons',wkmax=[20,20],logthresh=1.8):
@@ -241,7 +248,7 @@ def getIntegrateDoppler(sims,FT2darr,normspecies='Protons',wkmax=[20,20],logthre
 		fig,ax=plt.subplots(nrows=2,figsize=(6,8))
 		ax[0].plot(angles*180/const.PI,integ)
 		ax[0].plot([0,0],[0,maxangle],color='k',linestyle='--')
-		ax[1].imshow(FT2d,**kwargs,extent=[0,wkmax[1],0,wkmax[0]])
+		ax[1].imshow(FT2d,**imkwargs,extent=[0,wkmax[1],0,wkmax[0]])
 		# doppler shifted lines
 		dsv = np.tan(maxangle) * (dw/dk)/vA		
 		kx = np.linspace(0,wkmax[1],100)*knorm

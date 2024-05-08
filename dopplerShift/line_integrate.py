@@ -9,23 +9,23 @@ def LineBoxIntersection(Ys,Ye,Xn,Yn,XL,YL,theta):
             Ys, Ye : start and end point of line on y-axis
             Yn, Xn : offset of line mid-point
             YL, XL : total length of box in Y and X (pixel coordinates)
-            theta : positive angle clockwise from north [deg], represents 1/gradient of line
+            theta : positive angle clockwise from north [rad], represents 1/gradient of line
     """
     # +ve angle clockwise from north
-    Xs = (Ys-Yn)*np.tan(theta*np.pi/180)+Xn ; Xe = (Ye-Yn)*np.tan(theta*np.pi/180)+Xn
+    Xs = (Ys-Yn)*np.tan(theta)+Xn ; Xe = (Ye-Yn)*np.tan(theta)+Xn
     # check initial co-ordinates, if wrong then use other bounds 
     if Xs < 0:
         Xs = 0
-        Ys = Yn+((Xs-Xn)/np.tan(theta*np.pi/180))
+        Ys = Yn+((Xs-Xn)/np.tan(theta))
     if Xs > XL:
         Xs = XL
-        Ys = Yn+((Xs-Xn)/np.tan(theta*np.pi/180))
+        Ys = Yn+((Xs-Xn)/np.tan(theta))
     if Xe > XL:
         Xe = XL
-        Ye = Yn+((Xe-Xn)/np.tan(theta*np.pi/180)) 
+        Ye = Yn+((Xe-Xn)/np.tan(theta)) 
     if Xe < 0:
         Xe = 0
-        Ye = Yn+((Xe-Xn)/np.tan(theta*np.pi/180)) 
+        Ye = Yn+((Xe-Xn)/np.tan(theta)) 
     xlim = [Xs,Xe] ; ylim = [Ys,Ye]
     return np.array(xlim), np.array(ylim)
 
@@ -81,7 +81,7 @@ def line_integrate(Z,xposini=[],yposini=[],angles=[],rowlim=(-4,4),collim=(0,15)
         for j in range(len(angles)):
             # find intersection points between line and box (pixel coords)
             Ystart = Ny ; Yend = 0
-            xlim, ylim = LineBoxIntersection(Ystart,Yend,Xn,Yn,Nx,Ny,angles[j])
+            xlim, ylim = LineBoxIntersection(Ystart,Yend,Xn,Yn,Nx,Ny,angles[j]*180/np.pi)
             # lsize = np.sqrt((xlim[-1]-xlim[0])**2+(ylim[-1]-ylim[0])**2)
             # find data points along line
             x = np.linspace(xlim[0],xlim[1],int(lsize))

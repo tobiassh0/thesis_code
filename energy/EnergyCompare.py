@@ -16,6 +16,10 @@ def plot_energy_compare(ax,times,tcmin,label,names,energy_quant,energy_mult,colo
 		Out:
 			ax : the same axes (panel) plotted on
 	"""
+	# if not identifying, make false array len of No. energies plotting
+	if len(identify)==1:
+		identify = [False]*len(energy_quant)
+
 	# loop through each field and ion species
 	for i in range(len(energy_quant)):
 		Energy = read_pkl(energy_quant[i])*energy_mult[i]
@@ -114,12 +118,12 @@ def energy_compare(sims,labels,tmax=7,colors=None,mean_to=10,frac=1,figname='',\
 		print(identify_indmat,identify_markersmat)
 		print(identify_mat,identify_indmat[c],identify_markersmat[c])
 		if N!=1 or M!=1: # multiple sims plot
-			axs[c].axhline(0,linestyle='--',color='darkgrey')
 			axs[c] = plot_energy_compare(axs[c],times,tcmin,labels[c],names,energy_quant,energy_mult,colors,identify=identify_mat,\
 										identify_ind=identify_indmat[c],identify_markers=identify_markersmat[c])
+			axs[c].axhline(0,linestyle='--',color='darkgrey')
 		else: # single sim plot
-			axs.axhline(0,linestyle='--',color='darkgrey')
 			axs = plot_energy_compare(axs,times,tcmin,labels[0],names,energy_quant,energy_mult,colors)
+			axs.axhline(0,linestyle='--',color='darkgrey')
 		c+=1
 		os.chdir('..')
 
@@ -203,6 +207,7 @@ if __name__=='__main__':
 	from func_load import *
 	from mpl_toolkits.axes_grid1.inset_locator import zoomed_inset_axes
 	import copy
+
 	# # D-T
 	# os.chdir('/storage/space2/phrmsf/traceT')
 	# sims = np.sort([i for i in os.listdir() if 'traceT' in i])
@@ -228,10 +233,11 @@ if __name__=='__main__':
 	identify_ind = [np.linspace(100,12000,8,dtype=int) for i in range(len(sims))]
 	identify_markers = [['o','s','v','^','<','>','X','D'] for i in range(len(sims))]
 	# # identify_markers = [['x']*len(identify_ind) for i in range(len(sims))]
-	energy_compare(sims,labels,colors=['b','g','r','orange','m'],tmax=10,figname='time_scatter',identify_mat=[False,False,True,True,False],\
-					identify_indmat=identify_ind,identify_markersmat=identify_markers)
-
+	energy_compare(sims,labels,colors=['b','g','r','orange','m'],tmax=10,identify_mat=[False,False,True,True,False],\
+					identify_indmat=identify_ind,identify_markersmat=identify_markers,figname='time_scatter')
 	# Gyro-resonance at times specified
 	gyro_time_compare(home,sims,identify_indmat=identify_ind,identify_markersmat=identify_markers,\
 						multipanel=False,figname='singlepanel')
-
+	# sims = ['0_00_p_90']
+	# labels = ['0']
+	# energy_compare(sims,labels,colors=['b','g','r','orange','m'],tmax=10,figname='zero') # ,figname='time_scatter')
