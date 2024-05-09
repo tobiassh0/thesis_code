@@ -2,6 +2,72 @@
 from func_load import *
 import scipy
 
+def getdopgrad(FT2d,logthresh=1.8,norm=1,kernel='custom',dydxrange=(-0.5,0.5)):
+    """
+        Get doppler gradient in range of dydx space
+        Get this first from angles, then transfer to angle in terms of 
+        real coords as angles are noisy
+    """
+    # make copy of FT2d and thresh
+    tFT2d = FT2d.copy()
+    tFT2d[FT2d < logthresh] = 0
+    tFT2d[FT2d > logthresh] = 1
+    
+    # Kernel gradient map
+    _,kGangle = Kernel(tFT2d,kernel=kernel) # list_new func : kernel = 'scharr' or 'sobel'
+    # plt.imshow(kGangle,**imkwargs) ; plt.show()
+
+    # remove edge abberations
+    kGangle = kGangle[1:-1,1:-1]
+
+    # flatten to take hist
+    kGangle = kGangle.flatten()
+
+    # convert to all negative angles (easier to calc real gradient)
+    kGangle[kGangle>0] -= const.PI # phi = pi - theta
+    
+    # # remove gradients larger than 90deg (or limiting angle)
+    # kGangle = kGangle[np.abs(kGangle)<const.PI/2]
+
+    # convert grad from angle to velocity (convert +-inf to nan)
+    dydx = np.nan_to_num(np.tan(kGangle),posinf=np.nan,neginf=np.nan)
+    
+    # remove nan & zero values
+    dydx = dydx[~np.isnan(dydx)]
+    dydx = dydx[dydx!=0]
+
+    # normalise and get hist
+    dydx/=norm
+    counts,bins=np.histogram(dydx,bins=1000,range=dydxrange,density=True)
+    # plt.hist(dydx,bins=1000,range=dydxrange,density=True) ; plt.show()
+    
+    # only get negative gradients
+    # get grad and calc corresponding angle
+    grad = -np.abs(bins[np.argmax(counts)]) # negative gradient
+    angle = np.arctan(grad*norm)
+    # print(grad,angle*180/const.PI)
+
+    return grad, angle # radians 
+
+def getdoptheory(file0,Emin,wcmin,minspec,vA,uperp_vA=0.9):
+    """
+        file0 ; sdf read object
+        Emin ; MeV
+        wcmin ; 1/s
+        minspec ; name
+        vA ; m/s
+    """
+    # get minority birth uperp (in terms of vA)
+    theta_B,_ = getMagneticAngle(file0)
+    # get minority birth energy, mass and velocity
+    umin = np.sqrt(2*Emin*1e6*const.qe/getMass(minspec))
+    uperp = uperp_vA*vA
+    # get pitch angle
+    pitch_angle = np.arcsin(uperp/umin)
+    # get dsth
+    dsth = (umin/vA)*np.cos(theta_B)*np.cos(pitch_angle)
+    return dsth
+
 def LineBoxIntersection(Ys,Ye,Xn,Yn,XL,YL,theta):
     """
     Find intersection points between a line with eqn (Y-Yn)=(X-Xn)/tan(theta)

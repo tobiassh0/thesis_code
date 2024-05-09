@@ -169,7 +169,7 @@ def getKernelDoppler(sims,FT2darr,normspecies,wkmax=[10,25],logthresh=1.8,kernel
 		cbar = plt.colorbar(im, cax=ax2_cbar, orientation='horizontal')
 		fig2.savefig(home+'/FT_2d_doppler_all.png',bbox_inches='tight')
 		# plt.show()
-	return np.array(dsvarr)
+	return None # np.array(dsvarr)
 
 def getIntegrateDoppler(sims,FT2darr,normspecies='Protons',wkmax=[20,20],logthresh=1.8):
 	"""

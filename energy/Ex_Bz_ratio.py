@@ -47,7 +47,7 @@ def Ex_Bz(sims,xarr,sim0=[],minspec='Protons',mean_to=10,home=None):
         rxarr[i,:] = [xarr[i] for r in range(len(times))]
         ax[i].plot(times/tcmin,fratio[i,:],color='k')
         ax[i].axhline(1,color='r',linestyle='--')
-        ax[i].annotate(xarr[i],xy=(0.95,0.95),xycoords='axes fraction',va='top',ha='right')
+        ax[i].annotate("{:.0f}".format(xarr[i]),xy=(0.95,0.95),xycoords='axes fraction',va='top',ha='right')
     ax[0].set_ylim(0,2.5)
     ax[0].locator_params(axis='y',nbins=5)
     ax[0].locator_params(axis='x',nbins=6)

@@ -64,7 +64,7 @@ def PlotGyroResonance(home,duarr,sims,species=['Deuterons','Tritons'],norm_spec=
 			name = home+'/du_peak_vs_theory.png'
 		ax.set_ylabel(ylabel,**tnrfont) ; ax.set_xlabel(xlabel,**tnrfont)
 		ax.set_xlim(lims[0]) ; ax.set_ylim(lims[1])		
-		# fig.savefig(name,bbox_inches='tight')
+		fig.savefig(name,bbox_inches='tight')
 	else:
 		if identify:
 			ax.legend(labels,loc='best') #,ncol=len(labels))
@@ -72,7 +72,7 @@ def PlotGyroResonance(home,duarr,sims,species=['Deuterons','Tritons'],norm_spec=
 		ax.set_ylabel(ylabel,fontsize=24)
 		ax.set_xlabel(r'$t/$'+time_norm,**tnrfont)
 		fig.savefig(home+'/du_ratio_vs_time.png',bbox_inches='tight')
-	plt.show()
+	# plt.show()
 	return None
 
 # Plots and shows the experiment vs theory plot for the ratio between two species change in energy density
@@ -195,6 +195,8 @@ if __name__=='__main__':
 	# ylabel=r'$(\Delta u_{D}/\Delta u_{He3})$' + ' ' + r'$(\xi_{He3}/\xi_D)$'
 	duarr = majIons_edens_ratio(home,sims,species=['Deuterons','He3'],norm_spec='Protons')
 	print(duarr,duarr.shape)
-	# PlotGyroResonance(home,duarr,sims,species=['Deuterons','He3'],norm_spec='Protons',labels=hlabels,\
-	# 				  ylabel=ylabel,xlabel=xlabel,lims=((0,8),(0,8)),through_time=True,identify=True,time_norm=r'$\tau_{cp}$')
-	du_gyroratio(home,duarr,sims,species=['Deuterons','Helium3'],norm_spec='Protons',labels=hlabels)
+	
+	PlotGyroResonance(home,duarr,sims,species=['Deuterons','He3'],norm_spec='Protons',labels=hlabels,\
+					  ylabel=ylabel,xlabel=xlabel,lims=((0,8),(0,8)),through_time=False,identify=True,time_norm=r'$\tau_{cp}$')
+	
+	# du_gyroratio(home,duarr,sims,species=['Deuterons','Helium3'],norm_spec='Protons',labels=hlabels)

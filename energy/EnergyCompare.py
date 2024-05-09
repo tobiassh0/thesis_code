@@ -200,6 +200,7 @@ def gyro_time_compare(home,sims,identify_indmat,identify_markersmat,species=['De
 	plt.xlim(0,7)
 	plt.ylim(-1,22)
 	# plt.show() ; sys.exit()
+	ax.legend(labels,loc='best')
 	fig.savefig('gyro_resonance_{}.png'.format(figname),bbox_inches='tight')
 	return None
 
