@@ -3,6 +3,10 @@
 
 ## Folders  ##
 *~
+
+## txt files ##
+*.txt
+
 ## Backup py files ##
 *.pyc 
 
