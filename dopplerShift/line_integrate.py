@@ -66,7 +66,7 @@ def getdoptheory(file0,Emin,wcmin,minspec,vA,uperp_vA=0.9):
     pitch_angle = np.arcsin(uperp/umin)
     # get dsth
     dsth = (umin/vA)*np.cos(theta_B)*np.cos(pitch_angle)
-    return dsth
+    return dsth # normalised to vA
 
 def LineBoxIntersection(Ys,Ye,Xn,Yn,XL,YL,theta):
     """
