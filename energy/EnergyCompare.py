@@ -131,17 +131,19 @@ def energy_compare(sims,labels,tmax=7,colors=None,mean_to=10,frac=1,figname='',\
 	if N!=1 or M!=1: # multiple sims
 		axs[0].set_xlim(0,tmax)
 		axs[0].set_ylim(-250,100)
-		axs[0].set_ylabel(r'$\Delta u$'+'  ['+r'$Jm^{-3}$'+']',**tnrfont)
-		axs[len(axs)//2].set_ylabel(r'$\Delta u$'+'  ['+r'$Jm^{-3}$'+']',**tnrfont)
-		for n in range(int((M-1)*(N-1)+1),int(M*N)):
-			axs[n].set_xlabel(r'$t$'+getOmegaLabel(ionspecies[-1])+r'$/2\pi$',**tnrfont)
+		# axs[len(axs)//2].set_ylabel(r'$\Delta u$'+'  ['+r'$Jm^{-3}$'+']',**tnrfont)
+		# axs[0].set_ylabel(r'$\Delta u$'+'  ['+r'$Jm^{-3}$'+']',**tnrfont)
+		# for n in range(int((M-1)*(N-1)+1),int(M*N)):
+		# 	axs[n].set_xlabel(r'$t$'+getOmegaLabel(ionspecies[-1])+r'$/2\pi$',**tnrfont)
 	else: # single sim
 		axs.set_xlim(0,tmax)	
 		axs.set_ylim(-250,100)
-		axs.set_ylabel(r'$\Delta u$'+'  ['+r'$Jm^{-3}$'+']',**tnrfont)
-		axs.set_xlabel(r'$t$'+getOmegaLabel(ionspecies[-1])+r'$/2\pi$',**tnrfont)
+		# axs.set_ylabel(r'$\Delta u$'+'  ['+r'$Jm^{-3}$'+']',**tnrfont)
+		# axs.set_xlabel(r'$t$'+getOmegaLabel(ionspecies[-1])+r'$/2\pi$',**tnrfont)
 	legend = fig.legend(names,loc='upper center',ncol=len(energy_quant),bbox_to_anchor=(0.5,1.0),borderpad=0.1)
 	# plt.show()
+	fig.supylabel(r'$\Delta u$'+'  ['+r'$Jm^{-3}$'+']',**tnrfont,x=0.05)
+	fig.supxlabel(r'$t$'+getOmegaLabel(ionspecies[-1])+r'$/2\pi$',**tnrfont,y=-0.0125)
 	fig.savefig('energy_compare_{}.png'.format(figname),bbox_inches='tight')
 	return None
 
@@ -239,6 +241,8 @@ if __name__=='__main__':
 	# Gyro-resonance at times specified
 	gyro_time_compare(home,sims,identify_indmat=identify_ind,identify_markersmat=identify_markers,\
 						multipanel=False,figname='singlepanel')
+	# gyro_time_compare(home,sims,identify_indmat=identify_ind,identify_markersmat=identify_markers,\
+	# 					multipanel=True,figname='multi_panel')
 	# sims = ['0_00_p_90']
 	# labels = ['0']
 	# energy_compare(sims,labels,colors=['b','g','r','orange','m'],tmax=10,figname='zero') # ,figname='time_scatter')

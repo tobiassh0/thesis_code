@@ -52,7 +52,7 @@ def Ex_Bz(sims,xarr,sim0=[],minspec='Protons',mean_to=10,home=None):
     ax[0].locator_params(axis='y',nbins=5)
     ax[0].locator_params(axis='x',nbins=6)
     ax[0].set_xlim(0,times[-1]/tcmin)
-    fig.supxlabel(r'$t/\tau_{cp}$',**tnrfont)
+    fig.supxlabel(r'$t\Omega_p/2\pi$',**tnrfont)
     fig.supylabel(r'$(E_x^2/\Delta B_z^2)\epsilon_0\mu_0$',**tnrfont)
     fig.savefig(home+'Ex_Bz_time.png',bbox_inches='tight')
 
