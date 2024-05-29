@@ -1,63 +1,202 @@
 
 from func_load import *
 import energy.LarmorRadii as lr
+from scipy import stats
 
-def ciggie_vperp(restart_files,vA,spec,bins=100,theta=3.141/2,binrange=(0,0.2)):
-    # create empty array of size len(restart times) x No. bins
-    cig_mat = np.zeros((len(restart_files),bins))
-    # get mass
-    mass_spec = getMass(spec)
-    # loop through times
-    for i in range(len(restart_files)):
-        print(i,restart_files[i])
-        di = sdfread(restart_files[i])
-        # load velocities
-        Vx = getQuantity1d(di,'Particles_Px_'+spec)/mass_spec # getQuantity1d
-        Vy = getQuantity1d(di,'Particles_Py_'+spec)/mass_spec
-        Vz = getQuantity1d(di,'Particles_Pz_'+spec)/mass_spec
-        # perp
-        Vxperp = Vx*np.sin(theta)           # (1-(np.cos(theta)**2)*(np.cos(theta_y)**2))**0.5
-        Vyperp = Vy                         # (1-(np.cos(theta)**2)*(np.sin(theta_y)**2))**0.5
-        Vzperp = Vz*np.cos(theta)
-        Vperp = np.sqrt(np.mean(Vxperp**2 + Vyperp**2 + Vzperp**2))
-        print(Vperp)
-        cig_mat[i,:],_ = np.histogram(Vperp/vA,bins=bins,density=True,range=binrange)
-    return cig_mat
+""" TODO; parallelise loading velocities for each component, species and time
+def para_velocity_get(i,species=['Deuterons','He3']):
+    rstfl = sdfread(i)
+    VARR = []
+    for spec in species:
+        Vx=getQuantity1d(rstfl,'Particles_Px_'+spec)/getMass(spec)
+        Vy=getQuantity1d(rstfl,'Particles_Py_'+spec)/getMass(spec)
+        Vz=getQuantity1d(rstfl,'Particles_Pz_'+spec)/getMass(spec)
+        VARR.append([Vx,Vy,Vz])
+    return
 
-if __name__=='__main__':
+def para_velocity_hist(restart_files):
+    # pass indice of restart and both species, return vel component arrays size [nspec, ntimes, ndim, nbins] = [2, 25, 3, 100]
+    pool=mp.Pool(mp.cpu_count())
+    arr = np.array(pool.map_async(para_velocity_get,restart_files).get(99999))
+    pool.close()
+    pass
+"""
 
-    simloc = getSimulation('/storage/space2/phrmsf/lowres_D_He3/0_05_p_90')
+def getRowsCols(num):
+    N = 0
+    M = num
+    while N+1<=M:
+        N+=1
+        if num % N == 0:
+            M = num // N
+    return N, M
+
+def plotVelocityHist(home,sims,species,minspec='Protons',binrange=None,colors=['b','r','g'],labels=[''],num_bins=200,logyscale=True):
+    # if binrange == None:
+    #     binrange = (-0.15,0.15)
+    if len(colors)!=len(species):
+        colors = plt.cm.rainbow(np.linspace(0,1,len(species)))
+    if len(labels)!=len(sims):
+        labels=['']*len(sims)
+
+    for j in range(len(sims)):
+        print(sim+' :: {:.2f}%'.format(100*j/len(sims))) # index as %
+        simloc = getSimulation(home+sims[j])
+        times = read_pkl('times')
+        restart_files = lr.para_check_restart(simloc)
+        # load first file and parameters
+        d0 = sdfread(0)
+        B0 = getMeanField3D(d0,'Magnetic_Field_B')
+        theta,_ = getMagneticAngle(d0) # radians
+        vA = getAlfvenVel(d0)
+        tcmin = 2*const.PI/getCyclotronFreq(d0,minspec)
+        # setup figures
+        Nrows,Ncols=getRowsCols(len(restart_files))
+        figx,axx=plt.subplots(figsize=(3*Nrows,3*Ncols),nrows=Nrows,ncols=Ncols,sharey=True,sharex=True,layout='constrained')
+        figy,axy=plt.subplots(figsize=(3*Nrows,3*Ncols),nrows=Nrows,ncols=Ncols,sharey=True,sharex=True,layout='constrained')
+        figz,axz=plt.subplots(figsize=(3*Nrows,3*Ncols),nrows=Nrows,ncols=Ncols,sharey=True,sharex=True,layout='constrained')
+        axx = axx.ravel() ; axy = axy.ravel() ; axz = axz.ravel() # collapse into 1d arrays
+        # loop through times
+        for i in range(len(restart_files)):
+            print(i,restart_files[i])
+            # loop through species
+            for s in range(len(species)):
+                rstfl = sdfread(restart_files[i])
+                Vx=getQuantity1d(rstfl,'Particles_Px_'+species[s])/getMass(species[s])
+                Vy=getQuantity1d(rstfl,'Particles_Py_'+species[s])/getMass(species[s])
+                Vz=getQuantity1d(rstfl,'Particles_Pz_'+species[s])/getMass(species[s])
+                # histograms
+                _=axx[i].hist(Vx/vA,bins=num_bins,color=colors[s],edgecolor='none',alpha=0.35,density=True,range=binrange)
+                _=axy[i].hist(Vy/vA,bins=num_bins,color=colors[s],edgecolor='none',alpha=0.35,density=True,range=binrange)
+                _=axz[i].hist(Vz/vA,bins=num_bins,facecolor=colors[s],edgecolor='none',alpha=0.35,density=True,range=binrange)
+                # # KDEs # TODO; make this quicker
+                # Vxkde = stats.gaussian_kde(Vx)
+                # Vykde = stats.gaussian_kde(Vy)
+                # Vzkde = stats.gaussian_kde(Vz)
+                # axx[i].plot(varr,Vxkde(varr),color=colors[s])
+                # axy[i].plot(varr,Vykde(varr),color=colors[s])
+                # axz[i].plot(varr,Vzkde(varr),color=colors[s])
+            # annotate times
+            axx[i].annotate(r'${:.2f}$'.format(times[restart_files[i]]/tcmin)+r'$\tau_{cmin}$',xy=(0.95,0.95),xycoords='axes fraction',ha='right',va='top',**tnrfont)
+            axy[i].annotate(r'${:.2f}$'.format(times[restart_files[i]]/tcmin)+r'$\tau_{cmin}$',xy=(0.95,0.95),xycoords='axes fraction',ha='right',va='top',**tnrfont)
+            axz[i].annotate(r'${:.2f}$'.format(times[restart_files[i]]/tcmin)+r'$\tau_{cmin}$',xy=(0.95,0.95),xycoords='axes fraction',ha='right',va='top',**tnrfont)
+        logname = ''
+        if logyscale:
+            # log yscale
+            axx[0].set_yscale('log') # sharey=True so will account for all
+            axy[0].set_yscale('log')
+            axz[0].set_yscale('log')
+            logname='_log'
+        # vx plot save
+        figx.supxlabel(r'$v_x/v_A$',**tnrfont)
+        figx.supylabel('Normalised Count',**tnrfont)
+        figx.savefig(home+'Vx_hist_'+labels[j]+logname+'.pdf')
+        # vy plot save
+        figy.supxlabel(r'$v_y/v_A$',**tnrfont)
+        figy.supylabel('Normalised Count',**tnrfont)
+        figy.savefig(home+'Vy_hist_'+labels[j]+logname+'.pdf')
+        # vz plot save
+        figz.supxlabel(r'$v_z/v_A$',**tnrfont)
+        figz.supylabel('Normalised Count',**tnrfont)
+        figz.savefig(home+'Vz_hist_'+labels[j]+logname+'.pdf')
+    return None
+
+def plotVelocityScatter(home,sim,species='Protons'):
+    simloc = getSimulation(home+sim)
     times = read_pkl('times')
     restart_files = lr.para_check_restart(simloc)
-    # restart_files = [0]#,3000,6000,9000,12000]
-    d0 = sdfread(0)
-    B0 = getMeanField3D(d0,'Magnetic_Field_B')
-    theta,_ = getMagneticAngle(d0) # radians
-    vA = getAlfvenVel(d0)
+    mass = getMass(species)
+    vA = getAlfvenVel(sdfread(0))
+    tcspec = 2*const.PI/getCyclotronFreq(sdfread(0),species)
+    az=45 ; el=30 # degrees
+    for i in range(len(restart_files)):
+        fig=plt.figure()
+        ax=fig.add_subplot(projection='3d')
+        print('{:.2f}%'.format(100*i/len(restart_files))) # print progress
+        d = sdfread(restart_files[i])
+        Vx = getQuantity1d(d,'Particles_Px_'+species)/mass
+        Vy = getQuantity1d(d,'Particles_Py_'+species)/mass
+        Vz = getQuantity1d(d,'Particles_Pz_'+species)/mass
+        ax.plot(Vx/vA, Vy/vA, Vz/vA, ',k', alpha=0.25)
+        ax.view_init(elev=el,azim=az)
+        ax.set_title('{:.2f}'.format(times[restart_files[i]]/tcspec,**tnrfont)+r'$\tau_{c\sigma}$')
+        ax.set_xlabel(r'$v_x/v_A$',**tnrfont)
+        ax.set_ylabel(r'$v_y/v_A$',**tnrfont)
+        ax.set_zlabel(r'$v_z/v_A$',**tnrfont)
+        fig.savefig(home+'VelocityScatter_'+sim+'_'+str(int(restart_files[i]))+'.png')
+    plt.close('all') # close all open figs
+    return None
 
-    binrange=(0,0.1)
-    cig_mat = ciggie_vperp(restart_files,vA,spec='Deuterons',bins=1000,theta=theta,binrange=binrange)
-    plt.imshow((cig_mat.T),**imkwargs,cmap='jet',extent=[0,10,binrange[0],binrange[1]])
-    plt.show()
+if __name__=='__main__':
+    home = '/storage/space2/phrmsf/lowres_D_He3/'
+    sims = np.sort([i for i in os.listdir(home) if 'p_90' in i and '.pdf' not in i])[1:] # remove 0%
+    xiHe3 = [i.split('_')[1] for i in sims]
+    # plotVelocityScatter(home,sims[0],species='Protons')
+    plotVelocityHist(home,sims,['Protons'],minspec='Protons',colors=['g'],labels=xiHe3,num_bins=200,logyscale=True)
     sys.exit()
 
-    # loop through and get histogram of y-velocity
-    # N,M=(5,5)
-    # fig,ax=plt.subplots(figsize=(15,15),nrows=N,ncols=M,sharex=True,sharey=True)
-    # ax=ax.ravel()
-    for i in range(len(restart_files)):
-        print(i)
-        rstfl = sdfread(restart_files[i])
-        DVx  =np.sin(theta)*getQuantity1d(rstfl,'Particles_Px_Deuterons')/getMass('Deuterons')
-        DVy  =getQuantity1d(rstfl,'Particles_Py_Deuterons')/getMass('Deuterons')
-        DVz  =np.cos(theta)*getQuantity1d(rstfl,'Particles_Pz_Deuterons')/getMass('Deuterons')
-        He3Vx=np.sin(theta)*getQuantity1d(rstfl,'Particles_Px_He3')/getMass('He3')
-        He3Vy=getQuantity1d(rstfl,'Particles_Py_He3')/getMass('He3')
-        He3Vz=np.cos(theta)*getQuantity1d(rstfl,'Particles_Pz_He3')/getMass('He3')
-        _=plt.hist(DVx/vA,bins=100,color='b',alpha=0.45,density=True,range=(-0.2,0.2))
-        _=plt.hist(He3Vx/vA,bins=100,color='r',alpha=0.45,density=True,range=(-0.2,0.2))
-        _=plt.hist(He3Vx**2)
-    # fig.supylabel('Normalised Count',**tnrfont)
-    # fig.supxlabel(r'$v_y/v_A$',**tnrfont)
-    plt.show()
+    binrange=(-0.3,0.3)
+    N = 400
+    varr = np.linspace(binrange[0],binrange[1],N)
+    # loop through xiHe3, times, and species, get velocity components and plot as hist
+    species = ['Deuterons','He3']
+    colors = ['r','b']
+    for sim in sims:
+        xiHe3 = int(sim.split('_')[1])
+        print('SIM :: {}%'.format(xiHe3))
+        simloc = getSimulation(home+sim)
+        times = read_pkl('times')
+        restart_files = lr.para_check_restart(simloc)
+        # restart_files = [0]#,3000,6000,9000,12000]
+        d0 = sdfread(0)
+        B0 = getMeanField3D(d0,'Magnetic_Field_B')
+        theta,_ = getMagneticAngle(d0) # radians
+        vA = getAlfvenVel(d0)
+        tcp = 2*const.PI/getCyclotronFreq(d0,'Protons')
+        # setup figures
+        figx,axx=plt.subplots(figsize=(15,15),nrows=5,ncols=5,sharey=True,sharex=True,layout='constrained')
+        figy,axy=plt.subplots(figsize=(15,15),nrows=5,ncols=5,sharey=True,sharex=True,layout='constrained')
+        figz,axz=plt.subplots(figsize=(15,15),nrows=5,ncols=5,sharey=True,sharex=True,layout='constrained')
+        axx = axx.ravel() ; axy = axy.ravel() ; axz = axz.ravel() # collapse into 1d arrays
+        # loop through times
+        for i in range(len(restart_files)):
+            print(i,restart_files[i])
+            # loop through species
+            for s in range(len(species)):
+                rstfl = sdfread(restart_files[i])
+                Vx=getQuantity1d(rstfl,'Particles_Px_'+species[s])/getMass(species[s])
+                Vy=getQuantity1d(rstfl,'Particles_Py_'+species[s])/getMass(species[s])
+                Vz=getQuantity1d(rstfl,'Particles_Pz_'+species[s])/getMass(species[s])
+                # histograms
+                _=axx[i].hist(Vx/vA,bins=N,color=colors[s],edgecolor='none',alpha=0.35,density=True,range=binrange)
+                _=axy[i].hist(Vy/vA,bins=N,color=colors[s],edgecolor='none',alpha=0.35,density=True,range=binrange)
+                _=axz[i].hist(Vz/vA,bins=N,facecolor=colors[s],edgecolor='none',alpha=0.35,density=True,range=binrange)
+                # # KDEs # TODO; make this quicker
+                # Vxkde = stats.gaussian_kde(Vx)
+                # Vykde = stats.gaussian_kde(Vy)
+                # Vzkde = stats.gaussian_kde(Vz)
+                # axx[i].plot(varr,Vxkde(varr),color=colors[s])
+                # axy[i].plot(varr,Vykde(varr),color=colors[s])
+                # axz[i].plot(varr,Vzkde(varr),color=colors[s])
+            # annotate times
+            axx[i].annotate(r'${:.2f}$'.format(times[restart_files[i]]/tcp)+r'$\tau_{cp}$',xy=(0.95,0.95),xycoords='axes fraction',ha='right',va='top',**tnrfont)
+            axy[i].annotate(r'${:.2f}$'.format(times[restart_files[i]]/tcp)+r'$\tau_{cp}$',xy=(0.95,0.95),xycoords='axes fraction',ha='right',va='top',**tnrfont)
+            axz[i].annotate(r'${:.2f}$'.format(times[restart_files[i]]/tcp)+r'$\tau_{cp}$',xy=(0.95,0.95),xycoords='axes fraction',ha='right',va='top',**tnrfont)
+            # log yscale
+            axx[i].set_yscale('log')
+            axy[i].set_yscale('log')
+            axz[i].set_yscale('log')
+        # vx plot save
+        figx.supxlabel(r'$v_x/v_A$',**tnrfont)
+        figx.supylabel('Normalised Count',**tnrfont)
+        figx.savefig(home+'Vx_hist_'+str(xiHe3)+'%_log.pdf')
+        # vy plot save
+        figy.supxlabel(r'$v_y/v_A$',**tnrfont)
+        figy.supylabel('Normalised Count',**tnrfont)
+        figy.savefig(home+'Vy_hist_'+str(xiHe3)+'%_log.pdf')
+        # vz plot save
+        figz.supxlabel(r'$v_z/v_A$',**tnrfont)
+        figz.supylabel('Normalised Count',**tnrfont)
+        figz.savefig(home+'Vz_hist_'+str(xiHe3)+'%_log.pdf')
+    # plt.show()
 

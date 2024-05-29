@@ -3,7 +3,6 @@ import multiprocessing as mp # for parallelisation
 
 def para_loop_restart(i,check_species='Protons'):
     if 'Particles_Px_'+check_species in getKeys(sdfread(i)):
-        print(i)
         return i
     else:
         pass
@@ -14,7 +13,9 @@ def para_check_restart(simloc):
     rest_files = np.array(pool.map_async(para_loop_restart,list_sdf(simloc)).get(99999))
     pool.close()
     # remove None
-    return rest_files[rest_files != np.array(None)]
+    rest_files = rest_files[rest_files != np.array(None)]
+    print('Done :: {} files found.'.format(len(rest_files)))
+    return rest_files
 
 def linear_check_getVelocityPerp(restart_files,times,spec,mass_spec,theta,theta_y=3.1415/2):
     print('Linear loading velocities of {} for {} files...'.format(spec,len(restart_files)))
