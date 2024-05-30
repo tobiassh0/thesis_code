@@ -134,24 +134,11 @@ def getl4l5(l4=False,l5=True):
 def sdfread(index,d=0,l5=True,l4=False):
 	l4, l5 = getl4l5()
 	d = None
-	try: # try and load
-		if index==0:
-			try:
-				if l5: 
-					d=sdf.read(('%05d'%index)+'.sdf')
-				else:#then l4
-					d=sdf.read(('%04d'%index)+'.sdf')	
-			except:
-				index+=1
-				if l5: 
-					d=sdf.read(('%05d'%index)+'.sdf')
-				else:#then l4
-					d=sdf.read(('%04d'%index)+'.sdf')	
-		else: # index!=0
-			if l5: 
-				d=sdf.read(('%05d'%index)+'.sdf')
-			else:#then l4
-				d=sdf.read(('%04d'%index)+'.sdf')	
+	try:
+		if l5: 
+			d=sdf.read(('%05d'%index)+'.sdf')
+		else:#then l4
+			d=sdf.read(('%04d'%index)+'.sdf')	
 	except:
 		print('# ERROR # : Can\'t load {} sdf file'.format(index))
 	return d
