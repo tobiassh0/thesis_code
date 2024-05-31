@@ -40,47 +40,71 @@ def tracer_twoStream_test(loc):
     plt.savefig('trace_particle_ID_{}.png'.format(ID))
     return None
 
+def tracer_plotPhaseSpace(loc,species=['Deuterons'],colors=['k'],num_particles=10,plot=False,phasespace=False):
+    simloc=getSimulation(loc)
+    ind_lst=list_sdf(simloc)
+    xid = np.zeros((len(species),num_particles,len(ind_lst)))
+    vxid = np.zeros((len(species),num_particles,len(ind_lst)))
+    times = np.zeros(len(ind_lst))
+    IDarr = []
+    for k in range(len(species)):
+        for j in range(num_particles):
+            # load files
+            for i in range(0,len(ind_lst)):
+                d=sdfread(i)
+                times[i]+=d.__dict__['Header']['time']
+                # for k in getKeys(d): print(k)
+                id = getQuantity1d(d,'Particles_ID_subset_tracer_'+species[k])
+                if i == 0:
+                    ID = random.choice(id)
+                    IDarr.append(ID)
+                    print(ID)
+                index = np.where(id==ID)[0][0]
+                vx = d.__dict__['Particles_Px_subset_tracer_'+species[k]]
+                x = vx.grid.data[0]
+                xid[k,j,i] = x[index]
+                vxid[k,j,i]= vx.data[index]
+                if plot:
+                    if phasespace:
+                        # phase-space scatter
+                        plt.scatter(xid[k,j,i],vxid[k,j,i],color=colors[k],alpha=(i/len(ind_lst))**4) # deuterons (blue)
+            if plot:
+                if phasespace:
+                    # phase-space lines
+                    plt.plot(xid[k,j,:],vxid[k,j,:],'-k',alpha=0.5) # color
+                else:
+                    # velocity through time
+                    plt.plot(ind_lst,vxid[k,:,:],color=colors[k])
+    return xid, vxid, times/(num_particles*len(species)), IDarr
+
 if __name__=='__main__': 
     # # test two stream case
     # tracer_twoStream_test(loc='/home/space/phrmsf/Documents/EPOCH/epoch_ID/epoch1d/tracer')
+
+    # D_He3 5% tracer test case
     home = '/home/space/phrmsf/Documents/EPOCH/epoch_ID/epoch1d/D_He3_tracer'
-    simloc=getSimulation(home)
-    ind_lst = list_sdf(simloc)
-    name1 = 'Deuterons' ; name2 = 'He3'
-    # ID of "name" particle you want to track
-    ID = 35 # default but should choose based on subset
-    # load files
-    for j in range(10):
-        x1id = []
-        vx1id = []
-        x2id = []
-        vx2id = []
-        for i in range(0,len(ind_lst)-1):
-            d=sdfread(i)
-            # for k in getKeys(d): print(k)
-            id1 = getQuantity1d(d,'Particles_ID_subset_tracer_'+name1)
-            id2 = getQuantity1d(d,'Particles_ID_subset_tracer_'+name2)
-            if i == 0:
-                ID1 = random.choice(id1)
-                ID2 = random.choice(id2)
-                print(ID1, ID2)
-            index1 = np.where(id1==ID1)[0][0]
-            index2 = np.where(id2==ID2)[0][0]
-            vx1 = d.__dict__['Particles_Px_subset_tracer_'+name1]
-            vx2 = d.__dict__['Particles_Px_subset_tracer_'+name2]
-            x1 = vx1.grid.data[0]
-            x2 = vx2.grid.data[0]
-            x1id.append(x1[index1])
-            vx1id.append(vx1.data[index1])
-            x2id.append(x2[index2])
-            vx2id.append(vx2.data[index2])
-            # phase-space scatter
-            plt.scatter(x1id[-1],vx1id[-1],color='b',alpha=(i/len(ind_lst))**4) # deuterons (blue)
-            plt.scatter(x2id[-1],vx2id[-1],color='r',alpha=(i/len(ind_lst))**4) # helium3 (red)
-        # phase-space lines
-        plt.plot(x1id,vx1id,'-k',alpha=0.5)
-        plt.plot(x2id,vx2id,'-k',alpha=0.5)
-        # # velocity through time
-        # plt.plot(ind_lst[:-1],vx1id,color='b')
-        # plt.plot(ind_lst[:-1],vx2id,color='r')
+    species = ['Deuterons','He3']
+    colors = ['b','r']
+    xid,vxid,times,_=tracer_plotPhaseSpace(loc=home,species=species,colors=colors,plot=True,phasespace=True,num_particles=5)
     plt.show()
+    print(xid.shape,vxid.shape)
+    wcp=(const.qe*3.7/getMass('Protons'))
+    tcp = 2*const.PI/wcp
+    # # plot first species, first tracked particle, all time
+    # plt.plot(times/tcp,xid[0,0,:])
+    # plt.show()
+    # # plot first species, all tracked particles, all time
+    # for i in range(xid.shape[1]):
+    #     plt.plot(times/tcp,xid[0,i,:]-np.mean(xid[0,i,:10]))
+    # plt.show()
+    # # summated FFT spectra on all particles
+    # timestep = (times[-1]-times[0])/len(times)
+    # n=vxid[0,0,:].size
+    # fnyq=0.5*2*const.PI/timestep
+    # freq=np.linspace(-fnyq,fnyq,n) 
+    # FFT=0
+    # for i in range(vxid.shape[1]):
+    #     print(i)
+    #     pre=np.fft.fft(vxid[0,i,:])
+    #     FFT+=np.fft.fftshift(pre)
+    # plt.plot(freq/wcp,np.log10(np.abs(FFT))) ; plt.show()

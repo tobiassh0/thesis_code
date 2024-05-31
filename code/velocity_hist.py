@@ -57,18 +57,19 @@ def plotVelocityKDE(home,sim,species='Protons',color='r',dims=['x','y','z'],name
     rootv = np.zeros(len(restart_files))
     # loop through each time
     for i in range(len(restart_files)):
-        V2=0
+        V=[]
         print(i,restart_files[i])
         # loop through dimensions
         for j in range(len(dims)):
             rstfl = sdfread(restart_files[i])
-            V2+=(getQuantity1d(rstfl,'Particles_P'+dims[j]+'_'+species)/getMass(species))**2
+            V.append(getQuantity1d(rstfl,'Particles_P'+dims[j]+'_'+species)/getMass(species))
+        V=np.array(V).flatten()
         # KDE on total velocities
-        V = V2**(0.5)
         Vkde = stats.gaussian_kde(V/vA)
-        varr = np.linspace(min(V),max(V),num_bins)
+        varr = np.linspace(-2*vA,10*vA,num_bins) # np.min(V),np.max(V)
         dist = Vkde(varr/vA)
         ax[i].plot(varr/vA,dist,color=color)
+        """
         # get gradient of dist
         grad_dist = np.gradient(dist,(varr[-1]-varr[0])/(vA*num_bins))
         ax[i].plot(varr/vA,grad_dist,color='k',zorder=2)
@@ -76,6 +77,7 @@ def plotVelocityKDE(home,sim,species='Protons',color='r',dims=['x','y','z'],name
         vmin, grad_min = root_find(varr/vA,grad_dist)
         rootv[i] = vmin*vA
         ax[i].scatter(vmin,grad_min,color='r',edgecolor='none',zorder=3)
+        """
         # gridlines
         ax[i].grid(True)
         # ax[i].axhline(0,linestyle='--',color='darkgrey',zorder=1)
@@ -83,12 +85,12 @@ def plotVelocityKDE(home,sim,species='Protons',color='r',dims=['x','y','z'],name
                         xycoords='axes fraction',ha='right',va='top',**tnrfont)
     # plot save
     figname = '_'.join([species,name,logname,'.pdf'])
-    fig.supxlabel(r'$|\mathbf{v}|/v_A$',**tnrfont)
-    fig.supylabel('KDE (green) ; Gradient (black)',**tnrfont)
-    ax[-1].set_xlim(6.4,6.6)
+    fig.supxlabel(r'$\mathbf{v}/v_A$',**tnrfont)
+    fig.supylabel('KDE',**tnrfont) # (green) ; Gradient (black)
+    # ax[-1].set_xlim(6.4,6.6)
     fig.savefig(home+'V_KDEgrad_'+figname)
     plt.clf()
-    plt.plot(restart_files,rootv,'-o') ; plt.show()
+    # plt.plot(restart_files,rootv,'-o') ; plt.show()
     return None
 
 def plotVelocitydimKDE(home,sim,species='Protons',color='r',dims=['x','y','z'],name='',logname='',num_bins=200):
@@ -246,9 +248,11 @@ def plotVelocityScatter(home,sim,species='Protons'):
 if __name__=='__main__':
     home = '/storage/space2/phrmsf/lowres_D_He3/'
     sims = np.sort([i for i in os.listdir(home) if 'p_90' in i and '.pdf' not in i])[1:] # remove 0%
-    xiHe3 = ['Protons_'+i.split('_')[1] for i in sims]
-    # plotVelocityScatter(home,sims[0],species='Protons')
-    plotVelocitydimKDE(home,sims[0],species='Protons',color='g',dims=['z'],name='5%',num_bins=1000)
+    xiHe3 = [str(int(i.split('_')[1]))+'%' for i in sims] # 'Protons_'+
+    for i in range(len(sims)):
+        print(sims[i])
+        plotVelocityKDE(home,sims[i],species='Protons',color='g',dims=['x','y','z'],name=xiHe3[i],num_bins=1500)
     sys.exit()
-    plotVelocityKDE(home,sims[0],species='Protons',color='g',dims=['x','y','z'],name='5%',num_bins=1000)
-    plotVelocityHist(home,sims,['Protons'],minspec='Protons',colors=['g'],labels=xiHe3,num_bins=200,logyscale=True)
+    # plotVelocityScatter(home,sims[0],species='Protons')
+    # plotVelocitydimKDE(home,sims[0],species='Protons',color='g',dims=['z'],name='5%',num_bins=1000)
+    # plotVelocityHist(home,sims,['Protons'],minspec='Protons',colors=['g'],labels=xiHe3,num_bins=200,logyscale=True)
