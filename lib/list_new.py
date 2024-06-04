@@ -2319,7 +2319,7 @@ def energies(sim_loc,frac=1,plot=False,leg=True,integ=False,linfit=False,electro
 	try:
 		times=read_pkl('times')
 	except:
-		times = batch_getTimes(np.zeros(len(read_pkl('Exenergy'))),1,len(read_pkl('Exenergy'))-1) # janky approach, only used for testing and when times.pkl hasn't been made
+		times = batch_getTimes(np.zeros(len(read_pkl('Exenergy'))),1,len(read_pkl('Exenergy'))-1) # TODO; janky approach, only used for testing and when times.pkl hasn't been made
 	n = (len(index_list)//frac)
 	
 	#################################
@@ -2507,7 +2507,7 @@ def paraVelocity(INDEX):
 	return np.sqrt(2*getQuantity1d(sdfread(index),'Derived_Average_Particle_Energy_'+species)/mSpec)
 
 # quote "cigarette plots", which show the distribution of velocity/energy normalised to the  
-def ciggies(sim_loc,species_lst=['Deuterons','Alphas'],nval=10000,para=False,eload=True,vload=False,logo=False):
+def ciggies(sim_loc,species_lst=['Deuterons','Alphas'],nval=10000,para=False,eload=True,vload=False,logo=False,dump=True):
 	if logo: # print the ciggies logo # made this because I could
 		import pyfiglet
 		print(pyfiglet.figlet_format('===#  --  @@@',font='letters',justify='center',width=110))
@@ -2551,6 +2551,7 @@ def ciggies(sim_loc,species_lst=['Deuterons','Alphas'],nval=10000,para=False,elo
 				fSpecies = read_pkl(figname+species)
 				fload = True
 			except:
+				print('# FAILED #')
 				fload = False
 		# check if fload is possible
 		if fload:
@@ -2570,6 +2571,7 @@ def ciggies(sim_loc,species_lst=['Deuterons','Alphas'],nval=10000,para=False,elo
 				if eload:
 					matSpecies = read_pkl(species+'_KEdensmatrix')/dens
 			except: # didn't load, calculate instead
+				print('# FAILED #')
 				if eload:
 					matSpecies,_ = getEnergies([species+'_KEdens'],[species],Nt,dump=True)/dens # loads energy density matrix of species
 				if vload:
@@ -2584,7 +2586,8 @@ def ciggies(sim_loc,species_lst=['Deuterons','Alphas'],nval=10000,para=False,elo
 						for t in range(Nt):
 							if int(100*t/Nt)%5==0:print(100*t/Nt, ' %')
 							matSpecies[t,:] = np.sqrt(2*getQuantity1d(sdfread(t),'Derived_Average_Particle_Energy_'+species)/massSpecies)		
-					dumpfiles(matSpecies,'v_'+species)
+					if dump:
+						dumpfiles(matSpecies,'v_'+species)
 			# normalise
 			matSpecies = matSpecies/matnorm
 			matmin  = np.min(matSpecies) ; matmax = np.max(matSpecies) ; matmean = np.mean(matSpecies)
@@ -2596,7 +2599,8 @@ def ciggies(sim_loc,species_lst=['Deuterons','Alphas'],nval=10000,para=False,elo
 				yarr = matSpecies[t,:]
 				fSpecies[t,:],_,_ = np.histogram2d(xarr,yarr,range=[[0,L],[matmin,matmax]],bins=(1,nval),density=True)
 			# dump distribution matrix
-			dumpfiles(fSpecies,figname+species)
+			if dump:
+				dumpfiles(fSpecies,figname+species)
 
 		# extents of matrix per species
 		extents = [0,T,matmin,matmax]
