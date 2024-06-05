@@ -116,7 +116,7 @@ class Simulation():
 		# energy_int = 0
 
 	### PLOT CIGARETTE PLOTS ###
-		ciggies(self.sim_file_loc,species_lst=getAllSpecies(self.file0),para=False) # doesnt return anything
+		ciggies(self.sim_file_loc,species_lst=getAllSpecies(self.file0),para=False,nval=100) # doesnt return anything
 
 	### FOURIER TRANSFORMS ###
 		self.klim = 0.5*2*const.PI*self.Nx/self.L
@@ -259,6 +259,7 @@ class Simulation():
 
 
 if __name__ == '__main__':
-	#simloc = '/storage/space2/phrmsf/ECRH/ECRH_JT60U_6'#lowres_D_He3/0_05_p_90'
-	simloc = '/storage/space2/phrmsf/lowres_D_He3/energy_protons/1MEV/' #traceT/90deg'
+	# simloc = '/storage/space2/phrmsf/ECRH/ECRH_JT60U_6'#lowres_D_He3/0_05_p_90'
+	# simloc = '/storage/space2/phrmsf/lowres_D_He3/energy_protons/1MEV/' #traceT/90deg'
+	simloc = '/storage/space2/phrmsf/lowres_D_He3/tracer_0_05/'
 	Simulation(simloc)

@@ -3,8 +3,15 @@ from func_load import *
 from matplotlib.collections import LineCollection
 import matplotlib.colors as colors
 import energy.LarmorRadii as lr
+import collections
+import itertools
 
-# import random
+
+# makes dict of allids (shuffled) and a linear index (0-->len(px))
+# finds linear index of tracked ids in allids using dict key
+def track_IDS(linear_index,allids,trackids=[None]):
+    result = dict(zip(allids,linear_index))
+    return np.array([result[idx] for idx in trackids])
 
 def tracer_twoStream_test(loc):
     simloc=getSimulation(loc)
@@ -42,42 +49,59 @@ def tracer_twoStream_test(loc):
     plt.savefig('trace_particle_ID_{}.png'.format(ID))
     return None
 
-def tracer_plotPhaseSpace(loc,species=['Deuterons'],colors=['k'],num_particles=10,plot=False,phasespace=False):
-    simloc=getSimulation(loc)
-    ind_lst=list_sdf(simloc)
-    xid = np.zeros((len(species),num_particles,len(ind_lst)))
-    vxid = np.zeros((len(species),num_particles,len(ind_lst)))
-    times = np.zeros(len(ind_lst))
-    IDarr = []
+def tracer_getXPX(loc,species=['Deuterons'],minspec=['Protons'],colors=['k'],num_particles=10,plot=False,phasespace=False):
+    # load sim & set constants
+    sim=getSimulation(loc)
+    d0=sdfread(0)
+    tcmin=2*const.PI/getCyclotronFreq(d0,'Protons')
+    # find files where ID is output
+    restart_files=lr.para_check_restart(sim) # list_sdf(sim)
+    # setup empty arrays for positions, momentum & times
+    xid = np.zeros((len(species),num_particles,len(restart_files)))
+    pxid = np.zeros((len(species),num_particles,len(restart_files)))
+    times = np.zeros(len(restart_files))
+    # setup which particles to initially track by randomly choosing
+    IDarr = np.zeros((len(species),num_particles)) # array of IDs shape [No. species, No. particles to follow]
     for k in range(len(species)):
-        for j in range(num_particles):
-            # load files
-            for i in range(0,len(ind_lst)):
-                d=sdfread(i)
-                times[i]+=d.__dict__['Header']['time']
-                # for k in getKeys(d): print(k)
-                id = getQuantity1d(d,'Particles_ID_subset_tracer_'+species[k])
-                if i == 0:
-                    ID = random.choice(id)
-                    IDarr.append(ID)
-                    print(ID)
-                index = np.where(id==ID)[0][0]
-                vx = d.__dict__['Particles_Px_subset_tracer_'+species[k]]
-                x = vx.grid.data[0]
-                xid[k,j,i] = x[index]
-                vxid[k,j,i]= vx.data[index]
-                if plot:
-                    if phasespace:
-                        # phase-space scatter
-                        plt.scatter(xid[k,j,i],vxid[k,j,i],color=colors[k],alpha=(i/len(ind_lst))**4) # deuterons (blue)
-            if plot:
-                if phasespace:
-                    # phase-space lines
-                    plt.plot(xid[k,j,:],vxid[k,j,:],'-k',alpha=0.5) # color
-                else:
-                    # velocity through time
-                    plt.plot(ind_lst,vxid[k,:,:],color=colors[k])
-    return xid, vxid, times/(num_particles*len(species)), IDarr
+        tid = getQuantity1d(d0,'Particles_ID_'+species[k])
+        IDarr[k,:] = np.random.choice(tid,num_particles,replace=False)
+    # loop through each time, find particle and append array with position and x-momentum (TODO; extend to py & pz)
+    for i in range(len(restart_files)):
+        print("{:.4f}%".format(100*i/len(restart_files)))
+        di=sdfread(restart_files[i])
+        times[i]=di.__dict__['Header']['time']
+        for k in range(len(species)):
+            px=di.__dict__['Particles_Px_'+species[k]]
+            x=px.grid.data[0]
+            ids=getQuantity1d(di,'Particles_ID_'+species[k])
+            linear_index=np.arange(0,len(ids),1)
+            indices=track_IDS(linear_index=linear_index,allids=ids,trackids=IDarr[k,:]) # shape: [No. particles]
+            for j in range(num_particles): # len(indices)
+                index=indices[j]
+                pxid[k,j,i]=px.data[index]
+                xid[k,j,i]=x[index]
+    # plotting scripts
+    if plot:
+        if phasespace:
+            for k in range(len(species)):
+                for j in range(num_particles):
+                    for i in range(len(times)):
+                        plt.scatter(xid[k,j,i],pxid[k,j,i],color=colors[k],alpha=i/len(times)**4)
+            plt.xlabel(r'$x$'+'  '+r'$[m]$',**tnrfont)
+            plt.ylabel(r'$p_x$'+'  '+r'$[kgms^{-2}]$',**tnrfont)
+            plt.legend(species,loc='best')
+            plt.savefig('track_phase_space.png')
+        else: # velocity space 
+            for k in range(len(species)):
+                for j in range(num_particles):
+                    plt.plot(times/tcmin,pxid[k,j,:],color=colors[k])
+            plt.xlabel(r'$t/\tau_{c\sigma}$',**tnrfont)
+            plt.ylabel(r'$p_x$'+'  '+r'$[kgms^{-2}]$',**tnrfont)
+            plt.legend(species,loc='best')
+            plt.savefig('track_momentum_time.png')
+
+    return times, xid, pxid, IDarr
+
 
 def tracer_plot3dPhaseSpace(loc,species=['Deuterons','He3'],colors=['b','r'],num_particles=10):
     sim=getSimulation(loc)
@@ -127,6 +151,7 @@ def tracer_plot3dPhaseSpace(loc,species=['Deuterons','He3'],colors=['b','r'],num
     ax.set_zlabel(r'$p_x$'+'  '+r'$[kgm/s^{-2}]$',**tnrfont)
     plt.show()
     fig.savefig('tracer_D_He3_phase_time.png',bbox_inches='tight')
+    
     return None
 
 
@@ -134,34 +159,35 @@ if __name__=='__main__':
     # # test two stream case
     # tracer_twoStream_test(loc='/home/space/phrmsf/Documents/EPOCH/epoch_ID/epoch1d/tracer')
 
-    # D_He3 5% tracer test case
-    home = '/home/space/phrmsf/Documents/EPOCH/epoch_ID/epoch1d/D_He3_tracer'
-    species = ['Deuterons','He3']
-    colors = ['b','r']
-    tracer_plot3dPhaseSpace(loc=home,num_particles=20)
-    sys.exit()
+    # # D_He3 5% tracer test case
+    # home = '/home/space/phrmsf/Documents/EPOCH/epoch_ID/epoch1d/D_He3_tracer'
+    # species = ['Deuterons']#,'He3']
+    # colors = ['b','r']
+    # tracer_plot3dPhaseSpace(loc=home,num_particles=20)
+    # times,xid,pxid,_=tracer_getXPX(loc=home,species=species,colors=colors,plot=True,phasespace=False,num_particles=1)
+    # # plt.show()
 
-    xid,vxid,times,_=tracer_plotPhaseSpace(loc=home,species=species,colors=colors,plot=True,phasespace=True,num_particles=5)
-    plt.show()
-    print(xid.shape,vxid.shape)
-    wcp=(const.qe*3.7/getMass('Protons'))
-    tcp = 2*const.PI/wcp
-
-    # # plot first species, first tracked particle, all time
-    # plt.plot(times/tcp,xid[0,0,:])
-    # plt.show()
-    # # plot first species, all tracked particles, all time
-    # for i in range(xid.shape[1]):
-    #     plt.plot(times/tcp,xid[0,i,:]-np.mean(xid[0,i,:10]))
-    # plt.show()
-    # # summated FFT spectra on all particles
-    # timestep = (times[-1]-times[0])/len(times)
-    # n=vxid[0,0,:].size
-    # fnyq=0.5*2*const.PI/timestep
-    # freq=np.linspace(-fnyq,fnyq,n) 
-    # FFT=0
-    # for i in range(vxid.shape[1]):
-    #     print(i)
-    #     pre=np.fft.fft(vxid[0,i,:])
-    #     FFT+=np.fft.fftshift(pre)
-    # plt.plot(freq/wcp,np.log10(np.abs(FFT))) ; plt.show()
+    # # D_He3 high res tracers
+    home = '/storage/space2/phrmsf/lowres_D_He3/tracer_0_05/'
+    species=['Deuterons','He3']
+    colors=['b','r']
+    num_particles = 1 # particles to track for each species
+    times,xid,pxid,_=tracer_getXPX(loc=home,species=species,colors=colors,plot=True,phasespace=False,num_particles=num_particles)
+    # Find FT
+    dt = (times[-1]-times[0])/len(times)
+    wnyq=0.5*2*const.PI/dt
+    freq=np.linspace(-wnyq,wnyq,len(times))/getCyclotronFreq(sdfread(0),'Protons')
+    # loop through each species and particle id
+    fig,ax=plt.subplots(figsize=(10,6),nrows=len(species))
+    for k in range(len(species)):
+        for j in range(num_particles):
+            window=np.hanning(len(pxid[k,j,:]))
+            FT=np.fft.fftshift(
+                np.fft.fft(window*pxid[k,j,:])
+                )
+            ax[k].plot(freq,np.abs(FT),color=colors[k])
+        ax[k].set_ylabel('FT magnitude',**tnrfont)
+        ax[k].set_xlim(0) # set minimum above 0
+    fig.supxlabel(r'$\omega/\Omega_p$',**tnrfont)
+    fig.savefig('FT_momentum.png',bbox_inches='tight')
+    plt.clf()
