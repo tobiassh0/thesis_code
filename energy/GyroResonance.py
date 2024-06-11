@@ -4,7 +4,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 def PlotGyroResonance(home,duarr,sims,species=['Deuterons','Tritons'],norm_spec='Alphas',through_time=False,identify=False,lims=((0,1),(0,1)),labels='',\
-					  ylabel=r'$[\Delta u_1/\Delta u_2]_{max}$',xlabel=r'$(\xi_1/\xi_2)(m_2/m_1)(q_1/q_2)^2$',time_norm=r'$\tau_{cD}$'):
+					  ylabel=r'$[\Delta u_1/\Delta u_2]_{max}$',xlabel=r'$(\xi_1/\xi_2)(m_2/m_1)(q_1/q_2)^2$',time_norm=r'$\tau_{cD}$',figname=''):
 	"""
 		IN:
 			duarr 			: shape (len(sims), len(species), len(times))
@@ -59,9 +59,9 @@ def PlotGyroResonance(home,duarr,sims,species=['Deuterons','Tritons'],norm_spec=
 			import matplotlib as mpl
 			mpl.rc('font',family='Times New Roman')
 			ax.legend(labels,loc='best',fontsize=16)
-			name = home+'/du_peak_vs_theory_label.png'
+			name = home+'/du_peak_vs_theory_label_{}.png'.format(figname)
 		else:
-			name = home+'/du_peak_vs_theory.png'
+			name = home+'/du_peak_vs_theory_{}.png'.format(figname)
 		ax.set_ylabel(ylabel,**tnrfont) ; ax.set_xlabel(xlabel,**tnrfont)
 		ax.set_xlim(lims[0]) ; ax.set_ylim(lims[1])		
 		fig.savefig(name,bbox_inches='tight')
@@ -71,8 +71,8 @@ def PlotGyroResonance(home,duarr,sims,species=['Deuterons','Tritons'],norm_spec=
 		ax.axhline((marr[1]/marr[0])*(qarr[0]/qarr[1])**2,linestyle='--',color='k')
 		ax.set_ylabel(ylabel,fontsize=24)
 		ax.set_xlabel(r'$t/$'+time_norm,**tnrfont)
-		fig.savefig(home+'/du_ratio_vs_time.png',bbox_inches='tight')
-	# plt.show()
+		fig.savefig(home+'/du_ratio_vs_time_{}.png'.format(figname),bbox_inches='tight')
+	plt.show()
 	return None
 
 # Plots and shows the experiment vs theory plot for the ratio between two species change in energy density

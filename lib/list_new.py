@@ -1260,8 +1260,8 @@ def getMagneticAngle(d0):
 			phi_x = const.PI/2
 		else:
 			phi_x = float(input('B0 angle to xhat [deg]::'))*(const.PI/180)
-		phi_y = const.PI/2
-	return phi_x, phi_y # will return 90 degrees for phi_y # hard-coded
+		phi_y = 0 # const.PI/2
+	return phi_x, phi_y # will return 0 degrees for phi_y # hard-coded
 
 def coldplasmadispersion_analytical(omegas,wpf=[None,None,None],wcf=[None,None,None],theta=None):
 	"""

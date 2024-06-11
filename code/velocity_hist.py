@@ -39,7 +39,7 @@ def root_find(x,y,search_between=(6.45,6.5)):
     minyarg = np.where(y==yminval)[0][0]
     return x[minyarg], y[minyarg]
 
-def plotVelocityKDE(home,sim,species='Protons',color='r',dims=['x','y','z'],name='',logname='',num_bins=200):
+def plotVelocityKDE(home,sim,species=['Protons'],colors=['r'],dims=['x','y','z'],name='',logname='',num_bins=200):
     simloc = getSimulation(home+sim)
     times = read_pkl('times')
     restart_files = lr.para_check_restart(simloc)
@@ -48,7 +48,7 @@ def plotVelocityKDE(home,sim,species='Protons',color='r',dims=['x','y','z'],name
     B0 = getMeanField3D(d0,'Magnetic_Field_B')
     theta,_ = getMagneticAngle(d0) # radians
     vA = getAlfvenVel(d0)
-    tcspec = 2*const.PI/getCyclotronFreq(d0,species)
+    tcspec = 2*const.PI/getCyclotronFreq(d0,species[-1])
     # setup one fig
     Nrows,Ncols=getRowsCols(len(restart_files))
     fig,ax=plt.subplots(figsize=(3*Nrows,3*Ncols),nrows=Nrows,ncols=Ncols,sharey=True,sharex=True,layout='constrained')
@@ -59,16 +59,19 @@ def plotVelocityKDE(home,sim,species='Protons',color='r',dims=['x','y','z'],name
     for i in range(len(restart_files)):
         V=[]
         print(i,restart_files[i])
-        # loop through dimensions
-        for j in range(len(dims)):
-            rstfl = sdfread(restart_files[i])
-            V.append(getQuantity1d(rstfl,'Particles_P'+dims[j]+'_'+species)/getMass(species))
+        # loop through species:
+        for k in range(len(species)):
+            # loop through dimensions
+            for j in range(len(dims)):
+                rstfl = sdfread(restart_files[i])
+                V.append(getQuantity1d(rstfl,'Particles_P'+dims[j]+'_'+species[k])/getMass(species[k]))
         V=np.array(V).flatten()
-        # KDE on total velocities
-        Vkde = stats.gaussian_kde(V/vA)
-        varr = np.linspace(-2*vA,10*vA,num_bins) # np.min(V),np.max(V)
-        dist = Vkde(varr/vA)
-        ax[i].plot(varr/vA,dist,color=color)
+        ax[i].hist(V/vA,bins=num_bins,density=True,range=(-1.5,1.5),edgecolor='none')
+        # # KDE on total velocities
+        # Vkde = stats.gaussian_kde(V/vA)
+        # varr = np.linspace(-2*vA,2*vA,num_bins) # np.min(V),np.max(V)
+        # dist = Vkde(varr/vA)
+        # ax[i].plot(varr/vA,dist,color=colors[k])
         """
         # get gradient of dist
         grad_dist = np.gradient(dist,(varr[-1]-varr[0])/(vA*num_bins))
@@ -84,7 +87,7 @@ def plotVelocityKDE(home,sim,species='Protons',color='r',dims=['x','y','z'],name
         ax[i].annotate(r'${:.2f}$'.format(times[restart_files[i]]/tcspec)+r'$\tau_{c\sigma}$',xy=(0.95,0.95),\
                         xycoords='axes fraction',ha='right',va='top',**tnrfont)
     # plot save
-    figname = '_'.join([species,name,logname,'.pdf'])
+    figname = '_'.join([str(len(species)),name,logname,'.pdf'])
     fig.supxlabel(r'$\mathbf{v}/v_A$',**tnrfont)
     fig.supylabel('KDE',**tnrfont) # (green) ; Gradient (black)
     # ax[-1].set_xlim(6.4,6.6)
@@ -249,9 +252,11 @@ if __name__=='__main__':
     home = '/storage/space2/phrmsf/lowres_D_He3/'
     sims = np.sort([i for i in os.listdir(home) if 'p_90' in i and '.pdf' not in i])[1:] # remove 0%
     xiHe3 = [str(int(i.split('_')[1]))+'%' for i in sims] # 'Protons_'+
+    species=['Deuterons','He3','Protons']
+    colors=['b','g','r']
     for i in range(len(sims)):
         print(sims[i])
-        plotVelocityKDE(home,sims[i],species='Protons',color='g',dims=['x','y','z'],name=xiHe3[i],num_bins=1500)
+        plotVelocityKDE(home,sims[i],species=species,colors=colors,dims=['x'],name=xiHe3[i]+'_bulkandring',num_bins=1000)
     sys.exit()
     # plotVelocityScatter(home,sims[0],species='Protons')
     # plotVelocitydimKDE(home,sims[0],species='Protons',color='g',dims=['z'],name='5%',num_bins=1000)
