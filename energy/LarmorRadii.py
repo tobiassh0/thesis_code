@@ -72,6 +72,7 @@ def plotChangeEnergyLarmorRatio(home,sims,species,minspec='Protons',labels=[''],
 
 def plotChangeLarmorRadius(home,sims,species=['Deuterons','He3'],minspec='Protons',labels=[''],colors=['b','r']):
     for i in range(len(sims)):
+        print(sims[i])
         simloc=getSimulation(home+sims[i])
         d0=sdfread(0)
         times=read_pkl('times')
@@ -108,6 +109,7 @@ def plotChangeLarmorRadius(home,sims,species=['Deuterons','He3'],minspec='Proton
         plt.title(labels[i]+"%",**tnrfont)
         plt.legend(species,loc='best')
         plt.savefig(home+'Delta_LarmorRadiiSquared_'+labels[i]+'.png')
+        plt.clf()
     return None
 
 if __name__=='__main__':
