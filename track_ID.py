@@ -106,13 +106,16 @@ def tracer_getXPX(loc,species=['Deuterons'],minspec='Protons',colors=['k'],num_p
                 for j in range(num_particles):
                     # rL=np.abs(pxid[k,j,:])/(3.7*const.qe*getChargeNum(species[k]))
                     # wavelength = vA/wcmin #rL
-                    plt.plot(xid[k,j,:],pxid[k,j,:]/mass_spec,',k',alpha=0.1)
+                    plt.plot(xid[k,j,:]-xid[k,j,0],(pxid[k,j,:]-pxid[k,j,0])/mass_spec,colors[k]+'-',alpha=0.1)
+                    # plt.plot(xid[k,j,:],pxid[k,j,:]/mass_spec,',k',alpha=0.1)
                     # for i in range(len(times)):
                     #     plt.scatter(xid[k,j,i],pxid[k,j,i],color=colors[k],alpha=i/len(times)**4)
             plt.xlabel(r'$x$'+'  '+r'$[m]$',**tnrfont)
             plt.ylabel(r'$v_x$'+'  '+r'$[ms^{-1}]$',**tnrfont)
             plt.legend(species,loc='best')
+            plt.show()
             plt.savefig('track_phase_space_{}.png'.format(figname),bbox_inches='tight')
+            plt.clf()
         else: # velocity space 
             if d_momentum:
                 for k in range(len(species)):
@@ -199,13 +202,13 @@ if __name__=='__main__':
     # times,xid,pxid,_=tracer_getXPX(loc=home,species=species,colors=colors,plot=True,phasespace=False,num_particles=1)
     # # plt.show()
 
-    # # D_He3 high res tracers
+    # D_He3 high res tracers
     home = '/storage/space2/phrmsf/lowres_D_He3/tracer_0_05/'
-    species=['Protons']#'Deuterons','He3'] #,'Protons']
-    colors=['g']#'b','r'] #,'k']
+    species=['Deuterons','He3'] #,'Protons']
+    colors=['b','r'] #,'g']
     num_particles = 1000 # particles to track for each species
     times,xid,pxid,_=tracer_getXPX(loc=home,species=species,colors=colors,plot=True,num_particles=num_particles,\
-                                    figname='protons',d_position=True,d_momentum=True,weighted_IDs=True)
+                                    figname='delta_phase_DHe3',phasespace=True,weighted_IDs=True) # d_position=True,d_momentum=True,
 
     sys.exit()
 
