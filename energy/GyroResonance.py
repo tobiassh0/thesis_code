@@ -183,20 +183,28 @@ if __name__=='__main__':
 	# PlotGyroResonance(home,duarr,sims,species=['Deuterons','Tritons'],norm_spec='Alphas',labels=hlabels,\
 	# 				  ylabel=ylabel,xlabel=xlabel,lims=((0,1),(0,1)),through_time=False,identify=False,time_norm=r'$\tau_{cD}$')
 	
-	# D-He3
-	home = '/storage/space2/phrmsf/lowres_D_He3/'
-	sims = np.sort([i for i in os.listdir(home) if 'p_90' in i])[1:]
-	print(sims)
-	hlabels = np.array([int(i[2:4]) for i in sims])
-	# standard
-	xlabel=r'$(\xi_{D}/\xi_{He3})(m_{He3}/m_{D})(q_{D}/q_{He3})^2$'
-	ylabel=r'$[\Delta u_{D}/\Delta u_{He3}]_{max}$'
-	# # through-time
-	# ylabel=r'$(\Delta u_{D}/\Delta u_{He3})$' + ' ' + r'$(\xi_{He3}/\xi_D)$'
-	duarr = majIons_edens_ratio(home,sims,species=['Deuterons','He3'],norm_spec='Protons')
-	print(duarr,duarr.shape)
+	# # D-He3
+	# home = '/storage/space2/phrmsf/lowres_D_He3/'
+	# sims = np.sort([i for i in os.listdir(home) if 'p_90' in i])[1:]
+	# print(sims)
+	# hlabels = np.array([int(i[2:4]) for i in sims])
+	# # standard
+	# xlabel=r'$(\xi_{D}/\xi_{He3})(m_{He3}/m_{D})(q_{D}/q_{He3})^2$'
+	# ylabel=r'$[\Delta u_{D}/\Delta u_{He3}]_{max}$'
+	# # # through-time
+	# # ylabel=r'$(\Delta u_{D}/\Delta u_{He3})$' + ' ' + r'$(\xi_{He3}/\xi_D)$'
+	# duarr = majIons_edens_ratio(home,sims,species=['Deuterons','He3'],norm_spec='Protons')
+	# print(duarr,duarr.shape)
+	# PlotGyroResonance(home,duarr,sims,species=['Deuterons','He3'],norm_spec='Protons',labels=hlabels,\
+	# 				  ylabel=ylabel,xlabel=xlabel,lims=((0,8),(0,8)),through_time=False,identify=True,time_norm=r'$\tau_{cp}$')
+	# # du_gyroratio(home,duarr,sims,species=['Deuterons','Helium3'],norm_spec='Protons',labels=hlabels)
+
+	# p-B11
+	home = '/storage/space2/phrmsf/'
+	sims = ['p_B11']
+	xlabel=r'$(\xi_{p}/\xi_{B11})(m_{B11}/m_{p})(q_{p}/q_{B11})^2$'
+	ylabel=r'$[\Delta u_{p}/\Delta u_{B11}]_{max}$'
+	duarr = majIons_edens_ratio(home,sims,species=['Protons','B11'],norm_spec='Alphas')
+	PlotGyroResonance(home,duarr,sims,species=['Protons','B11'],norm_spec='Alphas',labels=[],xlabel=xlabel,ylabel=ylabel,\
+						through_time=True,identify=False,time_norm=r'$\tau_{c\alpha}$')
 	
-	PlotGyroResonance(home,duarr,sims,species=['Deuterons','He3'],norm_spec='Protons',labels=hlabels,\
-					  ylabel=ylabel,xlabel=xlabel,lims=((0,8),(0,8)),through_time=False,identify=True,time_norm=r'$\tau_{cp}$')
-	
-	# du_gyroratio(home,duarr,sims,species=['Deuterons','Helium3'],norm_spec='Protons',labels=hlabels)
