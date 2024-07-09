@@ -11,8 +11,9 @@ def PlotGyroResonance(home,duarr,sims,species=['Deuterons','Tritons'],norm_spec=
 			ylabel			: self exp.
 			xlabel			: self exp.
 			labels			: the labels of each simulation (i.e. concentration %), valid if identify=True
-			identify		: identifies each simulation and annotates/plots a legend box (default False)
-			through_time	: determines whether you plot a through_time or 1:1 du ratio (default False)
+			identify		: boolean : identifies each simulation and annotates/plots a legend box (default False)
+			through_time	: boolean : determines whether you plot a through_time or 1:1 du ratio (default False)
+			lims 			: limits on the gyro-resonance theory plot, should be equal in x and y
 		OUT:
 			None
 	"""
