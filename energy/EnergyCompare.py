@@ -147,91 +147,12 @@ def energy_compare(sims,labels,tmax=7,colors=None,mean_to=10,frac=1,figname='',\
 	fig.savefig('energy_compare_{}.png'.format(figname),bbox_inches='tight')
 	return None
 
-def gyro_time_compare(home,sims,identify_indmat,identify_markersmat,species=['Deuterons','He3','Protons'],mean_to=10,multipanel=True,\
-					figname='multiple_times',plot_du=True,lims=(-1,22)):
-	"""
-		DESCRIPTION HERE
-		IN:
-			param1			: desc
-			param2 			: desc
-		OUT:
-			param1			: desc 
-	"""
-	getSimulation(home+sims[0])
-	times = read_pkl('times')*getCyclotronFreq(sdfread(0),species[-1])/(2*const.PI) # normalised
-	labels = ["{:.2f}".format(times[i]) for i in identify_ind[0]]
-	m1 = getMass(species[0]) ; m2 = getMass(species[1]) 
-	q1 = getChargeNum(species[0]) ; q2 = getChargeNum(species[1])
-	if multipanel:
-		fig,ax=plt.subplots(nrows=1+(len(sims)-1)//4,ncols=4,figsize=(12,6),sharex=True,sharey=True)
-		fig.subplots_adjust(hspace=0.075,wspace=0.075)
-		ax=ax.ravel()
-		colors = ['k']*len(sims)
-		alphas = [1]*len(identify_ind[0])
-	else:
-		fig,ax=plt.subplots(figsize=(6,4))
-		if plot_du:
-			ax.plot([0,10],[0,10],color='darkgrey',linestyle='--',linewidth=0.5,zorder=0)
-		else:
-			ax.axhline((m2/m1)*(q1/q2)**2,color='darkgrey',linestyle='--',zorder=0)
-		colors = plt.cm.rainbow(np.linspace(0,1,len(sims)))
-		alphas = [1]*len(identify_ind[0]) #np.linspace(0.5,1,len(identify_ind[0]))
-	# loop through each sim (concentration)
-	for i in range(len(sims)):
-		print(i)
-		getSimulation(home+sims[i])
-		xi1,xi2,_ = getConcentrationRatios(sdfread(0))
-		times=read_pkl('times')
-		# load energy densities
-		u1 = read_pkl(species[0]+'_KEdens')
-		u2 = read_pkl(species[1]+'_KEdens')
-		du1_du2 = (u1-np.mean(u1[:mean_to]))/(u2-np.mean(u2[:mean_to]))
-		for j in range(len(identify_ind[i])): # time
-			if multipanel:
-				axj = ax[j]
-				ax[i].annotate(r'$t/\tau_{cp}=$'+labels[i],xy=(0.05,0.85),xycoords='axes fraction',fontsize=16,fontname='Times New Roman')
-			else:
-				axj = ax
-				if plot_du:
-					axj.scatter([(xi1/xi2)*(m2/m1)*(q1/q2)**2],du1_du2[identify_ind[i][j]],marker=identify_markers[i][j],\
-								zorder=1,facecolor=colors[i],edgecolor='none',s=30,alpha=alphas[j])
-				else: # plot kinetic energy per-particle
-					axj.scatter([xi2],(xi2/xi1)*du1_du2[identify_ind[i][j]],marker=identify_markers[i][j],\
-								zorder=1,facecolor=colors[i],edgecolor='none',s=30,alpha=alphas[j])
-		# plt.axhline((const.me_to_He3/const.me_to_mD)*(1/4),color='k')
-		os.chdir('..')
-	if multipanel: 
-		xoff = 0.075 ; yoff = -0.01
-		fig.supylabel(r'$\Delta u_D(t)/\Delta u_{He3}(t)$',x=xoff,**tnrfont)
-		fig.supxlabel(r'$(\xi_{D}/\xi_{He3})(m_{He3}/m_D)(q_D/q_{He3})^2$',y=yoff,**tnrfont)
-		figname = 'multipanel'
-		ax.legend(labels,loc='best')
-	else:
-		if plot_du:
-			# xoff = 0.05 ; yoff = -0.05
-			ax.set_ylabel(r'$\Delta u_D(t)/\Delta u_{He3}(t)$',**tnrfont)
-			ax.set_xlabel(r'$(\xi_{D}/\xi_{He3})(m_{He3}/m_D)(q_D/q_{He3})^2$',**tnrfont)
-			figname = 'singlepanel_du'
-			ax.set_xlim(lims) ; ax.set_ylim(lims)
-		else:
-			ax.set_ylabel(r'$\Delta E_D(t)/\Delta E_{He3}(t)$',**tnrfont)
-			ax.set_xlabel(r'$\xi_{He3}$',**tnrfont)
-			figname = 'singlepanel_dE'
-		# axcopy = copy.copy(ax)
-		# axinset = zoomed_inset_axes(ax, 0.25, loc=1)
-		# axinset.add_artist(axcopy)
-		# axinset.set_xlim(0.05,0.4)
-		# axinset.set_ylim(-0.15,0.4)
-	# plt.xlim(0,7)
-	# plt.ylim(-1,22)
-	# plt.show() ; sys.exit()
-	fig.savefig('gyro_resonance_{}.png'.format(figname),bbox_inches='tight')
-	return None
 
 if __name__=='__main__':
 	from func_load import *
 	from mpl_toolkits.axes_grid1.inset_locator import zoomed_inset_axes
 	import copy
+	import GyroResonance as gr
 
 	# # D-T
 	# os.chdir('/storage/space2/phrmsf/traceT')
@@ -260,10 +181,10 @@ if __name__=='__main__':
 	energy_compare(sims,labels,colors=['b','g','r','orange','m'],tmax=10,identify_mat=[False,False,True,True,False],\
 					identify_indmat=identify_ind,identify_markersmat=identify_markers,figname='time_scatter')
 	# gyro-resonance at times specified, single panel
-	gyro_time_compare(home,sims,identify_indmat=identify_ind,identify_markersmat=identify_markers,\
+	gr.gyro_time_compare(home,sims,identify_indmat=identify_ind,identify_markersmat=identify_markers,\
 						multipanel=False,figname='singlepanel')
 	# multi-panel
-	# gyro_time_compare(home,sims,identify_indmat=identify_ind,identify_markersmat=identify_markers,\
+	# gr.gyro_time_compare(home,sims,identify_indmat=identify_ind,identify_markersmat=identify_markers,\
 	# 					multipanel=True,figname='multi_panel')
 
 	# single sim energy compare
