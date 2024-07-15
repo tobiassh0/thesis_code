@@ -32,8 +32,8 @@ def plot_energy_compare(ax,times,tcmin,label,names,energy_quant,energy_mult,colo
 			for j in range(len(identify_ind)):
 				ax.scatter(times[identify_ind[j]]/tcmin,dEnergy[identify_ind[j]],marker=identify_markers[j],zorder=2,\
 							s=50,label='_nolegend_',edgecolor='k',facecolor='none')#colors[i])
-				ax.axvline(times[identify_ind[j]]/tcmin,color='k',linestyle='--',alpha=0.1,zorder=1)
-	ax.annotate(int(label),xy=(0.1,0.9),xycoords='axes fraction',ha='left',va='bottom')
+				ax.axvline(times[identify_ind[j]]/tcmin,color='k',linestyle='--',alpha=0.1,zorder=1,label='_nolegend_')
+		ax.annotate(int(label),xy=(0.1,0.9),xycoords='axes fraction',ha='left',va='bottom')
 	return ax
 
 def energy_compare(sims,labels,tmax=7,colors=None,mean_to=10,frac=1,figname='',\
@@ -81,7 +81,7 @@ def energy_compare(sims,labels,tmax=7,colors=None,mean_to=10,frac=1,figname='',\
 		identify_markersmat = [[None] for i in range(len(sims))]
 
 	# setup figure with N rows and M columns
-	fig,axs=plt.subplots(nrows=int(M),ncols=int(N),figsize=(12,12),sharex=True,sharey=True)
+	fig,axs=plt.subplots(nrows=int(M),ncols=int(N),figsize=(6,10),sharex=True,sharey=True)
 	if N != 1 or M != 1: # multiple sims
 		fig.subplots_adjust(hspace=0.075,wspace=0.075)
 		axs=axs.ravel() # unravel axes
@@ -140,9 +140,9 @@ def energy_compare(sims,labels,tmax=7,colors=None,mean_to=10,frac=1,figname='',\
 		axs.set_ylim(-250,100)
 		# axs.set_ylabel(r'$\Delta u$'+'  ['+r'$Jm^{-3}$'+']',**tnrfont)
 		# axs.set_xlabel(r'$t$'+getOmegaLabel(ionspecies[-1])+r'$/2\pi$',**tnrfont)
-	legend = fig.legend(names,loc='upper center',ncol=len(energy_quant),bbox_to_anchor=(0.5,1.0),borderpad=0.1)
-	fig.supylabel(r'$\Delta u$'+'  ['+r'$Jm^{-3}$'+']',**tnrfont,x=0.04)
-	fig.supxlabel(r'$t$'+getOmegaLabel(ionspecies[-1])+r'$/2\pi$',**tnrfont,y=0.04)
+	legend = fig.legend(names,loc='upper center',ncol=len(energy_quant),bbox_to_anchor=(0.5,0.97),borderpad=0.1)
+	fig.supylabel(r'$\Delta u$'+'  ['+r'$Jm^{-3}$'+']',**tnrfont,x=-0.05)
+	fig.supxlabel(r'$t$'+getOmegaLabel(ionspecies[-1])+r'$/2\pi$',**tnrfont,y=0.03)
 	# plt.show()
 	fig.savefig('energy_compare_{}.png'.format(figname),bbox_inches='tight')
 	return None

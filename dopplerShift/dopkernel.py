@@ -1,15 +1,6 @@
 
-### General process of doppler shift is a linear trend if the frequency (y-axis) due to the wavenumber (x-axis)
-## un-commenting will reveal this graphically with a simple example  
-#x = np.arange(0,100,0.01)
-#for i in range(0,30,2):
-#	y = np.ones(len(x))*i
-#	yds = y - x
-#	plt.plot(x,yds,color='k',alpha=1-i/30)
-#plt.show()
-
 from func_load import *
-import matplotlib.pyplot as plt
+
 
 def getKernelDoppler(sims,FT2darr,normspecies,wkmax=[10,25],logthresh=1.8,kernel='custom',dwdkrange=(-0.5,0.5),labels=[None],\
 							theta=86.3,plot=False,home=None):
@@ -76,7 +67,14 @@ def getKernelDoppler(sims,FT2darr,normspecies,wkmax=[10,25],logthresh=1.8,kernel
 		del ttFT2d # delete temp arr
 		# plt.imshow(FT2d,aspect='auto',origin='lower',extent=[0,wkmax[0],0,wkmax[1]])
 
-		""" Kernel gradient estimation (empirical)
+        """ theory doppler line """
+        # Ep = const.qe*14.68e6
+        # up = np.sqrt(2*Ep/(const.me_to_mp*const.me))
+        # uperp = 0.9*vA
+        # pitch_angle = np.arcsin(uperp/up)
+        # dsth = (up/vA)*np.cos(89*const.PI/180)*np.cos(pitch_angle)
+
+        """ Kernel gradient estimation (empirical) """
 		# Kernel gradient map
 		_,kGangle = Kernel(FT2d,kernel=kernel) # list_new func : kernel = 'scharr' or 'sobel'
 
@@ -109,7 +107,7 @@ def getKernelDoppler(sims,FT2darr,normspecies,wkmax=[10,25],logthresh=1.8,kernel
 		dsv = bins[np.argmax(counts)] # doppler shift velocity, in units of vA
 		dsvarr.append([dsv*vA,dsv,vA])
 		print(kernel+' kernel max :: ', dsv)
-		"""
+
 		if plot:
 			# # plot hist
 			# counts,bins,_=ax1[i].hist(dw_dk,bins=1000,density=True,range=dwdkrange) # np.log10
@@ -119,23 +117,17 @@ def getKernelDoppler(sims,FT2darr,normspecies,wkmax=[10,25],logthresh=1.8,kernel
 			# plot FT2d
 			im = ax2[i].imshow((tFT2d),**imkwargs,extent=[0,wkmax[1],0,wkmax[0]])
 			del tFT2d
-			# theory doppler line
-			Ep = const.qe*14.68e6
-			up = np.sqrt(2*Ep/(const.me_to_mp*const.me))
-			uperp = 0.9*vA
-			pitch_angle = np.arcsin(uperp/up)
-			dsth = (up/vA)*np.cos(89*const.PI/180)*np.cos(pitch_angle)
 
 			# doppler shifted line 
 			kx = np.linspace(0,20,100)*knorm
 			for j in range(0,int(wmax/wnorm),1):
 				w = (j*wnorm)*np.ones(len(kx))
-				# # empirical
-				# ww = w - (abs(dsv)*vA)*kx
-				# ax2[i].plot(kx/knorm,ww/wnorm,color='white',linestyle='-.')
-				# theory
-				tww = w - (abs(dsth)*vA)*kx
-				ax2[i].plot(kx/knorm,tww/wnorm,color='white',linestyle='--')
+				# empirical
+				ww = w - (abs(dsv)*vA)*kx
+				ax2[i].plot(kx/knorm,ww/wnorm,color='white',linestyle='-.')
+				# # theory
+				# tww = w - (abs(dsth)*vA)*kx
+				# ax2[i].plot(kx/knorm,tww/wnorm,color='white',linestyle='--')
 			ax2[i].set_xlim(0,20) # reduce plotting limits
 			ax2[i].set_ylim(0,10) # " " 
 			#ax2[i].set_ylabel(r'$\omega/$'+getOmegaLabel(normspecies),**tnrfont)
@@ -171,109 +163,16 @@ def getKernelDoppler(sims,FT2darr,normspecies,wkmax=[10,25],logthresh=1.8,kernel
 		# plt.show()
 	return None # np.array(dsvarr)
 
-def getIntegrateDoppler(sims,FT2darr,normspecies='Protons',wkmax=[20,20],logthresh=1.8):
-	"""
-	Extracts the maximum point in a smaller array (so don't use edge of array and bias sample) of the 2d FFT
-	the loops through multiple angles (angle +ve clockwise from North) and extracts the values of the threshed
-	2d FFT array, summates them then plots this integrand vs its corresponding angle. Can then find the angle
-	of doppler shift and convert this to a velocity, plotting this atop the 2d FFT for multiple l 
-	harmonics.  
-		params in
-			sims:			list of sims to analyse and extract each gradient from
-			FT2darr:		list of 2d FFTs corresponding to the sims in list sims 
-			normspecies:the normalisation species used for w,k space
-			wkmax:		the limits of the 2d FFT [wmax,kmax] which to plot, in units of normspecies normalisation 
-			logthresh:	the log value of the thresh which to apply to the 2d FFT 
-		params out
-			Plots the gradient angle vs. normalised integral to the number of cells np.sum(zi)/len(zi) 
-	"""	
-	for i in range(len(sims)):
-		# setup
-		sim_loc = getSimulation(sim)	
-		d0 = sdfread(0)
-		times = read_pkl('times')
-		vA = getAlfvenVel(d0)
-		print(vA/const.c)
-		klim = 0.5*2*const.PI/getdxyz(d0)
-		wlim = 0.5*2*const.PI/getdt(times)
-		wnorm = getCyclotronFreq(d0,normspecies)
-		knorm = wnorm/vA
-		# freq resolutions (no factor half)
-		dk = 2*const.PI/getGridlen(d0)
-		dw = 2*const.PI/times[-1]
-	
-		# cut FT2d into size needed
-		FT2d = FT2darr[i]
-		(nw,nk) = FT2d.shape
-		wmax = wkmax[0]*wnorm ; kmax = wkmax[1]*knorm
-		swmax = (wkmax[0]-10)*wnorm ; skmax = (wkmax[1]-10)*knorm
-		# reduce limit and find max
-		sFT2d = np.log10(FT2d[:int(nw*swmax/wlim),:int(nk*skmax/klim)])
-		FT2d = np.log10(FT2d[:int(nw*wmax/wlim),:int(nk*kmax/klim)])
-		(nw,nk) = FT2d.shape
-
-		# threshold FT2d
-		tFT2d = FT2d.copy() ; tsFT2d = sFT2d.copy() # copy arr
-		tFT2d[FT2d < logthresh] = 0
-		tFT2d[FT2d > logthresh] = 1
-		tsFT2d[sFT2d < logthresh] = 0
-		tsFT2d[sFT2d > logthresh] = 1
-		FT2d = tFT2d # replace old FT2d 
-		sFT2d = tsFT2d # replace old FT2d 
-		del tFT2d, tsFT2d # destroy temp arr
-
-		# extract maximum point along FAW
-		argind = np.unravel_index(sFT2d.argmax(),sFT2d.shape)
-		ym,xm = argind[0]*swmax/sFT2d.shape[0], argind[1]*skmax/sFT2d.shape[1]
-		del sFT2d # remove smaller matrix
-		print(xm/knorm,ym/wnorm)
-		angles = np.linspace(const.PI/2,const.PI,1000) # between -180deg and -90deg
-		# varying angle of line
-		integ = np.zeros(len(angles))
-		for i in range(len(angles)):
-			# find image edge intercepts
-			xi = (xm/knorm-(ym/wnorm)/np.tan(angles[i])) # algebra
-			yi = (ym/wnorm-(xm/knorm)*np.tan(angles[i])) # normalised
-			# ax.plot([0,xi],[yi,0],linestyle='--',color='white')
-			# convert to pixel coordinates
-			xi*=nk/(wkmax[1]); yi*=nw/(wkmax[0])
-			x,y=np.linspace(0,xi,1000),np.linspace(0,yi,1000)
-			# map coordinates to integrate
-			zi = scipy.ndimage.map_coordinates(FT2d, np.vstack((y,x)))
-			# integrate and append to array
-			integ[i]=np.sum(zi/len(zi)) # normalise to integ per cell
-		# maxangle (shared area)
-		maxangle = angles[np.argmax(integ)]
-		# plot angles vs integral
-		fig,ax=plt.subplots(nrows=2,figsize=(6,8))
-		ax[0].plot(angles*180/const.PI,integ)
-		ax[0].plot([0,0],[0,maxangle],color='k',linestyle='--')
-		ax[1].imshow(FT2d,**imkwargs,extent=[0,wkmax[1],0,wkmax[0]])
-		# doppler shifted lines
-		dsv = np.tan(maxangle) * (dw/dk)/vA		
-		kx = np.linspace(0,wkmax[1],100)*knorm
-		for l in range(0,int(wkmax[0]),1):
-			w = wnorm*np.ones(len(kx))*l
-			ww = w + (dsv*vA)*kx
-			ax[1].plot(kx/knorm,ww/wnorm,color='white',linestyle='--')
-		ax[1].set_xlabel(r'$kv_A/$'+getOmegaLabel(normspecies),**tnrfont)
-		ax[1].set_ylabel(r'$\omega/$'+getOmegaLabel(normspecies),**tnrfont)
-		ax[1].set_ylim(0,wkmax[0]) ; ax[1].set_xlim(0,wkmax[1])
-
-		plt.show()
-		sys.exit()
-	return None	
-		
 def PLOTDOPPLER(hlabels,dsvarr,pchange=True):
 	"""
 	Plotting the (1) Alf speed vA (2) Kernel extracted Doppler velocity and (3) the Doppler velocity
 	normalised to the 0% He3 concentration Doppler shift (i.e. vA normalisation removed)
-	In:
-		hlabels : the He3 concentration as a % (e.g. 0, 5, 10, 15 ...)
-		dsvarr 	: an array of the Doppler extracted velocities (dsv) and vA for each sim
-		pchange : boolean whether to plot percentage change (all on one plot) or with nrows
-	Out:
-		Saves the figure 
+		IN:
+			hlabels : the He3 concentration as a % (e.g. 0, 5, 10, 15 ...)
+			dsvarr 	: an array of the Doppler extracted velocities (dsv) and vA for each sim
+			pchange : boolean whether to plot percentage change (all on one plot) or with nrows
+		OUT:
+			Saves the figure 
 	"""
 	hlabels = hlabels/100 # change to actual value not %
 	dsv_vA,dsv,vA = dsvarr[:,0], dsvarr[:,1], dsvarr[:,2]
@@ -357,11 +256,120 @@ def PLOTDOPPLER(hlabels,dsvarr,pchange=True):
 	## 
 	plt.show()
 	return None
+
+def doppler_onesim(sim='/storage/space2/phrmsf/lowres_D_He3/0_38_p_90'):
+	"""
+    Example function of plotting the Doppler lines against a FT2d for fixed minority species 
+    parameters. 
+    """
+    # load sim & FT2d 
+	sim_loc = getSimulation(sim)
+	FT2d = read_pkl('FT_2d_Magnetic_Field_Bz')
+	d0 = sdfread(0)
+	times = read_pkl('times')
+	vA = getAlfvenVel(d0)
+	print(vA)
+	Ep = 14.68*1e6*const.qe
+	vp = (2*Ep/getMass('Protons'))**0.5 # proton velocity
+	klim = 0.5*2*const.PI/getdxyz(d0) 
+	wlim = 0.5*2*const.PI/getdt(times)
+	wcp = getCyclotronFreq(d0,'Protons')
+	wcD = getCyclotronFreq(d0,'Deuterons')
+	wnorm = wcp
+	knorm = wnorm/vA
+	(nw,nk) = (FT2d.shape)
+	dk = 2*const.PI/getGridlen(d0) # no factor half (see e-notes 24/10/23)
+	dw = 2*const.PI/times[-1]
+	print(dw,dk)
+	# figure setup
+	fig,ax=plt.subplots(ncols=3,figsize=(6*3,4))
 	
+	## calc gradients in image
+	# cut FT2d into size needed
+	(nw,nk) = FT2d.shape
+	kmax = 20*knorm ; wmax = 10*wnorm
+	kmin = 0*knorm; wmin = 0#*wnorm
+	FT2d = np.log10(FT2d[:int(nw*wmax/wlim),int(nk*kmin/klim):int(nk*kmax/klim)])
+	(nw,nk) = FT2d.shape
+	
+	# threshold FT2d
+	thresh = 1.8
+	tFT2d = FT2d.copy()
+	#tFT2d[FT2d > 1.6] = 0
+	tFT2d[FT2d < thresh] = 0
+	
+	# Kernel gradient map
+	kernel = 'custom'
+	_,kGangle = Kernel(tFT2d,kernel=kernel) # scharr, sobel or custom
+	# gradients as angles
+	kGangle = kGangle[1:-1,1:-1]# remove abberations around edge
+	im = ax[0].imshow(kGangle*180/const.PI,**kwargs,extent=[0,kmax/knorm,0,wmax/wnorm],cmap='Accent')
+	plt.colorbar(im)
+	print((dw/dk)/vA)
+	# remove zero values (dont want to plot them in hist)
+	dwdk = np.nan_to_num(np.tan(kGangle),posinf=np.nan,neginf=np.nan) # remove inf and -inf values
+	dw_dk = dwdk * (dw/dk)/vA # normalise
+	kGangle = kGangle.flatten()
+	# convert to all negative angles (easier to calc real gradient)
+	for i in range(len(kGangle)):
+		if kGangle[i] > 0:
+			kGangle[i]-=const.PI #rad
+	# remove inf values
+	dwdk = np.nan_to_num(np.tan(kGangle),posinf=np.nan,neginf=np.nan) # remove inf and -inf values
+	dwdk = dwdk[~np.isnan(dwdk)]
+	# remove zero values (dont want to plot them in hist)
+	dwdk = dwdk[dwdk!=0]
+	dw_dk = dwdk * (dw/dk)/vA # normalise
+	thresh = (np.abs(dw_dk) < 2.0) & (np.abs(dw_dk) > 0.001)
+	dw_dk = dw_dk[thresh]
+	print(kernel+' kernel mean :: ',np.mean(dw_dk))
+	print(kernel+' kernel medi :: ',np.median(dw_dk))
+	# plot hist
+	counts,bins,_=ax[1].hist(dw_dk,bins=1000,density=True,range=(-1,1)) # np.log10
+	dsv = bins[np.argmax(counts)] # doppler shift velocity in units of vA
+	print(kernel+' kernel max :: ', dsv)
+	ax[1].set_ylabel('Normalised count',**tnrfont)
+	ax[1].set_xlabel(r'$d\omega/dk$'+'  '+r'$[v_A]$',**tnrfont)
+	# plot kde
+	kde = stats.gaussian_kde(dw_dk)
+	xx = np.linspace(-1,1,1000)
+	ax[1].plot(xx,kde(xx),color='r')
+	#fig.savefig('dw_dk_'+kernel+'_grad.png',bbox_inches='tight')
+	#plt.show()
+	
+	# plot FT2d
+	#fig,ax=plt.subplots(figsize=(8,6))
+	ax[2].imshow((tFT2d[1:,1:]),**kwargs,extent=[0,kmax/knorm,0,wmax/wnorm])
+	kx = np.linspace(0,20,100)*knorm
+	theta = 86.3 # deg
+	kperp = np.sin(theta*const.PI/180)
+	kpara = np.cos(theta*const.PI/180)
+	uperp = 0.9; upara = 6.076 
+	dsth = -(kperp*uperp + kpara*upara)
+	print(dsv,(dsth+1))
+	# doppler shifted line 
+	for i in range(0,int(wmax/wnorm),1):
+		w = wnorm*np.ones(len(kx))*i
+		# empirical
+		ww = w + (dsv*vA)*kx
+		ax[2].plot(kx/knorm,ww/wnorm,color='white',linestyle='--')
+	#	# theory
+	#	tww = w + ((dsth+1)*vA)*kx
+	#	ax.plot(kx/knorm,tww/wnorm,color='white',linestyle='-.')
+	ax[2].set_xlim(0,20)
+	ax[2].set_ylim(0,20)
+	ax[2].set_ylabel(r'$\omega/\Omega_p$',**tnrfont)
+	ax[2].set_xlabel(r'$kv_A/\Omega_p$',**tnrfont)
+	ax[2].plot([0,10],[0,10],color='white',linestyle='--') # vA line
+	
+	#fig.savefig('FT_2d_doppler_th.png',bbox_inches='tight')
+	plt.show()
+
+
 if __name__ == '__main__':
-	from func_load import *
 	import scipy
-	# D-He3
+
+	# # D-He3
 	quantity='Magnetic_Field_Bz'
 	home = '/storage/space2/phrmsf/lowres_D_He3/'
 	sims = np.sort([i for i in os.listdir(home) if 'p_90' in i])
@@ -375,14 +383,6 @@ if __name__ == '__main__':
 	# kernel
 	sims = [home+sim for sim in sims]
 	dsvarr = getKernelDoppler(sims,FT2darr,labels=hlabels,normspecies='Protons',plot=True)
-	plt.clf()
 	PLOTDOPPLER(hlabels,dsvarr)
-	sys.exit()
-	# line integrate
-	sim=getSimulation('/storage/space2/phrmsf/lowres_D_He3/0_38_p_90')
-	sims=[sim]
-	FT2d = [read_pkl('FT_2d_'+quantity)]
-	getIntegrateDoppler(sims,FT2d)
-		
 		
 		
