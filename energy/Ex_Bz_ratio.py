@@ -142,7 +142,7 @@ if __name__=='__main__':
     sims = np.sort(sims)
     sim0 = getSimulation(home+sims[0])
     sims = sims[1:]
-    xiHe3 = [float(i.split('_')[1]) for i in sims]
+    xiHe3 = [int(i.split('_')[1]) for i in sims]
 
     # fratio, rxiHe3 = Ex_Bz(sims,xarr=xiHe3,sim0=sim0,home=home)
     fratio, rxiHe3 = f1_f2(home,sims,xiHe3,'Electric_Field_Ex','Magnetic_Field_Bz',sim0=sim0,\

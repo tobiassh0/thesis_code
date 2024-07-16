@@ -168,7 +168,7 @@ def du_gyroratio(home,duarr,sims,species,norm_spec='Alphas',labels=''):
 
 # plots the gyro-resonance theory vs emp. for values at multiple times (not through time, see PlotGyroResonance)
 def gyro_time_compare(home,sims,identify_indmat,identify_markersmat,species=['Deuterons','He3','Protons'],mean_to=10,multipanel=True,\
-					figname='multiple_times',plot_du=True,lims=(-1,22)):
+					figname='multiple_times',plot_du=True,lims=(-1,22),labels=[None]):
 	"""
 		Plots the gyro-resonance for multiple times either in a multi panel or in a (default) singular plot. 
 		Specify which markers to use and at which time indices. Can either plot du1/du2 ratio vs theory (1:1 line)
@@ -189,7 +189,7 @@ def gyro_time_compare(home,sims,identify_indmat,identify_markersmat,species=['De
 	"""
 	getSimulation(home+sims[0])
 	times = read_pkl('times')*getCyclotronFreq(sdfread(0),species[-1])/(2*const.PI) # normalised
-	labels = ["{:.2f}".format(times[i]) for i in identify_ind[0]]
+	tlabels = ["{:.2f}".format(times[i]) for i in identify_indmat[0]]
 	m1 = getMass(species[0]) ; m2 = getMass(species[1]) 
 	q1 = getChargeNum(species[0]) ; q2 = getChargeNum(species[1])
 	if multipanel:
@@ -197,15 +197,15 @@ def gyro_time_compare(home,sims,identify_indmat,identify_markersmat,species=['De
 		fig.subplots_adjust(hspace=0.075,wspace=0.075)
 		ax=ax.ravel()
 		colors = ['k']*len(sims)
-		alphas = [1]*len(identify_ind[0])
+		alphas = [1]*len(identify_indmat[0])
 	else:
 		fig,ax=plt.subplots(figsize=(6,4))
 		if plot_du:
-			ax.plot([0,10],[0,10],color='darkgrey',linestyle='--',linewidth=0.5,zorder=0)
+			ax.plot(lims,lims,color='darkgrey',linestyle='--',linewidth=0.5,zorder=0)
 		else:
 			ax.axhline((m2/m1)*(q1/q2)**2,color='darkgrey',linestyle='--',zorder=0)
 		colors = plt.cm.rainbow(np.linspace(0,1,len(sims)))
-		alphas = [1]*len(identify_ind[0]) #np.linspace(0.5,1,len(identify_ind[0]))
+		alphas = [1]*len(identify_indmat[0]) #np.linspace(0.5,1,len(identify_indmat[0]))
 	# loop through each sim (concentration)
 	for i in range(len(sims)):
 		print(i)
@@ -216,17 +216,17 @@ def gyro_time_compare(home,sims,identify_indmat,identify_markersmat,species=['De
 		u1 = read_pkl(species[0]+'_KEdens')
 		u2 = read_pkl(species[1]+'_KEdens')
 		du1_du2 = (u1-np.mean(u1[:mean_to]))/(u2-np.mean(u2[:mean_to]))
-		for j in range(len(identify_ind[i])): # time
+		for j in range(len(identify_indmat[i])): # time
 			if multipanel:
 				axj = ax[j]
-				ax[i].annotate(r'$t/\tau_{cp}=$'+labels[i],xy=(0.05,0.85),xycoords='axes fraction',fontsize=16,fontname='Times New Roman')
+				ax[i].annotate(r'$t/\tau_{cp}=$'+tlabels[i],xy=(0.05,0.85),xycoords='axes fraction',fontsize=16,fontname='Times New Roman')
 			else:
 				axj = ax
 				if plot_du:
-					axj.scatter([(xi1/xi2)*(m2/m1)*(q1/q2)**2],du1_du2[identify_ind[i][j]],marker=identify_markers[i][j],\
+					axj.scatter([(xi1/xi2)*(m2/m1)*(q1/q2)**2],du1_du2[identify_indmat[i][j]],marker=identify_markersmat[i][j],\
 								zorder=1,facecolor=colors[i],edgecolor='none',s=30,alpha=alphas[j])
 				else: # plot kinetic energy per-particle
-					axj.scatter([xi2],(xi2/xi1)*du1_du2[identify_ind[i][j]],marker=identify_markers[i][j],\
+					axj.scatter([xi2],(xi2/xi1)*du1_du2[identify_indmat[i][j]],marker=identify_markersmat[i][j],\
 								zorder=1,facecolor=colors[i],edgecolor='none',s=30,alpha=alphas[j])
 		# plt.axhline((const.me_to_He3/const.me_to_mD)*(1/4),color='k')
 		os.chdir('..')
@@ -246,6 +246,7 @@ def gyro_time_compare(home,sims,identify_indmat,identify_markersmat,species=['De
 		else:
 			ax.set_ylabel(r'$\Delta E_D(t)/\Delta E_{He3}(t)$',**tnrfont)
 			ax.set_xlabel(r'$\xi_{He3}$',**tnrfont)
+			# ax.legend(labels,loc='best')
 			figname = 'singlepanel_dE'
 		# axcopy = copy.copy(ax)
 		# axinset = zoomed_inset_axes(ax, 0.25, loc=1)

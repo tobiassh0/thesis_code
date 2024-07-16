@@ -33,7 +33,7 @@ def plot_energy_compare(ax,times,tcmin,label,names,energy_quant,energy_mult,colo
 				ax.scatter(times[identify_ind[j]]/tcmin,dEnergy[identify_ind[j]],marker=identify_markers[j],zorder=2,\
 							s=50,label='_nolegend_',edgecolor='k',facecolor='none')#colors[i])
 				ax.axvline(times[identify_ind[j]]/tcmin,color='k',linestyle='--',alpha=0.1,zorder=1,label='_nolegend_')
-		ax.annotate(int(label),xy=(0.1,0.9),xycoords='axes fraction',ha='left',va='bottom')
+		ax.annotate(label,xy=(0.1,0.9),xycoords='axes fraction',ha='left',va='bottom')
 	return ax
 
 def energy_compare(sims,labels,tmax=7,colors=None,mean_to=10,frac=1,figname='',\
@@ -131,6 +131,7 @@ def energy_compare(sims,labels,tmax=7,colors=None,mean_to=10,frac=1,figname='',\
 	if N!=1 or M!=1: # multiple sims
 		axs[0].set_xlim(0,tmax)
 		axs[0].set_ylim(-250,100)
+		axs[0].locator_params(axis='y',nbins=4)
 		# axs[len(axs)//2].set_ylabel(r'$\Delta u$'+'  ['+r'$Jm^{-3}$'+']',**tnrfont)
 		# axs[0].set_ylabel(r'$\Delta u$'+'  ['+r'$Jm^{-3}$'+']',**tnrfont)
 		# for n in range(int((M-1)*(N-1)+1),int(M*N)):
@@ -140,7 +141,8 @@ def energy_compare(sims,labels,tmax=7,colors=None,mean_to=10,frac=1,figname='',\
 		axs.set_ylim(-250,100)
 		# axs.set_ylabel(r'$\Delta u$'+'  ['+r'$Jm^{-3}$'+']',**tnrfont)
 		# axs.set_xlabel(r'$t$'+getOmegaLabel(ionspecies[-1])+r'$/2\pi$',**tnrfont)
-	legend = fig.legend(names,loc='upper center',ncol=len(energy_quant),bbox_to_anchor=(0.5,0.97),borderpad=0.1)
+	legend = fig.legend(names,loc='upper center',ncol=len(energy_quant),bbox_to_anchor=(0.5,0.97),borderpad=0.1,\
+						columnspacing=0.5,handlelength=1.5) # ncol=len(energy_quant)
 	fig.supylabel(r'$\Delta u$'+'  ['+r'$Jm^{-3}$'+']',**tnrfont,x=-0.05)
 	fig.supxlabel(r'$t$'+getOmegaLabel(ionspecies[-1])+r'$/2\pi$',**tnrfont,y=0.03)
 	# plt.show()
@@ -168,7 +170,7 @@ if __name__=='__main__':
 	home = '/storage/space2/phrmsf/lowres_D_He3/'
 	os.chdir(home)
 	sims = np.sort([i for i in os.listdir(home) if 'p_90' in i])[1:] # excluding zero
-	labels = [i[2:4] for i in sims]
+	labels = [int(i[2:4]) for i in sims]
 	# sims = np.array([home+i for i in sims])
 	# just zero case
 	# sims = ['0_00_p_90']
@@ -182,7 +184,7 @@ if __name__=='__main__':
 					identify_indmat=identify_ind,identify_markersmat=identify_markers,figname='time_scatter')
 	# gyro-resonance at times specified, single panel
 	gr.gyro_time_compare(home,sims,identify_indmat=identify_ind,identify_markersmat=identify_markers,\
-						multipanel=False,figname='singlepanel')
+						multipanel=False,figname='singlepanel',plot_du=False,labels=labels)
 	# multi-panel
 	# gr.gyro_time_compare(home,sims,identify_indmat=identify_ind,identify_markersmat=identify_markers,\
 	# 					multipanel=True,figname='multi_panel')
