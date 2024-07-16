@@ -19,21 +19,21 @@ def plot_energy_compare(ax,times,tcmin,label,names,energy_quant,energy_mult,colo
 	# if not identifying, make false array len of No. energies plotting
 	if len(identify)==1:
 		identify = [False]*len(energy_quant)
-
 	# loop through each field and ion species
 	for i in range(len(energy_quant)):
 		Energy = read_pkl(energy_quant[i])*energy_mult[i]
 		meanEnergy = np.mean(Energy[:mean_to])
 		dEnergy = Energy-meanEnergy
 		# print(len(dEnergy),len(times))
-		ax.plot(times/tcmin,dEnergy,color=colors[i])#,label=names[i])
+		ax.plot(times/tcmin,dEnergy,color=colors[i],zorder=1)#,label=names[i])
 		if identify[i]:
 			if not identify_markers[0]:
 				identify_markers = ['x']*len(identify_ind)
 			for j in range(len(identify_ind)):
-				ax.scatter(times[identify_ind[j]]/tcmin,dEnergy[identify_ind[j]],color=colors[i],marker=identify_markers[j],\
-							s=50,label='_nolegend_')
-	ax.annotate(int(label),xy=(0.1,0.9),xycoords='axes fraction',ha='left',va='bottom')
+				ax.scatter(times[identify_ind[j]]/tcmin,dEnergy[identify_ind[j]],marker=identify_markers[j],zorder=2,\
+							s=50,label='_nolegend_',edgecolor='k',facecolor='none')#colors[i])
+				ax.axvline(times[identify_ind[j]]/tcmin,color='k',linestyle='--',alpha=0.1,zorder=1,label='_nolegend_')
+		ax.annotate(label,xy=(0.1,0.9),xycoords='axes fraction',ha='left',va='bottom')
 	return ax
 
 def energy_compare(sims,labels,tmax=7,colors=None,mean_to=10,frac=1,figname='',\
@@ -81,7 +81,7 @@ def energy_compare(sims,labels,tmax=7,colors=None,mean_to=10,frac=1,figname='',\
 		identify_markersmat = [[None] for i in range(len(sims))]
 
 	# setup figure with N rows and M columns
-	fig,axs=plt.subplots(nrows=int(N),ncols=int(M),figsize=(12,6),sharex=True,sharey=True)
+	fig,axs=plt.subplots(nrows=int(M),ncols=int(N),figsize=(6,10),sharex=True,sharey=True)
 	if N != 1 or M != 1: # multiple sims
 		fig.subplots_adjust(hspace=0.075,wspace=0.075)
 		axs=axs.ravel() # unravel axes
@@ -131,6 +131,7 @@ def energy_compare(sims,labels,tmax=7,colors=None,mean_to=10,frac=1,figname='',\
 	if N!=1 or M!=1: # multiple sims
 		axs[0].set_xlim(0,tmax)
 		axs[0].set_ylim(-250,100)
+		axs[0].locator_params(axis='y',nbins=4)
 		# axs[len(axs)//2].set_ylabel(r'$\Delta u$'+'  ['+r'$Jm^{-3}$'+']',**tnrfont)
 		# axs[0].set_ylabel(r'$\Delta u$'+'  ['+r'$Jm^{-3}$'+']',**tnrfont)
 		# for n in range(int((M-1)*(N-1)+1),int(M*N)):
@@ -140,76 +141,20 @@ def energy_compare(sims,labels,tmax=7,colors=None,mean_to=10,frac=1,figname='',\
 		axs.set_ylim(-250,100)
 		# axs.set_ylabel(r'$\Delta u$'+'  ['+r'$Jm^{-3}$'+']',**tnrfont)
 		# axs.set_xlabel(r'$t$'+getOmegaLabel(ionspecies[-1])+r'$/2\pi$',**tnrfont)
-	legend = fig.legend(names,loc='upper center',ncol=len(energy_quant),bbox_to_anchor=(0.5,1.0),borderpad=0.1)
+	legend = fig.legend(names,loc='upper center',ncol=len(energy_quant),bbox_to_anchor=(0.5,0.97),borderpad=0.1,\
+						columnspacing=0.5,handlelength=1.5) # ncol=len(energy_quant)
+	fig.supylabel(r'$\Delta u$'+'  ['+r'$Jm^{-3}$'+']',**tnrfont,x=-0.05)
+	fig.supxlabel(r'$t$'+getOmegaLabel(ionspecies[-1])+r'$/2\pi$',**tnrfont,y=0.03)
 	# plt.show()
-	fig.supylabel(r'$\Delta u$'+'  ['+r'$Jm^{-3}$'+']',**tnrfont,x=0.05)
-	fig.supxlabel(r'$t$'+getOmegaLabel(ionspecies[-1])+r'$/2\pi$',**tnrfont,y=-0.0125)
 	fig.savefig('energy_compare_{}.png'.format(figname),bbox_inches='tight')
 	return None
 
-def gyro_time_compare(home,sims,identify_indmat,identify_markersmat,species=['Deuterons','He3','Protons'],mean_to=10,multipanel=True,\
-					figname='multiple_times'):
-
-	getSimulation(home+sims[0])
-	times = read_pkl('times')*getCyclotronFreq(sdfread(0),species[-1])/(2*const.PI) # normalised
-	labels = ["{:.2f}".format(times[i]) for i in identify_ind[0]]
-	if multipanel:
-		fig,ax=plt.subplots(nrows=1+(len(sims)-1)//4,ncols=4,figsize=(12,6),sharex=True,sharey=True)
-		fig.subplots_adjust(hspace=0.075,wspace=0.075)
-		ax=ax.ravel()
-		colors = ['k']*len(sims)
-		alphas = [1]*len(identify_ind[0])
-	else:
-		fig,ax=plt.subplots(figsize=(6,4))
-		ax.plot([0,10],[0,10],color='darkgrey',linestyle='--',linewidth=0.5,zorder=0)
-		colors = plt.cm.rainbow(np.linspace(0,1,len(sims)))
-		alphas = [1]*len(identify_ind[0]) #np.linspace(0.5,1,len(identify_ind[0]))
-	m1 = getMass(species[0]) ; m2 = getMass(species[1]) 
-	q1 = getChargeNum(species[0]) ; q2 = getChargeNum(species[1])
-	for i in range(len(sims)):
-		print(i)
-		getSimulation(home+sims[i])
-		xi1,xi2,_ = getConcentrationRatios(sdfread(0))
-		times=read_pkl('times')
-		# load energy densities
-		u1 = read_pkl(species[0]+'_KEdens')
-		u2 = read_pkl(species[1]+'_KEdens')
-		du1_du2 = (u1-np.mean(u1[:mean_to]))/(u2-np.mean(u2[:mean_to]))
-		for j in range(len(identify_ind[i])): # time
-			if multipanel:
-				axj = ax[j]
-				ax[i].annotate(r'$t/\tau_{cp}=$'+labels[i],xy=(0.05,0.85),xycoords='axes fraction',fontsize=16,fontname='Times New Roman')
-				axj.plot([0,10],[0,10],color='darkgrey',linestyle='--',linewidth=0.5,zorder=0)
-			else:
-				axj = ax
-			axj.scatter([(xi1/xi2)*(m2/m1)*(q1/q2)**2],du1_du2[identify_ind[i][j]],marker=identify_markers[i][j],\
-						zorder=1,facecolor=colors[i],edgecolor='none',s=30,alpha=alphas[j])
-		# plt.axhline((const.me_to_He3/const.me_to_mD)*(1/4),color='k')
-		os.chdir('..')
-	if multipanel: 
-		xoff = 0.075 ; yoff = -0.01
-		fig.supylabel(r'$\Delta u_D(t)/\Delta u_{He3}(t)$',x=xoff,**tnrfont)
-		fig.supxlabel(r'$(\xi_{D}/\xi_{He3})(m_{He3}/m_D)(q_D/q_{He3})^2$',y=yoff,**tnrfont)
-	else: 
-		xoff = 0.05 ; yoff = -0.05
-		ax.set_ylabel(r'$\Delta u_D(t)/\Delta u_{He3}(t)$',**tnrfont)
-		ax.set_xlabel(r'$(\xi_{D}/\xi_{He3})(m_{He3}/m_D)(q_D/q_{He3})^2$',**tnrfont)
-		# axcopy = copy.copy(ax)
-		# axinset = zoomed_inset_axes(ax, 0.25, loc=1)
-		# axinset.add_artist(axcopy)
-		# axinset.set_xlim(0.05,0.4)
-		# axinset.set_ylim(-0.15,0.4)
-	plt.xlim(0,7)
-	plt.ylim(-1,22)
-	# plt.show() ; sys.exit()
-	ax.legend(labels,loc='best')
-	fig.savefig('gyro_resonance_{}.png'.format(figname),bbox_inches='tight')
-	return None
 
 if __name__=='__main__':
 	from func_load import *
 	from mpl_toolkits.axes_grid1.inset_locator import zoomed_inset_axes
 	import copy
+	import GyroResonance as gr
 
 	# # D-T
 	# os.chdir('/storage/space2/phrmsf/traceT')
@@ -225,24 +170,26 @@ if __name__=='__main__':
 	home = '/storage/space2/phrmsf/lowres_D_He3/'
 	os.chdir(home)
 	sims = np.sort([i for i in os.listdir(home) if 'p_90' in i])[1:] # excluding zero
-	labels = [i[2:4] for i in sims]
+	labels = [int(i[2:4]) for i in sims]
 	# sims = np.array([home+i for i in sims])
 	# just zero case
 	# sims = ['0_00_p_90']
 	# labels = ['0']
 
-	# energy comparison
 	# linear times
 	identify_ind = [np.linspace(100,12000,8,dtype=int) for i in range(len(sims))]
 	identify_markers = [['o','s','v','^','<','>','X','D'] for i in range(len(sims))]
-	# # identify_markers = [['x']*len(identify_ind) for i in range(len(sims))]
+	# energy comparison
 	energy_compare(sims,labels,colors=['b','g','r','orange','m'],tmax=10,identify_mat=[False,False,True,True,False],\
 					identify_indmat=identify_ind,identify_markersmat=identify_markers,figname='time_scatter')
-	# Gyro-resonance at times specified
-	gyro_time_compare(home,sims,identify_indmat=identify_ind,identify_markersmat=identify_markers,\
-						multipanel=False,figname='singlepanel')
-	# gyro_time_compare(home,sims,identify_indmat=identify_ind,identify_markersmat=identify_markers,\
+	# gyro-resonance at times specified, single panel
+	gr.gyro_time_compare(home,sims,identify_indmat=identify_ind,identify_markersmat=identify_markers,\
+						multipanel=False,figname='singlepanel',plot_du=False,labels=labels)
+	# multi-panel
+	# gr.gyro_time_compare(home,sims,identify_indmat=identify_ind,identify_markersmat=identify_markers,\
 	# 					multipanel=True,figname='multi_panel')
+
+	# single sim energy compare
 	# sims = ['0_00_p_90']
 	# labels = ['0']
 	# energy_compare(sims,labels,colors=['b','g','r','orange','m'],tmax=10,figname='zero') # ,figname='time_scatter')

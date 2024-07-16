@@ -6,12 +6,11 @@ from func_load import *
 figpart, axpart = plt.subplots(nrows=3,figsize=(8,6),sharex=True) # assume 3 ion species # (6,10)
 figpart.subplots_adjust(hspace=0.17)
 ## fields
-figfield, axfield = plt.subplots(nrows=1,ncols=3,figsize=(10,6)) # assume 3 ion species # nrows=2,ncols=3figsize=(18,8)
+figfield, axfield = plt.subplots(nrows=1,ncols=3,figsize=(18,5)) # assume 3 ion species # nrows=2,ncols=3figsize=(10,6)
 figfield.subplots_adjust(wspace=0.,hspace=0.1)
 
 mean_to = 10
-#sim_lst = ['traceT_0_50','traceT_D_70_T_30','traceT_D_82_T_18','traceT_D_89_T_11','traceT_D_95_T_05','traceT_D_99_T_01','traceT_0_00']
-sim_lst = ['traceT_0_50','traceT_D_89_T_11','traceT_D_99_T_01','traceT_0_00']
+sim_lst = ['traceT_D_50_T_50','traceT_D_70_T_30','traceT_D_82_T_18','traceT_D_89_T_11','traceT_D_95_T_05','traceT_D_99_T_01','traceT_D_100_T_00']
 fields = ['Electric_Field_Ex','Magnetic_Field_By','Magnetic_Field_Bz']
 fieldnames = [] ; fieldmult = [] ; labels = []
 for field in fields:
@@ -20,8 +19,11 @@ for field in fields:
 	labels.append(b)
 	fieldmult.append(c)
 
-#colors = ['blue','pink','orange','g','k','r','cyan']
-colors = ['blue','g','r','cyan']
+colors = ['blue','deeppink','orange','g','k','r','darkturquoise']
+linestyles = [':','--','-','-.',':','--','-']
+# markers = ['o','s','x','^','>','<','v']
+# linewidths = [7,6,5,4,3,2,1]
+# colors = ['blue','g','r','cyan']
 
 c = 0
 N = 300
@@ -30,7 +32,7 @@ N = 300
 growth=[]
 for sim in sim_lst:
 	print(sim)
-	sim_loc = getSimulation('/storage/space2/phrmsf/'+sim)
+	sim_loc = getSimulation('/storage/space2/phrmsf/traceT/'+sim)
 	times = read_pkl('times')	
 	d0 = sdfread(0)
 	nx = len(getQuantity1d(d0,'Derived_Number_Density'))
@@ -64,14 +66,13 @@ for sim in sim_lst:
 		## running mean
 		Energyfield = np.convolve(Energyfield,np.ones(N)/N,mode='valid')
 		timesplot = np.linspace(0,max(times),len(Energyfield))
-		axfield[i].plot(timesplot/tcD,np.log(Energyfield),color=colors[c])
+		axfield[i].plot(timesplot/tcD,np.log(Energyfield),color=colors[c],linestyle=linestyles[c],linewidth=2)#,marker=markers[c],markevery=500)
 		## gradient of field ===> d(Delta u)/dt
 #		gradDu = np.convolve(np.gradient((Energyfield),dt),np.ones(N)/N,mode='valid') # np.convolve
 #		timesplot = np.linspace(0,max(times),len(gradDu))
 #		axfield[1,i].plot(timesplot/tcD,np.log(gradDu),color=colors[c])
 #		axfield[1,i].set_xlim(0,2.5)
 #		axfield[1,i].set_ylim(13,23)
-		axfield[i].annotate(labels[i],xy=[0.1,0.15],xycoords='axes fraction',fontsize=20)#,bbox=dict(fc="white"))
 #		axfield[1,i].annotate(labels[i],xy=[0.025,0.85],xycoords='axes fraction',fontsize=20)#,bbox=dict(fc="white"))
 		axfield[i].set_ylim(-6,6) # axfield[i].set_ylim(-0.1,265)
 		axfield[i].set_xticklabels([0,1,2,3,4,5,6])
@@ -98,7 +99,7 @@ for sim in sim_lst:
 		except:
 			nspec = 1
 			continue # should be 0 for species that arent present
-		Energypart = read_pkl(species[i]+'_KE')/(nspec) # energy density 
+		Energypart = read_pkl(species[i]+'_KEdens')/(nspec) # energy density 
 		meanEnergypart = np.mean(Energypart[:mean_to])
 		print(Energypart,meanEnergypart)
 		Energypart = np.convolve(Energypart,np.ones(N)/N,mode='valid')
@@ -130,15 +131,16 @@ for sim in sim_lst:
 #meangrowth = totgrowth/int(growth.shape[0])
 #print('meangrowth [wcD] :: ',2*const.PI*meangrowth/wcD)
 
-labels = [r'$50\%$',r'$30\%$',r'$18\%$',r'$11\%$',r'$5\%$',r'$1\%$',r'$0\%$']
-clabels = [r'$50\%$',r'$11\%$',r'$1\%$',r'$0\%$']
-axfield[1].legend(clabels,loc='best',frameon=False)
+# labels = [r'$50\%$',r'$11\%$',r'$1\%$',r'$0\%$'] 
+clabels = [r'$50\%$',r'$30\%$',r'$18\%$',r'$11\%$',r'$5\%$',r'$1\%$',r'$0\%$']
+axfield[1].legend(clabels,loc='best')#,frameon=False)
 axpart[2].legend(clabels,loc='best')#,frameon=False)
 slabels = [r'Deuterons',r'Tritons',r'Alphas']
 ylabels = [r'$\Delta E_D$'+' '+'['+r'$keV$'+']',r'$\Delta E_{T}$'+' '+'['+r'$keV$'+']',r'$\Delta E_\alpha$'+' '+'['+r'$MeV$'+']']
 
 for i in range(len(axfield)):
 	axfield[i].set_xlabel(r'$t/\tau_{cD}$',fontsize=20)
+	axfield[i].annotate(labels[i],xy=[0.1,0.15],xycoords='axes fraction',fontsize=20)#,bbox=dict(fc="white"))
 #	axfield[i].set_xlabel(r'Time $t$'+'  '+r'$[\tau_{cD}]$',**tnrfont)
 for j in range(len(axpart)): 
 	axpart[j].set_ylabel(ylabels[j],**tnrfont) # +' '+'['+r'$keV$'+']'
@@ -153,9 +155,11 @@ for j in range(len(axpart)):
 
 ## normal
 axpart[-1].set_xlabel(r'$t/\tau_{cD}$',fontsize=20)
-#figfield.savefig('/storage/space2/phrmsf/paper/fieldEnergies.eps',bbox_inches='tight')
-figpart.savefig('/storage/space2/phrmsf/paper/Energy_v_time.eps')
-figpart.savefig('/storage/space2/phrmsf/paper/Energy_v_time.png')
+figfield.savefig('/storage/space2/phrmsf/traceT/referee_reports/fieldEnergies_linestyle.eps',bbox_inches='tight')
+plt.show()
+
+# figpart.savefig('/storage/space2/phrmsf/paper/Energy_v_time.eps')
+# figpart.savefig('/storage/space2/phrmsf/paper/Energy_v_time.png')
 
 #plt.show()
 

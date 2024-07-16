@@ -9,9 +9,9 @@ class Simulation():
 	# other global info here	
 	#	
 	def __init__(self,simloc):
-		# print ASCII logo		
-#		self.sim_file_loc = getSimulation('') # allows user to input the file destination in the dir where batch is run
-#		self.sim_file_loc = getSimulation('/storage/space2/phrmsf/lowres_D_He3/0_34_p_90')
+		# # print ASCII logo		
+		# self.sim_file_loc = getSimulation('') # allows user to input the file destination in the dir where batch is run
+		# self.sim_file_loc = getSimulation('/storage/space2/phrmsf/lowres_D_He3/0_34_p_90')
 		self.sim_file_loc = getSimulation(simloc)
 		self.quantity = 'Magnetic_Field_Bz'
 		self.index_list = list_sdf(self.sim_file_loc)
@@ -113,10 +113,10 @@ class Simulation():
 		
 	### PLOT ENERGY DENSITIES OF FIELD COMPONENTS ### 
 		energy_int=energies(sim_loc=self.sim_file_loc,frac=1,plot=True,integ=True)
-#		energy_int = 0
+		# energy_int = 0
 
 	### PLOT CIGARETTE PLOTS ###
-		ciggies(self.sim_file_loc,species_lst=getAllSpecies(self.file0),para=False) # doesnt return anything
+		ciggies(self.sim_file_loc,species_lst=getAllSpecies(self.file0),para=False,nval=100) # doesnt return anything
 
 	### FOURIER TRANSFORMS ###
 		self.klim = 0.5*2*const.PI*self.Nx/self.L
@@ -125,8 +125,8 @@ class Simulation():
 		self.wlim_prime = self.wlim/self.wnorm
 		self.tlim_prime = self.T/self.tnorm
 
-#		in_klimprime = float(input('!>> klim_prime maximum on plot (0 for max): ')) ## in normalised units
-#		in_wlimprime = float(input('!>> wlim_prime maximum on plot (0 for max): ')) ## in normalised units
+		# in_klimprime = float(input('!>> klim_prime maximum on plot (0 for max): ')) ## in normalised units
+		# in_wlimprime = float(input('!>> wlim_prime maximum on plot (0 for max): ')) ## in normalised units
 		in_klimprime = 40 #100 # use when lazy
 		in_wlimprime = 25 #50
 		if in_klimprime == 0:
@@ -170,8 +170,7 @@ class Simulation():
 		###
 		dict_dump_txt(simdatadict) # write as .txt so can physically read, since pkl writes in binary
 
-
-	## FT 1d
+	### FT 1d
 		try:
 			self.FT_1d = read_pkl('FT_1d_'+self.quantity)
 			(nt,nk) = self.FT_1d.shape ; print('FT_1d shape (t,k):: {}'.format(nt,nk))
@@ -189,7 +188,7 @@ class Simulation():
 		plotting(fig_1,ax_1,'FT_1d_'+self.quantity)
 		del self.FT_1d
 
-	## FT 2d
+	### FT 2d
 		try:
 			self.FT_2d = read_pkl('FT_2d_'+self.quantity)
 			w_lim, k_lim = self.FT_2d.shape[0]*(in_wlimprime/self.wlim_prime), self.FT_2d.shape[1]*(in_klimprime/self.klim_prime)
@@ -199,7 +198,7 @@ class Simulation():
 			for quant in self.quantities: # create all FT_2d arrays for available fields
 				fmq = load_batch_fieldmatrix([],quant)
 				if quant == 'Magnetic_Field_Bz':
-						fmq = fmq-np.mean(fmq[0:10,:]) # delta Bz				
+					fmq = fmq-np.mean(fmq[0:10,:]) # delta Bz				
 				FT_2d = get2dTransform(fmq,window=True)
 				dumpfiles(FT_2d,'FT_2d_'+quant)
 		# load the one you want to analyse
@@ -210,9 +209,9 @@ class Simulation():
 		print('plotting shape: ',np.shape(self.FT_2d))
 		fig, ax = plot2dTransform(self.FT_2d,klim=in_klimprime,wlim=in_wlimprime,klabel=getWavenumberLabel(min_species),wlabel=getOmegaLabel(min_species))#min_species
 
-	## Cold plasma dispersion
-#		Te = getTemperature('Electrons') ; Ti = getTemperature('Deuterons') 
-#		k, omegas, w_LH = calcNewColdDisp(in_klimprime=100,Te=Te,Ti=Ti)
+	### Cold plasma dispersion
+		# Te = getTemperature('Electrons') ; Ti = getTemperature('Deuterons') 
+		# k, omegas, w_LH = calcNewColdDisp(in_klimprime=100,Te=Te,Ti=Ti)
 		omegas = self.wnorm*np.linspace(0,in_wlimprime,10000) # TODO: find out why doesn't go through 0 (Im and Re components)
 		k1,k2,k3=coldplasmadispersion(self.file0,omegas=omegas) # two solutions to the cold plasma dispersion
 		k1,k2,k3 = k1/self.knorm, k2/self.knorm, k3/self.knorm # can plot all three but not needed, k2 is main real branch
@@ -224,20 +223,20 @@ class Simulation():
 		ax.set_xlim(0,in_klimprime) # " "
 		plotting(fig,ax,'FT_2d_'+self.quantity)
 
-	## Power spectra
+	### Power spectra
 		_,_ = power(self.wnorm,wklims=[self.wlim_prime,self.klim_prime],wkmax=[self.wlim_prime,100],norm_omega=getOmegaLabel(min_species),\
 						quantity=self.quantity,plot=True)
 
-#	## Poynting
-#		FTSmag = Poynting2dFT(self.times,self.Nt,self.Nx,in_klimprime=in_klimprime,plot=True)
+	# ### Poynting
+	# 	FTSmag = Poynting2dFT(self.times,self.Nt,self.Nx,in_klimprime=in_klimprime,plot=True)
 		
-	## Bicoherence spectra ###
+	### Bicoherence spectra ###
 		karea = 30
 		warea = 30
 		nfft = self.Nt//5
 		noverlap = nfft//2
 		bispec=True #boolean, True as default will calculate both bicoh AND bispec
-#		klabel = r'$\lambda_{De}$'
+		# klabel = r'$\lambda_{De}$'
 		klabel = r'$v_A/\Omega_p$'
 		try:
 			bicname = 'Bicohmat_ka_wa_{}_{}'.format(karea,warea)
@@ -260,6 +259,8 @@ class Simulation():
 
 
 if __name__ == '__main__':
-	#simloc = '/storage/space2/phrmsf/ECRH/ECRH_JT60U_6'#lowres_D_He3/0_05_p_90'
-	simloc = '/storage/space2/phrmsf/lowres_D_He3/energy_protons/1MEV/' #traceT/90deg'
+	# simloc = '/storage/space2/phrmsf/ECRH/ECRH_JT60U_6'#lowres_D_He3/0_05_p_90'
+	# simloc = '/storage/space2/phrmsf/lowres_D_He3/energy_protons/1MEV/' #traceT/90deg'
+	# simloc = '/storage/space2/phrmsf/p_B11/'
+	simloc = '/storage/space2/phrmsf/traceT/traceT_D_100_T_00_v2'
 	Simulation(simloc)

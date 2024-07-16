@@ -1260,8 +1260,8 @@ def getMagneticAngle(d0):
 			phi_x = const.PI/2
 		else:
 			phi_x = float(input('B0 angle to xhat [deg]::'))*(const.PI/180)
-		phi_y = const.PI/2
-	return phi_x, phi_y # will return 90 degrees for phi_y # hard-coded
+		phi_y = 0 # const.PI/2
+	return phi_x, phi_y # will return 0 degrees for phi_y # hard-coded
 
 def coldplasmadispersion_analytical(omegas,wpf=[None,None,None],wcf=[None,None,None],theta=None):
 	"""
@@ -1685,7 +1685,7 @@ def Chi0Calc(file0,v0,kall,omegaall,species='Deuterons',wci=None,theta=90):
 	return Chi0#, PIxx, PIxy, PIyy
 
 
-def growth_rate_manual(minions='Alphas',majions='Deuterons',maj2ions='Tritons',wmax=25,theta_deg=89,xi3=10**(-4),xi2=0.0,\
+def growth_rate_manual(minions='Alphas',majions='Deuterons',maj2ions='Tritons',wmin=0,wmax=25,theta_deg=89,xi3=10**(-4),xi2=0.0,\
 					B0=2.1,ne=1e19,pitchangle=0.69115,_Emin=3.5,vspread=1/100,nval=int(1e5),plot=False):
 	"""
 	Plots the linear growth rate, from eqs. (29) and (8) in Refs. (R. Dendy et al., 1994) and (K. G. McClements et al., 1995) respectively. 
@@ -1694,13 +1694,13 @@ def growth_rate_manual(minions='Alphas',majions='Deuterons',maj2ions='Tritons',w
 			minions 		: minority species
 			majions 		: 1st bulk ion species
 			maj2ions		: 2nd bulk ion species
-			wmax 			: maximum frequency, as normalised to the minions cyclotron freq 
+			wmin, wmax		: minimum (maximum) frequency, as normalised to the minions cyclotron freq 
 			theta_deg 	: angle between magnetic field and x-hat (in degrees)
 			xi3			: minority species concentration
 			xi2			: 2nd bulk ion species concentration
 			B0				: magnetic field strength (Tesla)
 			ne				: electron number density
-			pitchangle	: the cosine of the pitch angle, default of 0.22*PI radians (as opposed to -0.646)
+			pitchangle 		: the pitch angle, default of 0.22*PI radians (as opposed to -0.646)
 			_Emin			: the energy of the minority species (in units of MeV)
 			vspread		: the thermal spread (vr/v3) of the parallel component 
 			nval			: number of valuation points to calculate (aim for dw < 0.01 Omega_c,minions)
@@ -1748,7 +1748,7 @@ def growth_rate_manual(minions='Alphas',majions='Deuterons',maj2ions='Tritons',w
 
 	## frequencies can be defined in two ways
 	# (1) cold plasma dispersion
-	omegas = wca*np.linspace(0,wmax,2*nval)	
+	omegas = wca*np.linspace(wmin,wmax,2*nval)	
 	k1, k2, k3 = coldplasmadispersion_analytical(omegas,wpf=[wpe,wpa,wpi],wcf=[wce,wca,wci],theta=theta)
 
 	# (2) freq of EM wave, eq. () from ()
@@ -2319,7 +2319,7 @@ def energies(sim_loc,frac=1,plot=False,leg=True,integ=False,linfit=False,electro
 	try:
 		times=read_pkl('times')
 	except:
-		times = batch_getTimes(np.zeros(len(read_pkl('Exenergy'))),1,len(read_pkl('Exenergy'))-1) # janky approach, only used for testing and when times.pkl hasn't been made
+		times = batch_getTimes(np.zeros(len(read_pkl('Exenergy'))),1,len(read_pkl('Exenergy'))-1) # TODO; janky approach, only used for testing and when times.pkl hasn't been made
 	n = (len(index_list)//frac)
 	
 	#################################
@@ -2507,7 +2507,7 @@ def paraVelocity(INDEX):
 	return np.sqrt(2*getQuantity1d(sdfread(index),'Derived_Average_Particle_Energy_'+species)/mSpec)
 
 # quote "cigarette plots", which show the distribution of velocity/energy normalised to the  
-def ciggies(sim_loc,species_lst=['Deuterons','Alphas'],nval=10000,para=False,eload=True,vload=False,logo=False):
+def ciggies(sim_loc,species_lst=['Deuterons','Alphas'],nval=10000,para=False,eload=True,vload=False,logo=False,dump=True):
 	if logo: # print the ciggies logo # made this because I could
 		import pyfiglet
 		print(pyfiglet.figlet_format('===#  --  @@@',font='letters',justify='center',width=110))
@@ -2551,6 +2551,7 @@ def ciggies(sim_loc,species_lst=['Deuterons','Alphas'],nval=10000,para=False,elo
 				fSpecies = read_pkl(figname+species)
 				fload = True
 			except:
+				print('# FAILED #')
 				fload = False
 		# check if fload is possible
 		if fload:
@@ -2570,6 +2571,7 @@ def ciggies(sim_loc,species_lst=['Deuterons','Alphas'],nval=10000,para=False,elo
 				if eload:
 					matSpecies = read_pkl(species+'_KEdensmatrix')/dens
 			except: # didn't load, calculate instead
+				print('# FAILED #')
 				if eload:
 					matSpecies,_ = getEnergies([species+'_KEdens'],[species],Nt,dump=True)/dens # loads energy density matrix of species
 				if vload:
@@ -2584,7 +2586,8 @@ def ciggies(sim_loc,species_lst=['Deuterons','Alphas'],nval=10000,para=False,elo
 						for t in range(Nt):
 							if int(100*t/Nt)%5==0:print(100*t/Nt, ' %')
 							matSpecies[t,:] = np.sqrt(2*getQuantity1d(sdfread(t),'Derived_Average_Particle_Energy_'+species)/massSpecies)		
-					dumpfiles(matSpecies,'v_'+species)
+					if dump:
+						dumpfiles(matSpecies,'v_'+species)
 			# normalise
 			matSpecies = matSpecies/matnorm
 			matmin  = np.min(matSpecies) ; matmax = np.max(matSpecies) ; matmean = np.mean(matSpecies)
@@ -2596,7 +2599,8 @@ def ciggies(sim_loc,species_lst=['Deuterons','Alphas'],nval=10000,para=False,elo
 				yarr = matSpecies[t,:]
 				fSpecies[t,:],_,_ = np.histogram2d(xarr,yarr,range=[[0,L],[matmin,matmax]],bins=(1,nval),density=True)
 			# dump distribution matrix
-			dumpfiles(fSpecies,figname+species)
+			if dump:
+				dumpfiles(fSpecies,figname+species)
 
 		# extents of matrix per species
 		extents = [0,T,matmin,matmax]
