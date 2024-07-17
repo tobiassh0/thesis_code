@@ -13,7 +13,6 @@ import FT_2d_vMCI as vmc
     implemented in an appealing way (TODO: could just do long bar at the top like before?)
 '''
 
-
 def getFT2d_and_Power(sim,kmax=30,wmax=20):
 	simLoc = getSimulation('/storage/space2/phrmsf/traceT/'+sim)
 	FT_2d = read_pkl('FT_2d_Magnetic_Field_Bz')
@@ -46,13 +45,9 @@ def getFT2d_and_Power(sim,kmax=30,wmax=20):
 	return FT_2d, psd, omegas, wcyc
 
 
-
-width_FT2d = 3
-
+# sim names
 sim_lst = ['traceT_D_100_T_00','traceT_D_99_T_01','traceT_D_89_T_11','traceT_D_50_T_50']
-kmax = 50; wmax = 30
-fig = plt.figure(figsize=(11,6))
-#fig.suptitle("Spatiotemporal Fourier transforms and power spectra")
+kmax = 40; wmax = 25
 
 # phase and group velocities of strongest MCI wave-packet
 xi2 = [0.0,0.01,0.11,0.50]
@@ -67,6 +62,91 @@ dk = 15
 c = w_MCI-v_gr*k_MCI
 k2 = k_MCI + dk ; k1 = k_MCI - dk
 w2 = v_gr*k2 + c ; w1 = v_gr*k1 + c
+
+## figure setup
+fig = plt.figure(figsize=(9,18),layout='constrained')
+#fig.suptitle("Spatiotemporal Fourier transforms and power spectra")
+width_FT2d = 3
+
+## FT2d spectra & PSDs
+gs1 = GridSpec(4, 5, left=0.05, right=0.98, wspace=0.10, hspace=0.075)# right spacing creates space for gs2 
+
+## 0%
+#FT2d
+FT2d,power,omegas,wcyc = getFT2d_and_Power(sim_lst[0],kmax=kmax,wmax=wmax)
+ax00 = fig.add_subplot(gs1[0, :width_FT2d])
+im0 = ax00.imshow(np.log10(FT2d),**imkwargs,cmap='magma',extent=[0,kmax,0,wmax],vmin=-2,vmax=6)
+#power
+ax01 = fig.add_subplot(gs1[0, width_FT2d:])
+ax01.plot(np.log10(power),omegas/wcyc)
+ax01.set_ylim(0,wmax)
+ax01.annotate(r'$0\%$',xy=(0.1,0.9),xycoords='axes fraction',ha='left',va='top',**tnrfont)
+
+## 1%
+#FT2d
+FT2d,power,omegas,wcyc = getFT2d_and_Power(sim_lst[1],kmax=kmax,wmax=wmax)
+ax10 = fig.add_subplot(gs1[1, :width_FT2d])
+im1 = ax10.imshow(np.log10(FT2d),**imkwargs,cmap='magma',extent=[0,kmax,0,wmax],vmin=-2,vmax=6)
+#power
+ax11 = fig.add_subplot(gs1[1, width_FT2d:])
+ax11.plot(np.log10(power),omegas/wcyc)
+ax11.set_ylim(0,wmax)
+ax11.annotate(r'$1\%$',xy=(0.1,0.9),xycoords='axes fraction',ha='left',va='top',**tnrfont)
+
+## 11%
+#FT2d
+FT2d,power,omegas,wcyc = getFT2d_and_Power(sim_lst[2],kmax=kmax,wmax=wmax)
+ax20 = fig.add_subplot(gs1[2, :width_FT2d])
+im2 = ax20.imshow(np.log10(FT2d),**imkwargs,cmap='magma',extent=[0,kmax,0,wmax],vmin=-2,vmax=6)
+#power
+ax21 = fig.add_subplot(gs1[2, width_FT2d:])
+ax21.plot(np.log10(power),omegas/wcyc)
+ax21.set_ylim(0,wmax)
+ax21.annotate(r'$11\%$',xy=(0.1,0.9),xycoords='axes fraction',ha='left',va='top',**tnrfont)
+
+## 50%
+#FT2d
+FT2d,power,omegas,wcyc = getFT2d_and_Power(sim_lst[3],kmax=kmax,wmax=wmax)
+ax30 = fig.add_subplot(gs1[3, :width_FT2d])
+im3 = ax30.imshow(np.log10(FT2d),**imkwargs,cmap='magma',extent=[0,kmax,0,wmax],vmin=-2,vmax=6)
+#power
+ax31 = fig.add_subplot(gs1[3, width_FT2d:])
+ax31.plot(np.log10(power),omegas/wcyc)
+ax31.set_ylim(0,wmax)
+ax31.annotate(r'$50\%$',xy=(0.1,0.9),xycoords='axes fraction',ha='left',va='top',**tnrfont)
+
+
+axall = [ax00,ax01,ax10,ax11,ax20,ax21,ax30,ax31]
+axall[-1].set_xlabel('PSD',**tnrfont)
+axall[-2].set_xlabel(r'$kv_A/\Omega_\alpha$',**tnrfont)
+boutside_ticks(axall)
+xoutside_ticks(axall)
+fig.supylabel(r'$\omega/\Omega_D$',x=-0.03,**tnrfont)
+
+# remove y-ticks of PSD, remove all ticks for x-axis, unless last row plots
+for i in range(len(axall)):
+	ax = axall[i]
+	if ax==axall[-1] or ax==axall[-2]:
+		pass
+	else:
+		ax.set_xticklabels([])
+	if (i+1)%2==0:
+		ax.set_yticklabels([])
+		for j in range(0,10):
+			ax.axhline(j,color='darkgrey',linestyle='--')
+	else:
+		for j in range(0,10):
+			ax.plot([0,1],[j,j],color='white',linestyle='-',linewidth=2)
+
+fig.savefig('/storage/space2/phrmsf/traceT/referee_reports/FT2dpower_test.png',bbox_inches='tight')
+plt.show()
+sys.exit()
+
+# ============================================= # 
+# ============================================= # 
+# ============================================= # 
+# ============================================= # 
+# ============================================= # 
 
 ## 0% & 11%
 gs1 = GridSpec(2, 5, left=0.05, right=0.49, wspace=0., hspace=0.05)# right spacing creates space for gs2 
