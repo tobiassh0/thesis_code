@@ -29,8 +29,7 @@ def generate_subplots(k, row_wise=False):
     # Choose your share X and share Y parameters as you wish:
     figure, axes = plt.subplots(nrow, ncol,
                                 sharex=True,
-                                sharey=True,
-								layout='constrained')
+                                sharey=False)
     # Check if it's an array. If there's only one plot, it's just an Axes obj
     if not isinstance(axes, np.ndarray):
         return figure, [axes]
@@ -159,7 +158,6 @@ def plot_new_comparison(home,sim_lst,labels=[None],colors=[None]):
     for i in range(len(sim_lst)):
         ax[i].plot(JETfreqs/wnorm,JETpower,color='k') #/JETpower[0]
         ax[i].set_xlim(0,maxnormJETfreqs)
-        ax[i].set_ylim(5,60)
         ax2 = ax[i].twinx()
         simloc = getSimulation(home+sim_lst[i])
         times = read_pkl('times')
@@ -174,14 +172,16 @@ def plot_new_comparison(home,sim_lst,labels=[None],colors=[None]):
         ax2.plot(omegas_norm[freq_thresh],log10_psd[freq_thresh],color=colors[i]) #/log10_psd[freq_thresh][0]
         # labelling and formatting
         ax2.set_ylabel('PSD',**tnrfont,color=colors[i])
-        ax2.annotate(labels[i],xy=(0.05,0.95),xycoords='axes fraction',ha='left',va='top',**tnrfont)#,color=colors[i])
+        ax2.annotate(labels[i],xy=(0.05,0.95),xycoords='axes fraction',ha='left',va='top',**tnrfont)
         ax2.set_ylim(0.5,3.0)
         ax2.locator_params(axis='y',nbins=4)
     # ax2.legend(loc='best')
-    fig.supylabel('ICE Power [dB]',**tnrfont,x=0.02)
-    fig.supxlabel(r'$\omega/\Omega_D$',**tnrfont)
-    fig.savefig('/storage/space2/phrmsf/traceT/referee_reports/JETpower_compare_all.png',bbox_inches='tight')
-    # plt.show()
+    fig.supylabel('ICE Power [dB]',**tnrfont,x=-0.01)
+    ax[-1].set_xlabel(r'$\omega/\Omega_D$',**tnrfont)
+    # fig.savefig('/storage/space2/phrmsf/traceT/referee_reports/JETpower_compare.png',bbox_inches='tight')
+    plt.show()
+    sys.exit()
+
     pass
 
 if __name__=='__main__':
@@ -195,7 +195,7 @@ if __name__=='__main__':
     # all traces
     sim_lst = ['traceT_D_50_T_50','traceT_D_70_T_30','traceT_D_82_T_18','traceT_D_89_T_11','traceT_D_95_T_05','traceT_D_99_T_01','traceT_D_100_T_00']
     labels = [r'$50\%$',r'$30\%$',r'$18\%$',r'$11\%$',r'$5\%$',r'$1\%$',r'$0\%$']
-    colors = ['blue','deeppink','orange','g','darkgrey','r','darkturquoise']    
+    colors = ['blue','deeppink','orange','g','k','r','darkturquoise']    
     plot_new_comparison(home,sim_lst,labels,colors)
 
 

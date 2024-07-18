@@ -11,6 +11,7 @@ figfield.subplots_adjust(wspace=0.,hspace=0.1)
 
 mean_to = 10
 sim_lst = ['traceT_D_50_T_50','traceT_D_70_T_30','traceT_D_82_T_18','traceT_D_89_T_11','traceT_D_95_T_05','traceT_D_99_T_01','traceT_D_100_T_00']
+sim_lst = ['traceT_D_50_T_50','traceT_D_89_T_11','traceT_D_99_T_01','traceT_D_100_T_00']
 fields = ['Electric_Field_Ex','Magnetic_Field_By','Magnetic_Field_Bz']
 fieldnames = [] ; fieldmult = [] ; labels = []
 for field in fields:
@@ -20,6 +21,7 @@ for field in fields:
 	fieldmult.append(c)
 
 colors = ['blue','deeppink','orange','g','k','r','darkturquoise']
+colors = ['blue','g','r','darkturquoise']
 linestyles = [':','--','-','-.',':','--','-']
 # markers = ['o','s','x','^','>','<','v']
 # linewidths = [7,6,5,4,3,2,1]
@@ -131,8 +133,8 @@ for sim in sim_lst:
 #meangrowth = totgrowth/int(growth.shape[0])
 #print('meangrowth [wcD] :: ',2*const.PI*meangrowth/wcD)
 
-# labels = [r'$50\%$',r'$11\%$',r'$1\%$',r'$0\%$'] 
 clabels = [r'$50\%$',r'$30\%$',r'$18\%$',r'$11\%$',r'$5\%$',r'$1\%$',r'$0\%$']
+clabels = [r'$50\%$',r'$11\%$',r'$1\%$',r'$0\%$']
 axfield[1].legend(clabels,loc='best')#,frameon=False)
 axpart[2].legend(clabels,loc='best')#,frameon=False)
 slabels = [r'Deuterons',r'Tritons',r'Alphas']
@@ -155,13 +157,10 @@ for j in range(len(axpart)):
 
 ## normal
 axpart[-1].set_xlabel(r'$t/\tau_{cD}$',fontsize=20)
-figfield.savefig('/storage/space2/phrmsf/traceT/referee_reports/fieldEnergies_linestyle.eps',bbox_inches='tight')
+# figfield.savefig('/storage/space2/phrmsf/traceT/referee_reports/fieldEnergies_linestyle.png',bbox_inches='tight')
+figpart.savefig('/storage/space2/phrmsf/traceT/referee_reports/Energy_v_time.png')
 plt.show()
 
-# figpart.savefig('/storage/space2/phrmsf/paper/Energy_v_time.eps')
-# figpart.savefig('/storage/space2/phrmsf/paper/Energy_v_time.png')
-
-#plt.show()
 
 
 

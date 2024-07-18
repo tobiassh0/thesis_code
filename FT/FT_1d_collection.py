@@ -45,8 +45,7 @@ for i in range(len(sim_lst)):
 #	for j in range(FT_1d.shape[1]):
 #		Pow[j] = np.sum(FT_1d[:,j]**2)
 #	PowAllt.append(Pow)
-	im = axs[i].imshow(np.log10(FT_1d),interpolation='nearest',cmap='seismic',origin='lower',aspect='auto',extent=[0,kmax,0,tplot],vmin=-3,vmax=4)
-	axs[i].set_ylabel(r'$t/\tau_{cD}$',fontsize=22)
+	im = axs[i].imshow(np.log10(FT_1d[:,1:]),interpolation='nearest',cmap='magma',origin='lower',aspect='auto',extent=[0,kmax,0,tplot],vmin=-3,vmax=3)
 	axs[i].annotate(labels[i],xy=[0.9,0.75],xycoords='axes fraction',fontsize=20,bbox=dict(fc="white"))
 	axs[i].tick_params(axis='both',direction='out',top=False,right=False,left=True,bottom=True)
 
@@ -54,6 +53,7 @@ for i in range(len(sim_lst)):
 #	plt.show()
 
 #axs[len(axs)-1].set_xlabel(r'$k\lambda_{De}$',fontsize=22)
+fig.supylabel(r'$t/\tau_{cD}$',fontsize=22,x=0.07)
 axs[len(axs)-1].set_xlabel(r'$kv_A/\Omega_D$',fontsize=22)#\lambda_{De}
 for ax in axs[1:]:
 	for i in range(0,14,2): # approximate (average spacing between features is 2.5333 +- 0.13) \-/ xi_T
@@ -69,9 +69,7 @@ plt.colorbar(im, cax=ax0_cbar, orientation='vertical')
 #fig.text(p00[3]+0.05, (p02[3]), r'$\log(B_z)$', va='center', rotation='vertical',fontsize=20) # xlabel, top row
 
 ## save
-os.chdir('/storage/space2/phrmsf/traceT/paper/')
-fig.savefig('FT_1d_Bz_collect_w_50.png')
-fig.savefig('FT_1d_Bz_collect_w_50.eps')
+fig.savefig('/storage/space2/phrmsf/traceT/referee_reports/FT_1d_Bz_collect_w_50.png',bbox_inches='tight')
 plt.show()
 
 

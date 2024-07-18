@@ -42,10 +42,10 @@ def power_compare(sims,labels=[None],normspecies='Deuterons',wkmax=[25,40],quant
 	# maj/min harmonics
 	if xmax != None:
 		for j in range(xmin,xmax,1):
-			ax.axvline(j,color='darkgrey',linestyle='--')
+			ax.axvline(j,color='orange',linestyle='--')
 	else:
 		for j in range(0,wmax,1):
-			ax.axvline(j,color='darkgrey',linestyle='--')
+			ax.axvline(j,color='orange',linestyle='--')
 	i=0
 	home=os.getcwd()	
 	for sim in sims:
@@ -100,31 +100,32 @@ def power_compare(sims,labels=[None],normspecies='Deuterons',wkmax=[25,40],quant
 	
 	# ax.set_xticks(np.linspace(0,wmax,6))
 	ax.locator_params(axis='x',nbins=6)
-	fig.savefig('power_compare_{}_{}.png'.format(lims[0],lims[1]),bbox_inches='tight')	
 
+	fig.savefig('power_compare_{}_{}.png'.format(lims[0],lims[1]),bbox_inches='tight')	
 	return None
 
 
 if __name__=='__main__':
 	from func_load import *
-	# ## D-T
-	# os.chdir('/storage/space2/phrmsf/traceT/')
-	# # sims = np.sort([i for i in os.listdir() if 'traceT' in i])
-	# # # rearrange so biggest to smallest T-concentration
-	# # sims = np.append(sims,sims[0])
-	# # sims = sims[1:]
-	# # hlabels = np.array([int(str(i[-2] + i[-1])) for i in sims])
-	# #
-	# sims = ['traceT_D_50_T_50','traceT_D_89_T_11','traceT_D_99_T_01','traceT_D_100_T_00','cold_JET26148']
-	# hlabels = [r'$50\%$',r'$11\%$',r'$1\%$',r'$0\%$','Baseline']
-	# power_compare(sims,labels=hlabels,wkmax=[25,45],normspecies='Alphas',colors=['b','g','r','darkcyan','k'],\
-	# 				xlims=[10,25],leg=False,height=3)
-	# sys.exit()
 
-	## D-He3
-	os.chdir('/storage/space2/phrmsf/lowres_D_He3/')
-	sims = np.sort([i for i in os.listdir() if 'p_90' in i])
-	sims = sims[1:] # remove 0%
-	hlabels = np.array([int(i[2:4]) for i in sims])	
-	power_compare(sims,labels=hlabels,wkmax=[20,45],normspecies='Protons',xlims=[0,20],\
-					omegalabel=True,leg=True)#,height=3)
+	## D-T
+	os.chdir('/storage/space2/phrmsf/traceT/')
+	# sims = np.sort([i for i in os.listdir() if 'traceT' in i])
+	# # rearrange so biggest to smallest T-concentration
+	# sims = np.append(sims,sims[0])
+	# sims = sims[1:]
+	# hlabels = np.array([int(str(i[-2] + i[-1])) for i in sims])
+	#
+	sims = ['traceT_D_50_T_50','traceT_D_89_T_11','traceT_D_99_T_01','traceT_D_100_T_00','cold_JET26148']
+	hlabels = [r'$50\%$',r'$11\%$',r'$1\%$',r'$0\%$','Baseline']
+	power_compare(sims,labels=hlabels,wkmax=[25,45],normspecies='Alphas',colors=['b','g','r','darkturquoise','k'],\
+					xlims=[10,25],leg=False,height=3)
+	sys.exit()
+
+	# ## D-He3
+	# os.chdir('/storage/space2/phrmsf/lowres_D_He3/')
+	# sims = np.sort([i for i in os.listdir() if 'p_90' in i])
+	# sims = sims[1:] # remove 0%
+	# hlabels = np.array([int(i[2:4]) for i in sims])	
+	# power_compare(sims,labels=hlabels,wkmax=[20,45],normspecies='Protons',xlims=[0,20],\
+	# 				omegalabel=True,leg=True)#,height=3)
