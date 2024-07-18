@@ -294,7 +294,6 @@ def getDispersionlimits(simloc):
 	wlim = [-wnyq, wnyq]
 	return klim, wlim
 
-
 # Gets dispersion limits of a simulation for a batch-wise loaded array
 def batch_getDispersionlimits(SIM_DATA):
 	grid_length, N_grid_points, duration, N_time_points = batch_getSimRanges(SIM_DATA)
@@ -516,7 +515,6 @@ def getOmegaLabel(species):
 
 def getWavenumberLabel(species):
 	return r'$v_A/$'+getOmegaLabel(species)
-
 	
 def getEffectiveMass(d):
 	ions = list(filter(None,getIonSpecies(d))) # remove empty elements
@@ -569,6 +567,7 @@ def getDebyeLength(d, species): # Species should always in general be Electrons
 	temp = getTemperature(species)
 	return (const.e0*const.kb*temp/(getMeanquantity(d,"Derived_Number_Density_"+species)*const.qe**2))**0.5 
 
+# returns the temperature of a given species in keV
 def getTemperature(species):
 	temp = 0
 	try:
@@ -579,21 +578,20 @@ def getTemperature(species):
 		try:
 			temp = getMeanquantity(sdfread(0),'Derived_Temperature_'+species) 
 			# could loop through files but temperature changes
-#			print('Temperature of {} [keV] :: {}'.format(species,str(temp/(const.eV_to_K*1E3))))
+		# print('Temperature of {} [keV] :: {}'.format(species,str(temp/(const.eV_to_K*1E3))))
 			return (temp)
 		except:
 			if temp == 0:
-#				print('# ERROR # : Can\'t get temperature from files...')
-				temp = 1
-#				temp = float(input('Temperature of '+species+'? [keV] :: '))
-				return temp*const.eV_to_K*1E3  #in keV
+				temp = (2/3)*(1/const.qe)*getMeanquantity(sdfread(0),'Derived_Average_Particle_Energy_'+species)
+		# temp = float(input('Temperature of '+species+'? [keV] :: '))
+				return temp/1e3 # keV
 			else:
 				print('# ERROR # :: TEMP')# shouldnt have to get here
 	
 # Returns the Larmor radius of a species depending on the mean magnetic field, and their average energy
 def getLarmorRadius(d, species):
-#	v_perp, v_para = getPerpParaVel(d,species) # TODO; finish this
-#	return getMass(species)*v_perp/(getChargeNum(species) * getMeanField3D(d,'Magnetic_Field_B')) # should be more accurate than just using energy and assuming even split
+	# v_perp, v_para = getPerpParaVel(d,species) # TODO; finish this
+	# return getMass(species)*v_perp/(getChargeNum(species) * getMeanField3D(d,'Magnetic_Field_B')) # should be more accurate than just using energy and assuming even split
 	try:
 		ek = getMeanquantity(d, 'Derived_EkBar_'+species)		
 	except:
@@ -616,26 +614,27 @@ def RotateVel(d, species, phi=None):
 
 # Get the perp and para components to velocity of a given species
 def getPerpParaVel(d, species):
+	mass = getMass(species)
 	try:
-		bx = getMeanField3D(d,'Magnetic_Field_Bx')
-		by = getMeanField3D(d,'Magnetic_Field_By')
-		bz = getMeanField3D(d,'Magnetic_Field_Bz')
+		magnetic_angle_xz, magnetic_angle_xy = getMagneticAngle(d)
 	except:
 		print('# ERROR # : Magnetic fields not readable') ; return None, None
-	mass = getMass(species)
 	try:
 		vx = getMeanquantity(d,'Particles_Px_'+species)/mass
 		vy = getMeanquantity(d,'Particles_Py_'+species)/mass
 		vz = getMeanquantity(d,'Particles_Pz_'+species)/mass
-		E0 = getMeanquantity(d,'Derived_Average_Particle_Energy_'+species)
-		vbool = v2 == (vx**2 + vy**2 + vz**2)
-		print(vbool)
-		v2 = 2*E0/mass
+		## basic algebra
+		# perp
+		vxperp = vx*(1-np.cos(magnetic_angle_xz)**2 * np.cos(magnetic_angle_xy)**2)**0.5
+		vyperp = vy*(1-np.cos(magnetic_angle_xz)**2 * np.sin(magnetic_angle_xy)**2)**0.5
+		vzperp = vz*np.cos(magnetic_angle_xz)
+		# para
+		vxpara = vx*np.cos(magnetic_angle_xy)*np.cos(magnetic_angle_xy)
+		vypara = vy*np.cos(magnetic_angle_xz)*np.sin(magnetic_angle_xy)
+		vzpara = vz*np.sin(magnetic_angle_xz)
 	except:
 		print('# ERROR # : Particle momentum/energy not readable') ; return None, None
-	vpara = (vx*bx+vy*by+vz*bz)/(bx**2 + by**2 + bz**2)
-	vperp = np.sqrt(v2 - vpara)
-	return vpara, vperp
+	return [vxperp, vyperp, vzperp], [vxpara, vypara, vzpara]
 
 #	minE = getQuantity1d()
 #	phi_x, phi_y = getMagneticAngle(d)
@@ -2917,3 +2916,19 @@ def plotSpectrogram(Spower,times,tnorm,nfft,noverlap,minspec='Alphas',clim=(None
 	ax.set_ylabel(r'$t$'+getOmegaLabel(minspec)+r'$/2\pi$',**tnrfont)
 	fig.savefig('Sx_mat_nfft_{}_noverlap_{}.png'.format(nfft,noverlap),bbox_inches='tight')
 	return None
+
+def para_loop_restart(i,check_species='Protons'):
+    if 'Particles_Px_'+check_species in getKeys(sdfread(i)):
+        return i
+    else:
+        pass
+
+def para_check_restart(simloc):
+    print('Parallel checking restart files...')
+    pool=mp.Pool(mp.cpu_count())
+    rest_files = np.array(pool.map_async(para_loop_restart,list_sdf(simloc)).get(99999))
+    pool.close()
+    # remove None
+    rest_files = rest_files[rest_files != np.array(None)]
+    print('Done :: {} files found.\n{}'.format(len(rest_files),rest_files))
+    return rest_files
