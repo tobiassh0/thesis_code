@@ -685,7 +685,7 @@ def ODR_fit(x,y,sx=[],sy=[],beta0=[1,0],curve='linear'):
 	# fit ODR line of best fit with errors
 	linear_model = odr.Model(func)
 	data = odr.RealData(x=x,y=y,sx=sx,sy=sy)
-	myodr = odr.ODR(data, linear_model, beta0=[1,-0.1])
+	myodr = odr.ODR(data, linear_model, beta0=beta0)#[1,-0.1])
 	myout = myodr.run()
 #	myout.pprint()
 

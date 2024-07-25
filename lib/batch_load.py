@@ -262,5 +262,5 @@ if __name__ == '__main__':
 	# simloc = '/storage/space2/phrmsf/ECRH/ECRH_JT60U_6'#lowres_D_He3/0_05_p_90'
 	# simloc = '/storage/space2/phrmsf/lowres_D_He3/energy_protons/1MEV/' #traceT/90deg'
 	# simloc = '/storage/space2/phrmsf/p_B11/'
-	simloc = '/storage/space2/phrmsf/traceT/traceT_D_100_T_00_v2'
+	simloc = '/home/space/phrmsf/Documents/EPOCH/5_devel/epoch1d/D_He3_minD'
 	Simulation(simloc)

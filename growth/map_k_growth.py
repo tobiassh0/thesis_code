@@ -267,7 +267,7 @@ if __name__=='__main__':
 	tlabels = [r'$0\%$',r'$1\%$',r'$11\%$']
 	colors = ['darkturquoise','r','g']
 	multi_empirical_growths(home,np.flip(sims),np.flip(tlabels),theory_sim=home+sims[0],\
-							colors=colors,times=[[0.5,1.5]],nval=int(2e6),domega=0.125) # times=[[0.5,2.0]]
+							colors=colors,times=[[0.5,2.0]],nval=int(2e6),domega=0.25) # times=[[0.5,2.0]]
 	
 	# # D-He3
 	# home = '/storage/space2/phrmsf/lowres_D_He3/'
