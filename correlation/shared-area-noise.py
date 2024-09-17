@@ -1,4 +1,13 @@
 
+def cross_corr(s1, s2, dx):
+	"""
+	cross correlation equation
+	cc = sum(s1(x) * s2(x-tau) * dx)^{X}_{0}
+	"""
+	cc = np.zeros(len(s2))
+	for i in range(len(s2)):
+		cc[i] = np.sum(np.roll(s2,i)*s1*dx) # roll ==> periodic
+	return cc
 
 def shared_area_noise():
 	## shared area example
@@ -37,11 +46,12 @@ def shared_area_noise():
 			sig2 = np.exp(-b2*(t-a2)**2)+noise2
 	
 			# shared area between signals
-			area, tpg = shared_area(sig1,sig2,fitgauss=True,dx=dt) # from list_new
+			area, tpg = SharedArea(sig1,sig2,fitgauss=True,dx=dt) # from list_new
 			tpng = t[np.argmax(area)]
 
 			# cross correlation
-			cc = np.correlate(sig2,sig1,mode='full')
+			# cc = np.correlate(sig2,sig1,mode='full')
+			cc = cross_corr(sig1,sig2,dx=dt)
 			tpcc = tcc[np.argmax(cc)]
 			# # fit Gauss
 			# popt, pcov = curve_fit(lambda t,a,b,c: np.exp(a*(t-b)**2)+c,tcc,cc,maxfev=10) # exponential fitting
