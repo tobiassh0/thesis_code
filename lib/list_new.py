@@ -2066,56 +2066,6 @@ def calcNewColdDisp(in_klimprime,Te,Ti):
 	# plt.show()
 	return k, omega, w_LH_new
 
-
-def calcPowerICE(FT_2d, wlim, klim, wcyc, va, kwidth, wmax, kmax):
-	# IN:
-	# FT_2d : whole matrix of spatiotemporal FFT
-	# wlim : normalised limit on freq
-	# klim : normalised limit on wavenumber
-	# wcyc : cyclotron freq used for normalisation
-	# va : Alfven velocity
-	# kwidth : width (normalised) to take power
-	# wmax, kmax : maximum limits to take power up to
-	# OUT:
-	# power : summed 
-	# omegas : array of frequencies from 0 to wmax and len FT_2d.shape[0]
-	(nw,nk) = FT_2d.shape
-	cellim = [nw*(wmax/wlim), nk*(kmax/klim)]
-	FT_2d = FT_2d[:int(cellim[0]),:int(cellim[1])] # within max lims
-	FT_2d = FT_2d[1:,1:] # remove first lines 
-	print(nw,nk,cellim)
-	kwidth = nk*kwidth/klim
-	# plt.imshow(np.log10(FT_2d),aspect='auto',interpolation='nearest',cmap='magma',origin='lower')
-	power = []
-	kcell=[]
-	for i in range(FT_2d.shape[0]): # range over w
-		kcell.append(np.where(FT_2d[i,:]==max(FT_2d[i,:])))
-		kcell[-1] = (kcell[-1])[0]
-		obv = 5*(nk/klim)
-		if i > 0: # can only check against previous kcells therefore require at least one point already in array
-			if kcell[-1] > kcell[-2]+obv:
-				FT_sorted = np.sort(FT_2d[i,:])
-				kcell[-1] = np.where(FT_2d[i,:]==FT_sorted[-2])
-				kcell[-1] = (kcell[-1])[0] # find second largest value
-		# plt.scatter(kcell[-1],i,color='k',s=10)
-		krange_min = kcell[-1] - kwidth
-		krange_max = kcell[-1] + kwidth
-		print(krange_max, krange_min)
-		if krange_min < 0:
-			krange_min = 0
-		if krange_max > nk*kmax/klim:
-			krange_max = cellim[1]-2
-		# plt.scatter(krange_max,i,color='red',s=10)	
-		# plt.scatter(krange_min,i,color='blue',s=10)
-		power.append(np.sum(FT_2d[i,int(krange_min):int(krange_max)]**2))
-
-	omegas=np.linspace(0,wmax,FT_2d.shape[0])
-	plt.plot(omegas,power)
-	plt.yscale('log')
-	plt.show()
-	
-	return power, omegas
-
 #def getPoynting(times,nt,nx,min_species='Alphas',plot=True):
 #	sval=[]
 #	for i in range(0,nt): # find restart files with all Electric and Magnetic Fields
@@ -2501,7 +2451,7 @@ def signedCurv(fx,dx):
 	kxint = np.sum(kx*dx)
 	return kx, kxint
 	
-def paraVelocity(INDEX):
+def paraVelocity(INDEX): # get average
 	index, species, mSpec = INDEX
 	return np.sqrt(2*getQuantity1d(sdfread(index),'Derived_Average_Particle_Energy_'+species)/mSpec)
 
