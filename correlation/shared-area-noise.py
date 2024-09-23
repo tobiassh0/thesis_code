@@ -1,12 +1,12 @@
 
-def cross_corr(s1, s2, dx):
+def cross_corr(s1,s2,dx):
 	"""
 	cross correlation equation
 	cc = sum(s1(x) * s2(x-tau) * dx)^{X}_{0}
 	"""
 	cc = np.zeros(len(s2))
 	for i in range(len(s2)):
-		cc[i] = np.sum(np.roll(s2,i)*s1*dx) # roll ==> periodic
+		cc[i] = np.sum(np.roll(s2,i)*s1*dx) # roll ==> periodic edges
 	return cc
 
 def shared_area_noise():
@@ -27,7 +27,8 @@ def shared_area_noise():
 	peak_gauss=np.zeros((len(vals),int(N)))
 	peak_ccorr=np.zeros((len(vals),int(N)))
 	peak_ccgauss=np.zeros((len(vals),int(N)))
-	
+	peak_npcorr=np.zeros((len(vals),int(N)))
+
 	# signal parameters
 	a1 = 1. ; b1 = 1
 	a2 = 6. ; b2 = b1
@@ -38,6 +39,7 @@ def shared_area_noise():
 		print(j)
 		png = np.zeros(int(N)) ; pg = np.zeros(int(N))
 		pcc = np.zeros(int(N)); pccg = np.zeros(int(N))
+		pnpcc=np.zeros(int(N)) #; pnpccg = np.zeros(int(N))
 		for i in range(int(N)):
 			# noise and signals	
 			noise1 = np.random.normal(0,noise_floor,len(t))# + 5 # creates random noise with each iteration
@@ -46,51 +48,58 @@ def shared_area_noise():
 			sig2 = np.exp(-b2*(t-a2)**2)+noise2
 	
 			# shared area between signals
-			area, tpg = SharedArea(sig1,sig2,fitgauss=True,dx=dt) # from list_new
+			area, _ = SharedArea(sig1,sig2,fitgauss=False,dx=dt) # from list_new
 			tpng = t[np.argmax(area)]
 
-			# cross correlation
-			# cc = np.correlate(sig2,sig1,mode='full')
-			cc = cross_corr(sig1,sig2,dx=dt)
+			# cross correlation (own implementation and numpy)
+			cc = cross_corr(sig2,sig1,dx=dt)
 			tpcc = tcc[np.argmax(cc)]
+			numpy_cc = np.correlate(sig2,sig1,mode='full')
+			numptcc=tcc[np.argmax(numpy_cc)]
 			# # fit Gauss
 			# popt, pcov = curve_fit(lambda t,a,b,c: np.exp(a*(t-b)**2)+c,tcc,cc,maxfev=10) # exponential fitting
-			# tpccg = popt[1]#TODO;
+			# tpccg = popt[1] # TODO gauss implementation
 
 			# summing total
 			png[i]=tpng
-			pg[i]=tpg
+			# pg[i]=tpg
 			pcc[i]=tpcc
 			# pccg[i]=tpccg
-		
+			pnpcc[i]=numptcc
+
 		# append all values in 2d array
 		peak_ngauss[j,] = (png)
-		peak_gauss[j,] = (pg)
+		# peak_gauss[j,] = (pg)
 		peak_ccorr[j,] = (pcc)
 		# peak_ccgauss[j,] = (pccg)
+		peak_npcorr[j,:] = (pnpcc)
 
 	# mean and std of each run
 	mean_ngauss=np.mean(peak_ngauss,axis=1)
 	std_ngauss=np.std(peak_ngauss,axis=1)
-	mean_gauss=np.mean(peak_gauss,axis=1)
-	std_gauss=np.std(peak_gauss,axis=1)
+	# mean_gauss=np.mean(peak_gauss,axis=1)
+	# std_gauss=np.std(peak_gauss,axis=1)
 	mean_cc=np.mean(peak_ccorr,axis=1)
 	std_cc=np.std(peak_ccorr,axis=1)
 	# mean_ccgauss=np.mean(peak_ccgauss,axis=1)
 	# std_ccgauss=np.std(peak_ccgauss,axis=1)
-	
+	mean_npcc=np.mean(peak_npcorr,axis=1)
+	std_npcc=np.std(peak_npcorr,axis=1)
+
 	# setup plot
 	fig,axs=plt.subplots(figsize=(8,6),nrows=2,sharex=True,gridspec_kw={'height_ratios':[2,1]})
 	fig.subplots_adjust(hspace=0.075)
 	
 	# formatting
 	axs[0].plot(vals,mean_ngauss,'-o',color='b',label='Shared Area')
+	axs[0].plot(vals,np.abs(mean_cc),'-s',color='r',label='Cross Corr')
+	axs[0].plot(vals,np.abs(mean_npcc),'-s',color='k',label='np Cross Corr')
 	# axs[0].plot(vals,mean_gauss,'--o',color='b')
-	axs[0].plot(vals,mean_cc,'-s',color='r',label='Cross Corr')
 	# axs[0].plot(vals,mean_ccgauss,'--s',color='r')
 	axs[1].plot(vals,std_ngauss/mean_ngauss,'-o',color='b')
+	axs[1].plot(vals,np.abs(std_cc/mean_cc),'-s',color='r')
+	axs[1].plot(vals,np.abs(std_npcc),'-s',color='k')
 	# axs[1].plot(vals,std_gauss/mean_gauss,'--o',color='b')
-	axs[1].plot(vals,std_cc/mean_cc,'-s',color='r')
 	# axs[1].plot(vals,std_ccgauss/mean_ccgauss,'--s',color='r')
 
 	# axs[0].errorbar(vals,mean_ngauss,yerr=std_ngauss,fmt='o',color='b')
@@ -101,8 +110,8 @@ def shared_area_noise():
 	axs[1].set_ylim(0,1)
 	axs[0].axhline(a2-a1,linestyle='--',color='darkgrey')
 	axs[0].legend(loc='best')
-	axs[0].set_ylabel('Offset, '+r'$\tau$',**tnrfont)
-	axs[1].set_ylabel(r'$\sigma_\tau/\mu_\tau$',**tnrfont)
+	axs[0].set_ylabel('Absolute offset, '+r'$\tau$',**tnrfont)
+	axs[1].set_ylabel(r'$|\sigma_\tau/\mu_\tau|$',**tnrfont)
 	axs[1].set_xlabel('Noise amp./Signal amp.',**tnrfont)
 	plt.savefig('correlation/noisy-shared-area_MC.png')
 	plt.show()
