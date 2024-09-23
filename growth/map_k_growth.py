@@ -141,10 +141,9 @@ def growth_wavenumber(sim_loc,normspecies='Alphas',omega_min=0,omega_max=50,dome
 	
 	return omegas, growthRatesMean, growthRatesSTD
 
-
 ## multiple empirical growth rates (for multiple time-ranges) plotted against theory 
-def multi_empirical_growths(home,sim_lst,labels,minions='Alphas',majions='Deuterons',maj2ions='Tritons',Emin=3.5e6,\
-							theory_sim=None,theta_deg=89,times=[[0,0.5],[0.5,2.0]],wmin=0,wmax=25,domega=0.25,nval=int(1e5)):
+def multi_empirical_growths(home,sim_lst,labels,minions='Alphas',majions='Deuterons',maj2ions='Tritons',Emin=3.5e6,colors=[None],\
+							theory_sim=None,theta_deg=89,times=[[0,0.5],[0.5,2.0]],wmin=0,wmax=25,domega=0.5,nval=int(1e2)):
 	"""
 		Function for an n-rows plot of the [0] theoretical growth rates [1] time range 1 [2] time range 2 ... [n] time range n
 		Each time range in the times array is given as 2 values, times[n] = [tstart, tend]. Using these ranges, the growth rates
@@ -167,20 +166,17 @@ def multi_empirical_growths(home,sim_lst,labels,minions='Alphas',majions='Deuter
 	"""	
 	## setup
 	times = np.array(times) # convert to numpy array
-	colors = ['b','r','k','g','orange']
 	if len(colors) < len(sim_lst):
 		colors = plt.cm.rainbow(np.linspace(0,1,len(sims)))
 	shapes = ['o']*len(sim_lst)
 	
 	## plot setup
-	fig,axs=plt.subplots(figsize=(8,6),nrows=times.shape[0]+1,sharex=True)
-	fig.subplots_adjust(hspace=0.1)
-	ax = axs.ravel()
+	fig,ax=plt.subplots(figsize=(8.5,4))
+	ax_emp = ax # ax.twinx()
 	
 	## majority harmonics
-	for a in np.arange(1,axs.shape[0],1):
-		for i in np.arange(0,wmax+1,1):
-			ax[a].axvline(i,color='darkgrey',linestyle='--')
+	for i in np.arange(0,wmax+1,1):
+		ax.axvline(i,color='darkgrey',linestyle='--')
 	
 	## theory
 	_=getSimulation(theory_sim)
@@ -189,7 +185,7 @@ def multi_empirical_growths(home,sim_lst,labels,minions='Alphas',majions='Deuter
 	## setup	
 	wcyca = getCyclotronFreq(d0,minions)
 	wnorm = wcyca
-	omegaall = wnorm*np.linspace(wmin,wmax,nval)
+	omegaall = wnorm*np.linspace(wmin,wmax,int(nval))
 	vA = getAlfvenVel(d0)
 	print(vA)
 
@@ -202,18 +198,14 @@ def multi_empirical_growths(home,sim_lst,labels,minions='Alphas',majions='Deuter
 	
 	## get theoretical growth rates & plot
 	# posomega, posgamma = growth_rate_theory(minions, majions, theta, d0, u, vd, vr, kall, omegaall)
-	posomega, posgamma = growth_rate_manual(minions=minions,majions=majions,maj2ions=maj2ions,wmax=wmax,theta_deg=theta_deg,xi3=10**(-4),xi2=0.0)
-	ax[0].plot(posomega/wcyca,posgamma/wcyca,color='k')
-	ax[0].set_ylabel(r'$\gamma_l/$'+getOmegaLabel(minions),**tnrfont)
-	ax[0].set_xlim(wmin,wmax)
-	ax[0].set_yscale('log')
-	ax[0].set_ylim(1e-6,1e1) # TODO; hardcoded
+	posomega, posgamma = growth_rate_manual(minions=minions,majions=majions,maj2ions=maj2ions,wmax=wmax,\
+											theta_deg=theta_deg,xi3=10**(-4),xi2=0.0,nval=int(nval))
+	# get peak frequencies and plot as scatter
+	peaks_th = extractPeaks(posgamma,Nperw=1)
+	ax.scatter(posomega[peaks_th]/wcyca,posgamma[peaks_th]/wcyca,color='k',marker='x')
+	ax.plot(posomega/wcyca,posgamma/wcyca,color='k')
 	
-	## hard coded limits
-	# ax[0].set_ylim(0,2500)
-
 	## empirical growths
-	t=1
 	for ttimes in times:
 		SimIndex=0
 		for sim in sim_lst:
@@ -231,51 +223,65 @@ def multi_empirical_growths(home,sim_lst,labels,minions='Alphas',majions='Deuter
 			omegas = omegas[thresh]
 
 			## plot
-			ax[t].plot(omegas/wnorm,growthRatesMean/wnorm,'-o',color=colors[SimIndex])
+			# ax_emp.plot(omegas/wnorm,growthRatesMean/wnorm,'-o',color=colors[SimIndex])
+			ax_emp.scatter(omegas/wnorm,growthRatesMean/wnorm,color=colors[SimIndex],label=labels[SimIndex])
 			SimIndex+=1
-		ax[t].set_xlim(0,wmax)
-		# ax[t].set_yscale('log')
-		ax[t].set_ylabel(r'$\gamma_s/$'+getOmegaLabel(minions),**tnrfont)
+		ax_emp.set_xlim(0,wmax)
 		
-		## hard-coded formatting
-		# ylim 
-		# ax[t].set_ylim(0,3.5)
-		
-		## annotation label (alpha) 
-		ax[t].annotate(str(ttimes[0])+r'$<t/\tau_{c\alpha}<$'+str(ttimes[1]),xy=(0.04,0.7125),xycoords='axes fraction',\
-							**tnrfont,ha='left',va='bottom',bbox=dict(boxstyle='square',pad=0.15,fc='w', ec='k', lw=1))
-		t+=1
+
+	## formatting
+	# yscale
+	ax.set_yscale('log')
+	ax_emp.set_yscale('log')
+	# ylabel
+	# ax_emp.set_ylabel(r'$\gamma_s/$'+getOmegaLabel(minions),**tnrfont) # what colour to set this to?
+	ax.set_ylabel(r'$\gamma/$'+getOmegaLabel(minions),**tnrfont)
+	# xlabel
+	ax.set_xlabel(r'$\omega/$'+getOmegaLabel(minions),**tnrfont)
+	# # ylim
+	ax.set_ylim(1e-2,10**(1)) # TODO; hardcoded
+	# ax_emp.set_ylim(1e-6,1e1) # TODO; hardcoded
+	# xlim
+	ax.set_xlim(wmin,wmax)
+	# legend
+	ax_emp.legend(loc='best')
+
+	# ## annotation label (alpha) 
+	# ax_emp.annotate(str(ttimes[0])+r'$<t/\tau_{c\alpha}<$'+str(ttimes[1]),xy=(0.04,0.7125),xycoords='axes fraction',\
+	# 					**tnrfont,ha='left',va='bottom',bbox=dict(boxstyle='square',pad=0.15,fc='w', ec='k', lw=1))
 	
-	# x-label
-	ax[-1].set_xlabel(r'$\omega/$'+getOmegaLabel(minions),**tnrfont)
-	plt.show()
-	fig.savefig(home+'/Bz_kt_{}_{}_{}.png'.format(wmin,wmax,domega),bbox_inches='tight')
-	fig.savefig(home+'/Bz_kt_{}_{}_{}.eps'.format(wmin,wmax,domega),bbox_inches='tight')
+	fig.savefig(home+'referee_reports/Bz_kt_growth_rates.png',bbox_inches='tight')
+	# plt.show()
+	
+	# fig.savefig(home+'/Bz_kt_{}_{}_{}.png'.format(wmin,wmax,domega),bbox_inches='tight')
+	# fig.savefig(home+'/Bz_kt_{}_{}_{}.eps'.format(wmin,wmax,domega),bbox_inches='tight')
 	return None
 
 #---------------------------------------------------------------------#
 
 if __name__=='__main__':
 	from func_load import * 
-	# # D-T
-	# home = '/storage/space2/phrmsf/traceT/'
-	# sims = ['traceT_D_100_T_00','traceT_D_99_T_01','traceT_D_89_T_11']
-	# tlabels = [r'$0\%$',r'$1\%$',r'$11\%$']
-	# multi_empirical_growths(home,np.flip(sims),np.flip(tlabels),theory_sim=sims[0],times=[[0.5,2.0]])
+	# D-T
+	home = '/storage/space2/phrmsf/traceT/'
+	sims = ['traceT_D_100_T_00','traceT_D_99_T_01','traceT_D_89_T_11']
+	tlabels = [r'$0\%$',r'$1\%$',r'$11\%$']
+	colors = ['darkturquoise','r','g']
+	multi_empirical_growths(home,np.flip(sims),np.flip(tlabels),theory_sim=home+sims[0],\
+							colors=colors,times=[[0.5,2.0]],nval=int(2e6),domega=0.25) # times=[[0.5,2.0]]
 	
-	# D-He3
-	home = '/storage/space2/phrmsf/lowres_D_He3/'
-	wcp = const.qe*3.7/getMass('Protons')
-	# sims = np.sort([i for i in os.listdir(home) if 'p_90' in i])
-	# hlabels = np.array([int(i[2:4]) for i in sims])	
-	# multi_empirical_growths(home,sims,hlabels,'Deuterons','Protons',theory_sim=sims[0])
-	sims = ['0_00_p_90','0_45_p_90']
-	colors=['b','r']
-	# get empirical growth rates for a range of k values and corresponding frequencies
-	for i in range(len(sims)):
-		simloc=getSimulation(home+sims[i])
-		omegas, growthRatesMean, growthRatesSTD = growth_wavenumber(simloc,'Protons',0,20,domega=0.01,\
-													tstart_frac=0,tend_frac=5,theta=89*180/const.PI)
-		thresh = growthRatesMean > 0
-		plt.scatter(omegas[thresh]/wcp,growthRatesMean[thresh]/wcp,color=colors[i])
-	plt.show()
+	# # D-He3
+	# home = '/storage/space2/phrmsf/lowres_D_He3/'
+	# wcp = const.qe*3.7/getMass('Protons')
+	# # sims = np.sort([i for i in os.listdir(home) if 'p_90' in i])
+	# # hlabels = np.array([int(i[2:4]) for i in sims])	
+	# # multi_empirical_growths(home,sims,hlabels,'Deuterons','Protons',theory_sim=sims[0])
+	# sims = ['0_00_p_90','0_45_p_90']
+	# colors=['b','r']
+	# # get empirical growth rates for a range of k values and corresponding frequencies
+	# for i in range(len(sims)):
+	# 	simloc=getSimulation(home+sims[i])
+	# 	omegas, growthRatesMean, growthRatesSTD = growth_wavenumber(simloc,'Protons',0,20,domega=0.01,\
+	# 												tstart_frac=0,tend_frac=5,theta=89*180/const.PI)
+	# 	thresh = growthRatesMean > 0
+	# 	plt.scatter(omegas[thresh]/wcp,growthRatesMean[thresh]/wcp,color=colors[i])
+	# plt.show()

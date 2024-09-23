@@ -4,11 +4,11 @@ from func_load import *
 home = os.getcwd()
 #twostreamloc = '/home/space/phrmsf/Documents/EPOCH/epoch-4.17.16/epoch1d/old/old_sims/twoStream_long'
 twostreamloc = '/home/space/phrmsf/Documents/EPOCH/5_devel/epoch1d/2stream'
-simLoc = getSimulation(twostreamloc)
+simloc = getSimulation(twostreamloc)
 
 # files and times
 d0 = sdfread(0)
-ind_lst = list_sdf(simLoc)
+ind_lst = list_sdf(simloc)
 #times = ind_lst[::len(ind_lst)//4]
 times = ind_lst
 
@@ -26,6 +26,7 @@ E_left=np.zeros((len(times),len(v0))) ; E_right=np.zeros((len(times),len(v0))) ;
 E_lhist=np.zeros((len(times),bins)) ; E_rhist=np.zeros((len(times),bins)) ; E_ihist=np.zeros((len(times),bins))
 Erange = (0,10*Emax)
 vx_left = np.zeros((len(times),len(v0))) ; vx_right = np.zeros((len(times),len(v0))) ; vx_ions = np.zeros((len(times),2*len(v0)))
+"""
 
 # ------------------------------------------------------- #
 ## Energy matrices through time (cigarette plots)
@@ -57,12 +58,12 @@ fig,ax=plt.subplots(ncols=2,figsize=(8,9),sharey=True)
 fig.subplots_adjust(wspace=0.05)
 L, T = (getGridlen(d0)/LDe, tend/tau_pe)
 # energy
-#ax[0].imshow(np.log10(E_left),extent=[Erange[0],Erange[1]/(1000*const.qe),0,T],**kwargs)
-#ax[1].imshow(np.log10(E_right),extent=[Erange[0],Erange[1]/(1000*const.qe),0,T],**kwargs)
+#ax[0].imshow(np.log10(E_left),extent=[Erange[0],Erange[1]/(1000*const.qe),0,T],**imkwargs)
+#ax[1].imshow(np.log10(E_right),extent=[Erange[0],Erange[1]/(1000*const.qe),0,T],**imkwargs)
 # histogram
-iml = ax[0].imshow(np.log10(E_lhist),extent=[Erange[0],Erange[1]/(1000*const.qe),0,T],**kwargs,clim=(-6,-2),cmap='viridis')
-imr = ax[1].imshow(np.log10(E_rhist),extent=[Erange[0],Erange[1]/(1000*const.qe),0,T],**kwargs,clim=(-6,-2),cmap='viridis')
-#imi = ax[2].imshow(np.log10(E_ihist),extent=[Erange[0],Erange[1]/(1000*const.qe),0,T],**kwargs,clim=(-6,-2))
+iml = ax[0].imshow(np.log10(E_lhist),extent=[Erange[0],Erange[1]/(1000*const.qe),0,T],**imkwargs,clim=(-6,-2),cmap='viridis')
+imr = ax[1].imshow(np.log10(E_rhist),extent=[Erange[0],Erange[1]/(1000*const.qe),0,T],**imkwargs,clim=(-6,-2),cmap='viridis')
+#imi = ax[2].imshow(np.log10(E_ihist),extent=[Erange[0],Erange[1]/(1000*const.qe),0,T],**imkwargs,clim=(-6,-2))
 # outside ticks
 boutside_ticks(ax)
 # colorbar(s) & formatting
@@ -101,7 +102,8 @@ ftimes = [int(len(times)*(ttimes[i]/(tend/plasma_prd))) for i in range(len(ttime
 ftimes[-1] = 100
 frac = 1
 temp = 273 ; dens = 10
-v_the = np.sqrt(2*const.kb*temp/const.me)
+v_the = np.sqrt(const.kb*temp/const.me) # getThermalVelocity(sdfread(0),'Left_Electrons')
+print(v_the)
 color = ['r','b','g']
 species = ['Left_Electrons','Right_Electrons'] #getAllSpecies(sdfread(0))
 
@@ -121,3 +123,47 @@ print(home)
 fig.savefig(home+'/twoStream_phase.png',bbox_inches='tight')
 #plt.show()
 
+"""
+
+# x = np.linspace(0,10,1000)
+# sigma=0.5
+# y = np.exp((-(x-5)**2)/(sigma**2))
+# plt.scatter(x,y,facecolor='b',zorder=2)
+# thresh = (x < 5) & (x > 4)
+# params, _ = ODR_fit(x[thresh],y[thresh],beta0=[1.5,0])
+# print(params)
+# plt.scatter(x[thresh],y[thresh],color='r',zorder=3)
+# plt.plot(x[thresh],x[thresh]*params[0]+params[1],color='r',zorder=1)
+# plt.show()
+
+# ------------------------------------------------------- #
+## Growth rate of mean(abs(Ex))
+
+times = read_pkl('times')
+L = getGridlen(sdfread(0))
+dx = getdxyz(sdfread(0))
+wpe = getPlasmaFreq(sdfread(0),'Left_Electrons')
+tpe = 2*const.PI/wpe
+
+Nx = L/dx
+Nx = int(L/dx)
+Ex = np.zeros((len(ind_lst),Nx))
+
+for i in range(len(ind_lst)):
+	Ex[i,:] = getQuantity1d(sdfread(i),'Electric_Field_Ex')
+
+Ex_abs = np.abs(Ex)
+Ex_mean_abs = np.mean(Ex_abs,axis=1)
+plt.plot(times[1:]/tpe,Ex_mean_abs[1:])
+
+gamma = wpe/2
+A = -1
+print(gamma)
+tplot = np.linspace(0,6*tpe,100)
+plt.plot(tplot/tpe,gamma*tplot+A,color='r')
+
+plt.yscale('symlog')
+plt.ylim(1e-6,1e-2) ; plt.xlim(0,6)
+plt.ylabel(r'$\langle|E_x|\rangle$'+'  '+'[V/m]',**tnrfont)
+plt.xlabel('Time,  '+r'$\tau_{pe}$',**tnrfont)
+plt.show()

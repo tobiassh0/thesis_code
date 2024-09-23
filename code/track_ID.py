@@ -2,7 +2,6 @@
 from func_load import *
 from matplotlib.collections import LineCollection
 import matplotlib.colors as colors
-import energy.LarmorRadii as lr
 import collections
 import itertools
 
@@ -62,7 +61,7 @@ def tracer_getXPX(loc,species=['Deuterons'],minspec='Protons',colors=['k'],num_p
     tcmin=2*const.PI/wcmin
     vA=getAlfvenVel(d0)
     # find files where ID is output
-    restart_files=lr.para_check_restart(sim) # list_sdf(sim)
+    restart_files=para_check_restart(sim) # list_sdf(sim)
     
     # setup empty arrays for positions, momentum & times
     xid = np.zeros((len(species),num_particles,len(restart_files)))
@@ -140,7 +139,7 @@ def tracer_getXPX(loc,species=['Deuterons'],minspec='Protons',colors=['k'],num_p
 
 def tracer_plot3dPhaseSpace(loc,species=['Deuterons','He3'],colors=['b','r'],num_particles=10):
     sim=getSimulation(loc)
-    restart_files=lr.para_check_restart(sim)
+    restart_files=para_check_restart(sim)
     restart_times=np.zeros(len(restart_files))
     d0=sdfread(0)
     tcp=2*const.PI/getCyclotronFreq(d0,'Protons')

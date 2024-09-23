@@ -50,6 +50,7 @@ class Simulation():
 			if 'times.pkl' not in os.listdir() or (self.times==None).any():
 				dumpfiles(self.times, 'times')
 		else: # have pkl files
+			# TODO; check if number of fieldmatrix pkl files corresponds to all calculated, otherwise, recalculate from last 
 			pkl_file = self.quantity
 			Nos = ['no','No','n','','N']
 			if len(lst_FT2d)>0:print('You have [{}] available FT 2d pkl file(s)'.format(len(lst_FT2d)))
@@ -197,8 +198,9 @@ class Simulation():
 			print('Creating all FT_2ds...')
 			for quant in self.quantities: # create all FT_2d arrays for available fields
 				fmq = load_batch_fieldmatrix([],quant)
+				# delta Bz
 				if quant == 'Magnetic_Field_Bz':
-					fmq = fmq-np.mean(fmq[0:10,:]) # delta Bz				
+					fmq = fmq-np.mean(fmq[0:10,:]) 
 				FT_2d = get2dTransform(fmq,window=True)
 				dumpfiles(FT_2d,'FT_2d_'+quant)
 		# load the one you want to analyse
@@ -261,6 +263,6 @@ class Simulation():
 if __name__ == '__main__':
 	# simloc = '/storage/space2/phrmsf/ECRH/ECRH_JT60U_6'#lowres_D_He3/0_05_p_90'
 	# simloc = '/storage/space2/phrmsf/lowres_D_He3/energy_protons/1MEV/' #traceT/90deg'
-	# simloc = '/storage/space2/phrmsf/p_B11/'
-	simloc = '/storage/space2/phrmsf/traceT/traceT_D_100_T_00_v2'
+	# simloc = '/home/space/phrmsf/Documents/EPOCH/5_devel/epoch1d/B_angle_khat/Bz0/'
+	simloc = '/storage/space2/phrmsf/C3_comp/C3_32/'
 	Simulation(simloc)
