@@ -613,12 +613,16 @@ def RotateVel(d, species, phi=None):
 	return vx_prime, vy_prime, vz_prime
 
 # Get the perp and para components to velocity of a given species
-def getPerpParaVel(d, species):
+def getPerpParaVel(d, species, theta_xz=3.14156/2, theta_xy=0):
 	mass = getMass(species)
-	try:
-		magnetic_angle_xz, magnetic_angle_xy = getMagneticAngle(d)
-	except:
-		print('# ERROR # : Magnetic fields not readable') ; return None, None
+	if theta_xz==None:
+		try:
+			magnetic_angle_xz, magnetic_angle_xy = getMagneticAngle(d)
+		except:
+			print('# ERROR # : Magnetic fields not readable') ; return None, None
+	else:
+		magnetic_angle_xz = theta_xz
+		magnetic_angle_xy = theta_xy
 	try:
 		vx = getMeanquantity(d,'Particles_Px_'+species)/mass
 		vy = getMeanquantity(d,'Particles_Py_'+species)/mass
@@ -1072,13 +1076,14 @@ def plot1dTransform(FT_matrix,klim,tlim,klabel=r'$v_A/\Omega_D$',wlabel=r'$\Omeg
 
 
 # Get the 2d FT of field data
-def get2dTransform(fieldmatrix,window=True):
+def get2dTransform(fieldmatrix,window=True,absolute=True):
 	if window: preshift = np.fft.fft2(HanningWindowT(fieldmatrix))[:,:] # windowed in T by default
 	else: preshift = np.fft.fft2(fieldmatrix)[:,:] 
 	shift = np.fft.fftshift(preshift) # shift to zero-freq so is symmetrical (read numpy fft.fftshift documentation)
 	shiftchopped = shift[int(fieldmatrix.shape[0]/2):,int(fieldmatrix.shape[1]/2):] # only take positive frequencies (w) and wavenumbers (k)
 	# shiftchopped = shift[:,:] # plots the whole FFT space
-	shiftchopped = np.abs(shiftchopped) # destroy phase information
+	if absolute:
+		shiftchopped = np.abs(shiftchopped) # destroy phase information
 	del preshift, shift
 	return shiftchopped
 
@@ -1365,9 +1370,10 @@ def coldplasmadispersion(file0,omegas,theta=None):
 	n1 =  np.lib.scimath.sqrt((B+F)/(2.0*A))
 	n2 = np.lib.scimath.sqrt((B-F)/(2.0*A))
 	n3 = -np.lib.scimath.sqrt((B+F)/(2.0*A))
-	#n4 = -np.lib.scimath.sqrt((B-F)/(2.0*A))
+	# n4 = -np.lib.scimath.sqrt((B-F)/(2.0*A))
 	del R, P, L, S, D, B, F, A
-	return (np.real(n1)*omegas)/const.c , (np.real(n2)*omegas)/const.c , np.real((n3*omegas)/const.c) #, (n4*omegas)/c, omegas
+	return n1*omegas/const.c, n2*omegas/const.c, n3*omegas/const.c
+	# return (np.real(n1)*omegas)/const.c , (np.real(n2)*omegas)/const.c , np.real((n3*omegas)/const.c) #, (n4*omegas)/c, omegas
 	
 # Plots the power spectrum of a signal from a 2d FFT (trans) matrix
 def powerspectrum(trans,wnorm,wklims=[None,None],wkmax=[0,None,0,None]):
@@ -2868,17 +2874,24 @@ def plotSpectrogram(Spower,times,tnorm,nfft,noverlap,minspec='Alphas',clim=(None
 	return None
 
 def para_loop_restart(i,check_species='Protons'):
-    if 'Particles_Px_'+check_species in getKeys(sdfread(i)):
-        return i
-    else:
-        pass
+	"""
+	Loop function for parallelised checking of restart files
+	"""
+	if 'Particles_Px_'+check_species in getKeys(sdfread(i)):
+		return i
+	else:
+		pass
 
 def para_check_restart(simloc):
-    print('Parallel checking restart files...')
-    pool=mp.Pool(mp.cpu_count())
-    rest_files = np.array(pool.map_async(para_loop_restart,list_sdf(simloc)).get(99999))
-    pool.close()
-    # remove None
-    rest_files = rest_files[rest_files != np.array(None)]
-    print('Done :: {} files found.\n{}'.format(len(rest_files),rest_files))
-    return rest_files
+	"""
+	Parallelised checking of all files in a sim directory to find which ones are
+	restart files based off of whether they have the particles x momentum in their keys"
+	"""
+	print('Parallel checking restart files...')
+	pool=mp.Pool(mp.cpu_count())
+	rest_files = np.array(pool.map_async(para_loop_restart,list_sdf(simloc)).get(99999))
+	pool.close()
+	# remove None
+	rest_files = rest_files[rest_files != np.array(None)]
+	print('Done :: {} files found.\n{}'.format(len(rest_files),rest_files))
+	return rest_files
