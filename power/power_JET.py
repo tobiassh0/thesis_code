@@ -50,7 +50,7 @@ def generate_subplots(k, row_wise=False):
 
 def load_JETdata(name='JET26148_ICE_POWER.txt',wnorm=2*3.141*17e6):
     data = np.loadtxt(name,delimiter=',')
-    power_dB, freq_MHz = data[:,1], data[:,0] # 2 columns, N rows
+    freq_MHz, power_dB = data[:,0], data[:,1] # 2 columns, N rows
     freq_rads = freq_MHz*1e6*(2*const.PI)
     # freq = (freq_MHz*1e6)*(2*const.PI/wnorm) # convert MHz to wcnorm
     return freq_rads, power_dB

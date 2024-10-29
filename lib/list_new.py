@@ -2873,20 +2873,20 @@ def plotSpectrogram(Spower,times,tnorm,nfft,noverlap,minspec='Alphas',clim=(None
 	fig.savefig('Sx_mat_nfft_{}_noverlap_{}.png'.format(nfft,noverlap),bbox_inches='tight')
 	return None
 
+"""
+Loop function for parallelised checking of restart files
+"""
 def para_loop_restart(i,check_species='Protons'):
-	"""
-	Loop function for parallelised checking of restart files
-	"""
 	if 'Particles_Px_'+check_species in getKeys(sdfread(i)):
 		return i
 	else:
 		pass
 
+"""
+Parallelised checking of all files in a sim directory to find which ones are restart files 
+based off of whether they have the particles x momentum in their keys list"
+"""
 def para_check_restart(simloc):
-	"""
-	Parallelised checking of all files in a sim directory to find which ones are
-	restart files based off of whether they have the particles x momentum in their keys"
-	"""
 	print('Parallel checking restart files...')
 	pool=mp.Pool(mp.cpu_count())
 	rest_files = np.array(pool.map_async(para_loop_restart,list_sdf(simloc)).get(99999))
