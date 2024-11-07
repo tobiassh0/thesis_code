@@ -252,7 +252,7 @@ def plotdopPower(home,sims,labels,minspec='Protons',wkmax=[20,45],xlims=[0,20],w
     ax.set_ylim(-2,5)
     ax.set_ylabel('PSD',**tnrfont)
     ax.locator_params(axis='x',nbins=6)
-    fig.savefig(home+'power_compare_dopw_{}_{}.png'.format(xmin,xmax),bbox_inches='tight')
+    # fig.savefig(home+'power_compare_dopw_{}_{}.png'.format(xmin,xmax),bbox_inches='tight')
     plt.show()
     
     return None

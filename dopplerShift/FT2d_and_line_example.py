@@ -45,19 +45,22 @@ def plot_example(home,simloc,wkmax=[10,20],minspec='Protons'):
     # line doppler on 4 example lines (same color and style)
     freqs = np.linspace(0,wmax_prime,tNw)
     ynarr = tNw*freqs/wmax_prime
-    angles = [-np.pi/2,-np.pi/2.5,-np.pi/3,-np.pi/4] # -90, -72, -60, -45
+    dop_ang = -83.82*(np.pi/180) # theoretical = 96.18 deg
+    angles = [-np.pi/2,dop_ang,-np.pi/2.5,-np.pi/4] # -90, 180-theory, -72, -45
     power_lines = np.zeros((len(angles),len(freqs)))
     # plot all cases
     for i in range(len(angles)):
         for j in range(0,wmax_prime+1):
             axarr[i].axvline(j,linestyle='--',color='darkgrey')
-        power_lines[i,:] = pl.getPowerLine(tFT2d,ynarr,freqs,kmax_prime=100,wmax_prime=wmax_prime,angle=angles[i])
+        power_lines[i,:] = li.getPowerLine(tFT2d,ynarr,freqs,kmax_prime=100,wmax_prime=wmax_prime,angle=angles[i])
         axarr[i].plot(freqs,np.log10(power_lines[i,:])-np.log10(dw),color='k')
         axarr[i].set_ylim(-3,0.5) ; axarr[i].set_xlim(0,wmax_prime)
         ax1.plot(kx,kx*(1/np.tan(angles[i]))+8,color='k',linestyle='--')
         if i==0: 
             y0=8.125 ; x0=18
         elif i==1:
+            y0=6.125 ; x0=18
+        elif i==2:
             y0=2.225 ; x0=18
         else:
             y0=0.125 ; x0=(-8*np.tan(angles[i]))
@@ -87,8 +90,6 @@ def plot_example(home,simloc,wkmax=[10,20],minspec='Protons'):
 if __name__=='__main__':
     from func_load import *
     import dopplerShift.line_integrate as li
-    import power.power_line as pl
     from matplotlib.gridspec import GridSpec
-
 
     plot_example(home='/storage/space2/phrmsf/lowres_D_He3/',simloc='0_05_p_90')
