@@ -193,16 +193,15 @@ def plotdopPower(home,sims,labels,minspec='Protons',wkmax=[20,45],xlims=[0,20],w
     fig,ax = plt.subplots(figsize=(width,height))
     for j in range(xmin,xmax):
         ax.axvline(j,color='darkgrey',linestyle='--')
-    i=0
-    for sim in sims:
+    for i in range(len(sims)):
         # load and setup
-        simloc = getSimulation(sim)
-        d0 = sdfread(0)
+        simloc = getSimulation(sims[i])
+        d0 = sdfread(1) # 0
         # load FFT2d and plot
         FT2d = read_pkl('FT_2d_Magnetic_Field_Bz')
         Nw, Nk = FT2d.shape
         times = read_pkl('times')
-        klim, wlim = getDispersionlimits(sim)
+        klim, wlim = getDispersionlimits(sims[i])
         kmin, kmax = klim
         wmin, wmax = wlim
         # frequency and Alfven speed
@@ -232,41 +231,47 @@ def plotdopPower(home,sims,labels,minspec='Protons',wkmax=[20,45],xlims=[0,20],w
         # dopangle = (-const.PI/2-angle) # change direction in which angle is measured
         # print('dgrad :',grad,'\ndopangle :',dopangle*180/const.PI)
 
-        # plot doppler
+        # get doppler line power values
         freqs_prime = np.linspace(0,wmax_prime,tNw) # normalised units
         thresh = (freqs_prime > xmin) & (freqs_prime < xmax)
         ynarr = freqs_prime*tNw/wmax_prime # np.linspace(0,tNw,tNw) # pixel units
         power_line = li.getPowerLine(tFT2d,ynarr,freqs_prime,kmax_prime=kmax_prime,wmax_prime=wmax_prime,angle=dopangle)
+
+        # plot PSD equivalent line
         ax.plot(freqs_prime,np.log10(power_line)-np.log10(dw),color=colors[i],label=labels[i])
     
-        i+=1
-
-    # zoom and formatting
+    # frequency label (omega or f)
     if omegalabel:
         ax.set_xlabel(r'$\omega^\prime/$'+getOmegaLabel(minspec),**tnrfont)	
     if freqlabel:
         ax.set_xlabel(r'$f^\prime/$'+getFreqLabel(minspec),**tnrfont)	
+
+    # legend
     if leg:
-        ax.legend(loc='best',labelspacing=0.1,borderpad=0.1,ncol=1)
+        ax.legend(loc='upper left',labelspacing=0.1,borderpad=0.1,columnspacing=0.1,ncol=len(sims))
+
+    # zoom and formatting
     ax.set_xlim(xmin,xmax)
     ax.set_ylim(-2,5)
     ax.set_ylabel('PSD',**tnrfont)
     ax.locator_params(axis='x',nbins=6)
-    # fig.savefig(home+'power_compare_dopw_{}_{}.png'.format(xmin,xmax),bbox_inches='tight')
-    plt.show()
+
+    # plt.show()
+    fig.savefig(home+'power_compare_dopw_{}_{}_short.png'.format(xmin,xmax),bbox_inches='tight')
     
     return None
     
 
 if __name__=='__main__':
     # # D-He3
-    home = '/storage/space2/phrmsf/lowres_D_He3/'
+    # home = '/storage/space2/phrmsf/lowres_D_He3/'
+    home = '/run/media/phrmsf/My Passport/simulations/D-He3/pklfiles-lowres_D_He3/'
     # get sims
     sims = np.sort([i for i in os.listdir(home) if 'p_90' in i])
+    sims = sims[1:] # remove 0%
+    # sims = sims[::2] # every other simulation
     xiHe3 = np.array([int(i[2:4]) for i in sims])
     sims = np.array([home+i for i in sims])
-    # sims = [home+'0_00_p_90']
-    # xiHe3= [0]
-
-    plotdopPower(home,sims[1:],xiHe3[1:],xlims=[0,20],leg=True)#,height=3)
+    
+    plotdopPower(home,sims,xiHe3,xlims=[12,20],leg=True,height=3)
     sys.exit()

@@ -26,7 +26,7 @@ E_left=np.zeros((len(times),len(v0))) ; E_right=np.zeros((len(times),len(v0))) ;
 E_lhist=np.zeros((len(times),bins)) ; E_rhist=np.zeros((len(times),bins)) ; E_ihist=np.zeros((len(times),bins))
 Erange = (0,10*Emax)
 vx_left = np.zeros((len(times),len(v0))) ; vx_right = np.zeros((len(times),len(v0))) ; vx_ions = np.zeros((len(times),2*len(v0)))
-"""
+
 
 # ------------------------------------------------------- #
 ## Energy matrices through time (cigarette plots)
@@ -54,7 +54,7 @@ for t, c in zip(times,np.arange(0,len(times),1)):
 #	ax[c].hist(E_right/(1000*const.qe),color='b',bins=100,density=True) ## uncomment for a nrow plot of histograms
 
 # plot energy & hist
-fig,ax=plt.subplots(ncols=2,figsize=(8,9),sharey=True)
+fig,ax=plt.subplots(ncols=2,figsize=(8,5),sharey=True)
 fig.subplots_adjust(wspace=0.05)
 L, T = (getGridlen(d0)/LDe, tend/tau_pe)
 # energy
@@ -78,9 +78,11 @@ for i in range(len(ax)):
 	ax[i].set_title(labels[i],**tnrfont)
 	ax[i].set_xlim(0,0.12)
 print('Normalised such that the sum of histogram in a given time bin (Y-axis) equals 1.')
-fig.savefig(home+'/twoStream_Energy_hist.png')
-#plt.show()
+fig.savefig(home+'/twoStream_Energy_hist-1.png',bbox_inches='tight')
+plt.show()
 plt.clf()
+sys.exit()
+
 
 # ------------------------------------------------------- #
 ## Electrostatic potential plots
@@ -120,10 +122,10 @@ for i in range(len(ax)):
 ax[-1].set_xticks([0,350,700,1050,1400])
 ax[-1].set_xlabel(r'$x/\lambda_{De}$',fontsize=20)
 print(home)
-fig.savefig(home+'/twoStream_phase.png',bbox_inches='tight')
+plt.show()
+# fig.savefig(home+'/twoStream_phase.png',bbox_inches='tight')
 #plt.show()
 
-"""
 
 # x = np.linspace(0,10,1000)
 # sigma=0.5

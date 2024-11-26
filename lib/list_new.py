@@ -278,7 +278,10 @@ def getDispersionlimits(simloc):
 		files = list_sdf(simloc)
 	except:
 		files = np.arange(0,len(times),1)
-	dx = getdxyz(sdfread(0))
+	try:
+		dx = getdxyz(sdfread(0))
+	except:
+		dx = getdxyz(sdfread(1))
 	dt = getdt(times)
 	knyq = 0.5*2*const.PI/dx
 	wnyq = 0.5*2*const.PI/dt
@@ -854,6 +857,7 @@ def plotPhaseSpace(files,species=False):
 		ax.set_title(r'$t\omega_{pe}/2\pi = $'+str(np.around(times[i],3)), fontsize=18)
 		fig.savefig('velocity{}.jpeg'.format(i), bbox_inches="tight")
 		ax.clear()
+	return None
 
 # Plots the electric field potential in the x direction using the numpy.gradient() function so as to maintain array size.
 def plotPhi(files,species='Electrons'):
@@ -1042,7 +1046,7 @@ def Windows(field,window):
 # def Norm_Type():
 
 # Get the 1d FT of field data
-def get1dTransform(fieldmatrix, window=False, start=0): 
+def get1dTransform(fieldmatrix,window=False,start=0): 
 	# takes log of absolute shifted 1D FT (x -> k) of the matrix from getfieldmatrix()
 	if window: fieldmatrix = HanningWindowT(fieldmatrix)
 	else: print('!# Warning #! : 1d FFT is not being Hanning windowed.')
@@ -1197,7 +1201,7 @@ def loadFm(arr):
 def getFm(arr):
 	ind, quantities = arr
 	vals = []
-	try: 
+	try: # TODO; very inefficient
 		nfile = sdf.read(('%05d'%ind)+'.sdf')
 	except:
 		try: 
@@ -2878,6 +2882,7 @@ Loop function for parallelised checking of restart files
 """
 def para_loop_restart(i,check_species='Protons'):
 	if 'Particles_Px_'+check_species in getKeys(sdfread(i)):
+		print(i)
 		return i
 	else:
 		pass

@@ -64,6 +64,7 @@ def getdoptheory(file0,Emin,wcmin,minspec,vA,uperp_vA=0.9):
     """
     # get minority birth uperp (in terms of vA)
     theta_B,_ = getMagneticAngle(file0)
+    theta_B = 89*np.pi/180
     # get minority birth energy, mass and velocity
     umin = np.sqrt(2*Emin*1e6*const.qe/getMass(minspec))
     uperp = uperp_vA*vA
