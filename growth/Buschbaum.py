@@ -48,13 +48,16 @@ class Buschbaum(object):
         self.f2 = self.Me/self.M2
         pass
 
-    def heatmap(self,_xi2=None,omega_max=4.0):
+    def heatmap(self,_xi2=None,omega_max=None):
+        # if haven't set frequency limit
+        if not omega_max:
+            omega_max = float(self.M2/self.M1)
         # get concentrations and mass ratios
         self.setupBB(_xi2)
         # frequencies
         omega = self.wb2*np.linspace(0,omega_max,1000)
         # setup figure
-        fig,ax=plt.subplots(figsize=(8,8))
+        fig,ax=plt.subplots(figsize=(6,6),layout='constrained')
         # meshgrid for heatmap (w, xi2, krel)
         X2, OMEGA = np.meshgrid(self.x2,omega)
         X1 = 1-X2
@@ -82,13 +85,40 @@ class Buschbaum(object):
         fig.savefig(home+'/buschbaum_heatmap.png')
         pass
 
-    def line_plot(self,_xi2=None,omega_max=4.0):
+    def steady_stateBB(self,omega,krel,omega_div,diffkgrad=0.01):
+        """
+            Finds the value of the frequency (less than the divergent frequency)
+            which is considered the turnover/divergence from the steady-state.
+            In:
+                self        : class object 
+                omega       : np.array of frequencies (unnormalised) used to calculate krel
+                krel        : np.array of wavenumber solutions, normalised by k0=w/c
+                omega_div   : value of frequency where krel solutions diverge
+                diffkgrad   : float value percentage (%/100) of gradient in krel which to consider 
+                                loss of steady state
+            Out:
+                omega_turn  : float value of turnover frequency (unnormalised) 
+        """
+        # get gradient of wavenumber
+        kgrad = np.gradient(krel)
+        # frequency of turnover < diverging
+        thresh = omega<omega_div 
+        # 1% floor value (turnover from steady-state)
+        index = np.nanargmin(np.abs(kgrad[thresh]-diffkgrad))
+        return (omega[thresh])[index]
+
+    def line_plot(self,_xi2=None,omega_max=None):
+        # if haven't set frequency limit
+        if not omega_max:
+            omega_max = float(self.M2/self.M1)
         # setup concentrations and mass ratios
         self.setupBB(_xi2)
         # frequencies
         omega = self.wb2*np.linspace(0,omega_max,1000)
         # setup figure
-        fig,ax=plt.subplots(figsize=(8,8))
+        fig,ax=plt.subplots(figsize=(6,6),layout='constrained')
+        fig_ra,ax_ra=plt.subplots(figsize=(6,6),layout='constrained')
+        res_amp=np.zeros(len(self.x1))
         # line plot
         for i in range(len(self.x1)):
             _x1 = self.x1[i] ; _x2 = self.x2[i]
@@ -106,26 +136,55 @@ class Buschbaum(object):
             # frequency of divergent wavenumber
             omega_div = omega[np.argmax(krel)]
             # frequency of wavenumber at turnover (0 grad)
-            omega_turn=omega[np.argmax(np.gradient(krel,(omega[-1]-omega[0])/len(omega)))]
-            ax.axvline(omega_div/self.wb2,linestyle='--',color='b')
-            ax.axvline(omega_turn/self.wb2,linestyle='--',color='r')
-            # plot
-            thresh = [True]*len(krel) # krel>0
-            ax.plot(omega/self.wb2,krel,color='k',label=r"{:.2f}%".format(100*_x2))
-            # ax.plot(omega[thresh]/wb2,krel[thresh],',',color='k',label=r"{:.2f}%".format(100*x2[i]))
-        # ax.legend(loc='best')
-        ax.set_xlabel(r'$\omega/\Omega_2$',**tnrfont)
-        ax.set_ylabel(r'$k_r$',**tnrfont)
+            omega_turn = self.steady_stateBB(omega,krel,omega_div) # omega[np.argmax(np.gradient(krel,(omega[-1]-omega[0])/len(omega)))]
+            # ax.axvline(omega_div/self.wb2,linestyle='--',color='b') # divergent frequency
+            # ax.axvline(omega_turn/self.wb2,linestyle='--',color='r') # turnover frequency (steady-state)
+            res_amp[i]=(omega_div-omega_turn)/self.wb2
+        #     # plot
+        #     thresh = [True]*len(krel) # krel>0
+        #     ax.plot(omega/self.wb2,krel,color='k',label=r"{:.2f}%".format(100*_x2))
+        #     # ax.plot(omega[thresh]/wb2,krel[thresh],',',color='k',label=r"{:.2f}%".format(100*x2[i]))
+        # # line plot
+        # ax.set_xlabel(r'$\omega/\Omega_2$',**tnrfont)
+        # ax.set_ylabel(r'$k_r$',**tnrfont)
         # fig.savefig(self.home+'/buschbaum_line.png')
-        plt.show()
+        # resonance amplitude
+        ax_ra.plot(self.x2,res_amp,'-o',color='k')
+        ax_ra.axvline(self.x2[np.argmax(res_amp)],linestyle='--',color='r')
+        ax_ra.text(self.x2[np.argmax(res_amp)],0.95*np.max(res_amp), "{:.2f}".format(self.x2[np.argmax(res_amp)]),color='r',\
+                    ha='right', va='top', rotation=90,**tnrfont)
+        ax_ra.set_ylabel(r'Resonance Amplitude, '+r'$(\omega_\infty-\omega_{\delta})$',**tnrfont)
+        ax_ra.set_xlabel(r'Relative Concentration, '+r'$\xi_2/(\xi_1+\xi_2)$',**tnrfont)
+        fig_ra.savefig(self.home+'/buschbaum_resamp.png')
+        pass
+
+    def maxresamp(self):
+
         pass
 
 # ================================ #
 
 if __name__=='__main__':
+    import csv
     # home dir
     home = os.getcwd()
+    f = open('bb-resamp.txt','r')
+    maxresamp=[] ; massra=[]
+    for x in f:
+        a,b=x.strip("\n").split(" ")
+        massra.append(float(a)) ; maxresamp.append(float(b))
+    fig,ax=plt.subplots(figsize=(8,5),layout='constrained')
+    ax.plot(massra[1:],maxresamp[1:],'-o',color='k')
+    ax.set_ylabel(r'Concentration of Max. Res. Amp.',**tnrfont)
+    ax.set_xlabel(r'Ion Mass Ratio, '+r'$(M_2/M_1)$',**tnrfont)
+    ax.set_ylim(0)
+    fig.savefig(home+'/buschbaum_maxresamp.png')
+    plt.show()
+    sys.exit()
+
+    # class var
     bb = Buschbaum(home,['Deuterons','Tritons','Alphas'])
-    bb.line_plot(_xi2=[0.5])
-    # bb.heatmap()
+    # plots (line, heatmap & max resonant amplitude)
+    bb.line_plot(_xi2=np.linspace(0,0.95,100))
+    # bb.heatmap(_xi2=None)
     

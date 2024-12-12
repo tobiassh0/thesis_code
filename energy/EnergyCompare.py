@@ -177,14 +177,14 @@ if __name__=='__main__':
 	# labels = ['0']
 
 	# linear times
-	identify_ind = [np.linspace(100,12000,8,dtype=int) for i in range(len(sims))]
-	identify_markers = [['o','s','v','^','<','>','X','D'] for i in range(len(sims))]
+	identify_ind = [np.linspace(3500,12000,6,dtype=int) for i in range(len(sims))]
+	identify_markers = [['v','^','<','>','X','D'] for i in range(len(sims))]
 	# energy comparison
 	energy_compare(sims,labels,colors=['b','g','r','orange','m'],tmax=10,identify_mat=[False,False,True,True,False],\
 					identify_indmat=identify_ind,identify_markersmat=identify_markers,figname='time_scatter')
 	# gyro-resonance at times specified, single panel
 	gr.gyro_time_compare(home,sims,identify_indmat=identify_ind,identify_markersmat=identify_markers,\
-						multipanel=False,figname='singlepanel',plot_du=False,labels=labels)
+						multipanel=False,figname='_singlepanel_',plot_du=True,labels=labels,lims=(-1,8))
 	# multi-panel
 	# gr.gyro_time_compare(home,sims,identify_indmat=identify_ind,identify_markersmat=identify_markers,\
 	# 					multipanel=True,figname='multi_panel')

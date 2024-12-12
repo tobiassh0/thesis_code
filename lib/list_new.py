@@ -432,20 +432,20 @@ def getIonlabel(species):
 	'Alpha': r'$\alpha$', 	
 	'Helium4': r'$\alpha$',
 	'He4': r'$\alpha$',
-	'Deuterons': r'$D_2$',
-	'Deutrons': r'$D_2$', # sometimes misspelled
-	'Tritium': r'$T_3$',
-	'Tritons': r'$T_3$',
+	'Deuterons': r'$D$',
+	'Deutrons': r'$D$', # sometimes misspelled
+	'Tritium': r'$T$',
+	'Tritons': r'$T$',
 	'Helium3': r'$He_3$', 
 	'He3': r'$He_3$',
-	'Borons': r'$B_{11}$',
+	'Borons': r'$B_11$',
 	'Boron': r'$B_{11}$',
 	'B11': r'$B_{11}$',
 	'Ions': 'Ions'}
 	
 	if species not in labels:
 		if species == '':
-			print('No maj2 species, no Ion label provided')
+			print('No Ion label provided, nothing returned')
 		else:
 			print('Species [{}] label is not in dictionary, check name passed for spelling mistakes'.format(species))
 			raise SystemExit

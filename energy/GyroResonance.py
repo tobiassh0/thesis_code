@@ -204,7 +204,7 @@ def gyro_time_compare(home,sims,identify_indmat,identify_markersmat,species=['De
 			ax.plot(lims,lims,color='darkgrey',linestyle='--',linewidth=0.5,zorder=0)
 		else:
 			ax.axhline((m2/m1)*(q1/q2)**2,color='darkgrey',linestyle='--',zorder=0)
-		colors = plt.cm.rainbow(np.linspace(0,1,len(sims)))
+		colors = plt.cm.rainbow(np.linspace(0,1,len(sims))) # colors = ['k']*len(sims)
 		alphas = [1]*len(identify_indmat[0]) #np.linspace(0.5,1,len(identify_indmat[0]))
 	# loop through each sim (concentration)
 	for i in range(len(sims)):
@@ -227,10 +227,10 @@ def gyro_time_compare(home,sims,identify_indmat,identify_markersmat,species=['De
 								zorder=1,facecolor=colors[i],edgecolor='none',s=30,alpha=alphas[j])
 				else: # plot kinetic energy per-particle
 					axj.scatter([xi2],(xi2/xi1)*du1_du2[identify_indmat[i][j]],marker=identify_markersmat[i][j],\
-								zorder=1,facecolor=colors[i],edgecolor='none',s=30,alpha=alphas[j])
+								zorder=1,edgecolor=colors[i],facecolor='none',s=30,alpha=alphas[j])
 		# plt.axhline((const.me_to_He3/const.me_to_mD)*(1/4),color='k')
 		os.chdir('..')
-	if multipanel: 
+	if multipanel:
 		xoff = 0.075 ; yoff = -0.01
 		fig.supylabel(r'$\Delta u_D(t)/\Delta u_{He3}(t)$',x=xoff,**tnrfont)
 		fig.supxlabel(r'$(\xi_{D}/\xi_{He3})(m_{He3}/m_D)(q_D/q_{He3})^2$',y=yoff,**tnrfont)
@@ -278,28 +278,28 @@ if __name__=='__main__':
 	# PlotGyroResonance(home,duarr,sims,species=['Deuterons','Tritons'],norm_spec='Alphas',labels=hlabels,\
 	# 				  ylabel=ylabel,xlabel=xlabel,lims=((0,1),(0,1)),through_time=False,identify=False,time_norm=r'$\tau_{cD}$')
 	
-	# # D-He3
-	# home = '/storage/space2/phrmsf/lowres_D_He3/'
-	# sims = np.sort([i for i in os.listdir(home) if 'p_90' in i])[1:]
-	# print(sims)
-	# hlabels = np.array([int(i[2:4]) for i in sims])
-	# # standard
-	# xlabel=r'$(\xi_{D}/\xi_{He3})(m_{He3}/m_{D})(q_{D}/q_{He3})^2$'
-	# ylabel=r'$[\Delta u_{D}/\Delta u_{He3}]_{max}$'
-	# # # through-time
-	# # ylabel=r'$(\Delta u_{D}/\Delta u_{He3})$' + ' ' + r'$(\xi_{He3}/\xi_D)$'
-	# duarr = majIons_edens_ratio(home,sims,species=['Deuterons','He3'],norm_spec='Protons')
-	# print(duarr,duarr.shape)
-	# PlotGyroResonance(home,duarr,sims,species=['Deuterons','He3'],norm_spec='Protons',labels=hlabels,\
-	# 				  ylabel=ylabel,xlabel=xlabel,lims=((0,8),(0,8)),through_time=False,identify=True,time_norm=r'$\tau_{cp}$')
-	# # du_gyroratio(home,duarr,sims,species=['Deuterons','Helium3'],norm_spec='Protons',labels=hlabels)
+	# D-He3
+	home = '/storage/space2/phrmsf/lowres_D_He3/'
+	sims = np.sort([i for i in os.listdir(home) if 'p_90' in i])[1:]
+	print(sims)
+	hlabels = np.array([int(i[2:4]) for i in sims])
+	# standard
+	xlabel=r'$(\xi_{D}/\xi_{He3})(m_{He3}/m_{D})(q_{D}/q_{He3})^2$'
+	ylabel=r'$[\Delta u_{D}/\Delta u_{He3}]_{max}$'
+	# # through-time
+	# ylabel=r'$(\Delta u_{D}/\Delta u_{He3})$' + ' ' + r'$(\xi_{He3}/\xi_D)$'
+	duarr = majIons_edens_ratio(home,sims,species=['Deuterons','He3'],norm_spec='Protons')
+	print(duarr,duarr.shape)
+	PlotGyroResonance(home,duarr,sims,species=['Deuterons','He3'],norm_spec='Protons',labels=hlabels,\
+					  ylabel=ylabel,xlabel=xlabel,lims=((0,8),(0,8)),through_time=False,identify=True,time_norm=r'$\tau_{cp}$')
+	# du_gyroratio(home,duarr,sims,species=['Deuterons','Helium3'],norm_spec='Protons',labels=hlabels)
 
-	# p-B11
-	home = '/storage/space2/phrmsf/'
-	sims = ['p_B11']
-	xlabel=r'$(\xi_{p}/\xi_{B11})(m_{B11}/m_{p})(q_{p}/q_{B11})^2$'
-	ylabel=r'$[\Delta u_{p}/\Delta u_{B11}]_{max}$'
-	duarr = majIons_edens_ratio(home,sims,species=['Protons','B11'],norm_spec='Alphas')
-	PlotGyroResonance(home,duarr,sims,species=['Protons','B11'],norm_spec='Alphas',labels=[],xlabel=xlabel,ylabel=ylabel,\
-						through_time=True,identify=False,time_norm=r'$\tau_{c\alpha}$')
+	# # p-B11
+	# home = '/storage/space2/phrmsf/'
+	# sims = ['p_B11']
+	# xlabel=r'$(\xi_{p}/\xi_{B11})(m_{B11}/m_{p})(q_{p}/q_{B11})^2$'
+	# ylabel=r'$[\Delta u_{p}/\Delta u_{B11}]_{max}$'
+	# duarr = majIons_edens_ratio(home,sims,species=['Protons','B11'],norm_spec='Alphas')
+	# PlotGyroResonance(home,duarr,sims,species=['Protons','B11'],norm_spec='Alphas',labels=[],xlabel=xlabel,ylabel=ylabel,\
+	# 					through_time=True,identify=False,time_norm=r'$\tau_{c\alpha}$')
 	
