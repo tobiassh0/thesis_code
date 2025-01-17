@@ -55,95 +55,95 @@ def load_JETdata(name='JET26148_ICE_POWER.txt',wnorm=2*3.141*17e6):
     # freq = (freq_MHz*1e6)*(2*const.PI/wnorm) # convert MHz to wcnorm
     return freq_rads, power_dB
 
-def plot_old_comparison(home,sim_lst,JETfreqs,JETpower,wnorm,):
-    maxJETfreqs = round(max(JETfreqs))
-    labelAll =[r'$\#26148$',r'$0\%$',r'$1\%$',r'$11\%$',r'$50\%$']
+# def plot_old_comparison(home,sim_lst,JETfreqs,JETpower,wnorm,):
+#     maxJETfreqs = round(max(JETfreqs))
+#     labelAll =[r'$\#26148$',r'$0\%$',r'$1\%$',r'$11\%$',r'$50\%$']
     
-    ## interpolate data
-    Ninterp = 10000
-    freqs = np.linspace(min(JETfreqs),max(JETfreqs),Ninterp)
-    JETpower = np.interp(freqs,JETfreqs,JETpower) # smooth out power so not as jagged
-    df = (freqs[-1]-freqs[0])/len(freqs)
-    KX, KXint = signedCurv(JETpower,df)
-    #ax2 = axs[0].twinx()
-    #ax2.plot(freqs,KX,color='b') ; ax2.set_ylim(0,max(abs(KX**2))+max(abs(KX**2))/10) ; ax2.set_ylabel(r'$k^2(\omega)$',fontsize=18,color='b')
-    dw = wnorm*(freqs[-1]-freqs[0])/len(freqs)
-    bs_JET = (1/len(JETpower))*np.sum((np.mean(JETpower)-JETpower)**2)
-    print('jet smoothness:',KXint)
+#     ## interpolate data
+#     Ninterp = 10000
+#     freqs = np.linspace(min(JETfreqs),max(JETfreqs),Ninterp)
+#     JETpower = np.interp(freqs,JETfreqs,JETpower) # smooth out power so not as jagged
+#     df = (freqs[-1]-freqs[0])/len(freqs)
+#     KX, KXint = signedCurv(JETpower,df)
+#     #ax2 = axs[0].twinx()
+#     #ax2.plot(freqs,KX,color='b') ; ax2.set_ylim(0,max(abs(KX**2))+max(abs(KX**2))/10) ; ax2.set_ylabel(r'$k^2(\omega)$',fontsize=18,color='b')
+#     dw = wnorm*(freqs[-1]-freqs[0])/len(freqs)
+#     bs_JET = (1/len(JETpower))*np.sum((np.mean(JETpower)-JETpower)**2)
+#     print('jet smoothness:',KXint)
 
-    psd = True
-    powArr = []
-    smoothArr = []
-    BS = []
-    BSS = []
-    smoothArr.append(KXint)
+#     psd = True
+#     powArr = []
+#     smoothArr = []
+#     BS = []
+#     BSS = []
+#     smoothArr.append(KXint)
 
-    Dcyc = np.arange(0,maxJETfreqs+1,1) # MHz
-    for i in range(len(axs)):
-        axs[i].annotate(labelAll[i],xy=(0.025,0.7),xycoords='axes fraction',fontsize=18,color='r')
-        axs[i].set_xlim(0,maxJETfreqs)
-        if i == 0: 
-            axs[i].set_ylabel(r'$P_{ICE}$'+'  '+'[dB]',fontsize=18)
-        else:
-            if psd:
-                axs[i].set_ylabel('PSD',fontsize=18)
-            else:
-                axs[i].set_ylabel(r'$\rho(\omega)$',fontsize=18) # probability density
-        for h in Dcyc: 
-            axs[i].axvline(h,linestyle='--',color='darkgrey')
+#     Dcyc = np.arange(0,maxJETfreqs+1,1) # MHz
+#     for i in range(len(axs)):
+#         axs[i].annotate(labelAll[i],xy=(0.025,0.7),xycoords='axes fraction',fontsize=18,color='r')
+#         axs[i].set_xlim(0,maxJETfreqs)
+#         if i == 0: 
+#             axs[i].set_ylabel(r'$P_{ICE}$'+'  '+'[dB]',fontsize=18)
+#         else:
+#             if psd:
+#                 axs[i].set_ylabel('PSD',fontsize=18)
+#             else:
+#                 axs[i].set_ylabel(r'$\rho(\omega)$',fontsize=18) # probability density
+#         for h in Dcyc: 
+#             axs[i].axvline(h,linestyle='--',color='darkgrey')
 
-    ## plot JET data
-    axs[0].plot(freqs,JETpower,color='k')
-    axs[0].set_xlim(0,maxJETfreqs)
-    JETpower = JETpower/(dw*np.sum(JETpower))
+#     ## plot JET data
+#     axs[0].plot(freqs,JETpower,color='k')
+#     axs[0].set_xlim(0,maxJETfreqs)
+#     JETpower = JETpower/(dw*np.sum(JETpower))
 
-    for i in range(len(sim_lst)):
-    #    ax2 = axs[i+1].twinx()
-        sim_loc = getSimulation(home+sim_lst[i])
-        wnorm = getCyclotronFreq(sdfread(0),'Deuterons')
-        wcD = getCyclotronFreq(sdfread(0),'Deuterons')
-        times = read_pkl('times')
-        power = 10**read_pkl('log10_power')
-        omegas = read_pkl('omegas_power')
-        if sim_lst[i] in ['traceT_0_50','traceT_D_89_T_11','traceT_D_99_T_01']: # un-normalised omegas
-            dw = (omegas[-1]-omegas[0])/len(omegas)
-            omegas = omegas/wnorm
-        else:
-            dw = wnorm*(omegas[-1]-omegas[0])/len(omegas)
-        print('dw ::',dw)
-    #    power = np.interp(freqs,omegas,power) # interpolate
-    #    dw = wnorm*(freqs[-1]-freqs[0])/len(freqs)
-        kx, kxint = signedCurv(power,dw)
-        smoothArr.append(kxint)
-        if psd: # psd
-            new_power = power/dw
-        else: # probability density
-            new_power = power/(dw*np.sum(power))
-            print('SUM ::',np.sum(dw*new_power))
-    #    thresh = omegas < maxJETfreqs
-    #    new_power = new_power[thresh]
-    #    axs[i+1].plot(omegas[thresh],(new_power),label=labels[i],color='k')  ; axs[i+1].set_yscale('log') ; axs[i+1].set_ylim(10**(np.log10(min(new_power))-0.5),10**(np.log10(max(new_power))+0.5)) # offset axis # *wcD/(2*const.PI*1e6)
-        axs[i+1].plot(omegas,np.log10(new_power),label=labels[i],color='k')#  ; axs[i+1].set_yscale('log')
-        axs[i+1].set_ylim(.5,3.)
-    #    ax2.plot(omegas,kx,color='b') ; ax2.set_ylim(0,max(abs(kx))+max(abs(kx))/10)
-        ## baseline
-        Pmean = np.mean(np.log10(new_power))
-        Pdiff = np.std(np.log10(new_power))
-        Pstd = np.abs(np.std(new_power))
-    #    baseline  = Pdiff*np.cos(freqs*2*const.PI)+Pmean
-    #    axs[i+1].plot(freqs,abs(baseline),color='b')
-    #    kxb, kxbint = signedCurv(baseline, dw)
-    #    smoothArr.append(str('basek :: '+str(kxbint)))
-    #    ax2.set_ylabel(r'$k(\omega)$',fontsize=18,color='b')
+#     for i in range(len(sim_lst)):
+#     #    ax2 = axs[i+1].twinx()
+#         sim_loc = getSimulation(home+sim_lst[i])
+#         wnorm = getCyclotronFreq(sdfread(0),'Deuterons')
+#         wcD = getCyclotronFreq(sdfread(0),'Deuterons')
+#         times = read_pkl('times')
+#         power = 10**read_pkl('log10_power')
+#         omegas = read_pkl('omegas_power')
+#         if sim_lst[i] in ['traceT_0_50','traceT_D_89_T_11','traceT_D_99_T_01']: # un-normalised omegas
+#             dw = (omegas[-1]-omegas[0])/len(omegas)
+#             omegas = omegas/wnorm
+#         else:
+#             dw = wnorm*(omegas[-1]-omegas[0])/len(omegas)
+#         print('dw ::',dw)
+#     #    power = np.interp(freqs,omegas,power) # interpolate
+#     #    dw = wnorm*(freqs[-1]-freqs[0])/len(freqs)
+#         kx, kxint = signedCurv(power,dw)
+#         smoothArr.append(kxint)
+#         if psd: # psd
+#             new_power = power/dw
+#         else: # probability density
+#             new_power = power/(dw*np.sum(power))
+#             print('SUM ::',np.sum(dw*new_power))
+#     #    thresh = omegas < maxJETfreqs
+#     #    new_power = new_power[thresh]
+#     #    axs[i+1].plot(omegas[thresh],(new_power),label=labels[i],color='k')  ; axs[i+1].set_yscale('log') ; axs[i+1].set_ylim(10**(np.log10(min(new_power))-0.5),10**(np.log10(max(new_power))+0.5)) # offset axis # *wcD/(2*const.PI*1e6)
+#         axs[i+1].plot(omegas,np.log10(new_power),label=labels[i],color='k')#  ; axs[i+1].set_yscale('log')
+#         axs[i+1].set_ylim(.5,3.)
+#     #    ax2.plot(omegas,kx,color='b') ; ax2.set_ylim(0,max(abs(kx))+max(abs(kx))/10)
+#         ## baseline
+#         Pmean = np.mean(np.log10(new_power))
+#         Pdiff = np.std(np.log10(new_power))
+#         Pstd = np.abs(np.std(new_power))
+#     #    baseline  = Pdiff*np.cos(freqs*2*const.PI)+Pmean
+#     #    axs[i+1].plot(freqs,abs(baseline),color='b')
+#     #    kxb, kxbint = signedCurv(baseline, dw)
+#     #    smoothArr.append(str('basek :: '+str(kxbint)))
+#     #    ax2.set_ylabel(r'$k(\omega)$',fontsize=18,color='b')
 
-    print(labelAll)
-    print(smoothArr)
-    #print(BS)
-    #print(BSS)
-    axs[len(axs)-1].set_xlabel(r'$\omega/\Omega_D$',fontsize=18)
-    #plt.show()
-    fig.savefig('/storage/space2/phrmsf/paper/Power_ICE_compare_normWcD.png')
-    fig.savefig('/storage/space2/phrmsf/paper/Power_ICE_compare_normWcD.eps')
+#     print(labelAll)
+#     print(smoothArr)
+#     #print(BS)
+#     #print(BSS)
+#     axs[len(axs)-1].set_xlabel(r'$\omega/\Omega_D$',fontsize=18)
+#     #plt.show()
+#     fig.savefig('/storage/space2/phrmsf/paper/Power_ICE_compare_normWcD.png')
+#     fig.savefig('/storage/space2/phrmsf/paper/Power_ICE_compare_normWcD.eps')
 
 def plot_new_comparison(home,sim_lst,labels=[None],colors=[None]):
     # load JET data
@@ -159,7 +159,6 @@ def plot_new_comparison(home,sim_lst,labels=[None],colors=[None]):
     for i in range(len(sim_lst)):
         ax[i].plot(JETfreqs/wnorm,JETpower,color='k') #/JETpower[0]
         ax[i].set_xlim(0,maxnormJETfreqs)
-        ax[i].set_ylim(5,60)
         ax2 = ax[i].twinx()
         simloc = getSimulation(home+sim_lst[i])
         times = read_pkl('times')
@@ -174,14 +173,16 @@ def plot_new_comparison(home,sim_lst,labels=[None],colors=[None]):
         ax2.plot(omegas_norm[freq_thresh],log10_psd[freq_thresh],color=colors[i]) #/log10_psd[freq_thresh][0]
         # labelling and formatting
         ax2.set_ylabel('PSD',**tnrfont,color=colors[i])
-        ax2.annotate(labels[i],xy=(0.05,0.95),xycoords='axes fraction',ha='left',va='top',**tnrfont)#,color=colors[i])
+        ax2.annotate(labels[i],xy=(0.05,0.95),xycoords='axes fraction',ha='left',va='top',**tnrfont)
         ax2.set_ylim(0.5,3.0)
         ax2.locator_params(axis='y',nbins=4)
     # ax2.legend(loc='best')
-    fig.supylabel('ICE Power [dB]',**tnrfont,x=0.02)
-    fig.supxlabel(r'$\omega/\Omega_D$',**tnrfont)
-    fig.savefig('/storage/space2/phrmsf/traceT/referee_reports/JETpower_compare_all.png',bbox_inches='tight')
-    # plt.show()
+    fig.supylabel('ICE Power [dB]',**tnrfont,x=-0.01)
+    ax[-1].set_xlabel(r'$\omega/\Omega_D$',**tnrfont)
+    # fig.savefig('/storage/space2/phrmsf/traceT/referee_reports/JETpower_compare.png',bbox_inches='tight')
+    plt.show()
+    sys.exit()
+
     pass
 
 if __name__=='__main__':
@@ -195,7 +196,7 @@ if __name__=='__main__':
     # all traces
     sim_lst = ['traceT_D_50_T_50','traceT_D_70_T_30','traceT_D_82_T_18','traceT_D_89_T_11','traceT_D_95_T_05','traceT_D_99_T_01','traceT_D_100_T_00']
     labels = [r'$50\%$',r'$30\%$',r'$18\%$',r'$11\%$',r'$5\%$',r'$1\%$',r'$0\%$']
-    colors = ['blue','deeppink','orange','g','darkgrey','r','darkturquoise']    
+    colors = ['blue','deeppink','orange','g','k','r','darkturquoise']    
     plot_new_comparison(home,sim_lst,labels,colors)
 
 
