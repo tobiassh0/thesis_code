@@ -100,9 +100,9 @@ def power_compare(sims,labels=[None],normspecies='Deuterons',wkmax=[25,40],quant
 	
 	# ax.set_xticks(np.linspace(0,wmax,6))
 	ax.locator_params(axis='x',nbins=6)
-	# plt.show()
-
+	plt.show()
 	fig.savefig('power_compare_{}_{}_short.png'.format(lims[0],lims[1]),bbox_inches='tight')	
+
 	return None
 
 
@@ -124,11 +124,11 @@ if __name__=='__main__':
 	# sys.exit()
 
 	## D-He3
-	# os.chdir('/storage/space2/phrmsf/lowres_D_He3/')
-	os.chdir('/run/media/phrmsf/My Passport/simulations/D-He3/pklfiles-lowres_D_He3/')
+	os.chdir('/storage/space2/phrmsf/lowres_D_He3/')
+	# os.chdir('/run/media/phrmsf/My Passport/simulations/D-He3/pklfiles-lowres_D_He3/')
 	sims = np.sort([i for i in os.listdir() if 'p_90' in i])
 	sims = sims[1:] # remove 0%
-	# sims = sims[::2]
+	sims = sims[::2]
 	hlabels = np.array([int(i[2:4]) for i in sims])	
 	print(sims, hlabels)
 	power_compare(sims,labels=hlabels,wkmax=[21,45],normspecies='Protons',xlims=[12,20],\

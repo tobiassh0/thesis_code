@@ -269,7 +269,7 @@ if __name__=='__main__':
     # get sims
     sims = np.sort([i for i in os.listdir(home) if 'p_90' in i])
     sims = sims[1:] # remove 0%
-    # sims = sims[::2] # every other simulation
+    sims = sims[::2] # every other simulation
     xiHe3 = np.array([int(i[2:4]) for i in sims])
     sims = np.array([home+i for i in sims])
     
