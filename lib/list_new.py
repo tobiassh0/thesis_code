@@ -1376,8 +1376,8 @@ def coldplasmadispersion(file0,omegas,theta=None):
 	n3 = -np.lib.scimath.sqrt((B+F)/(2.0*A))
 	# n4 = -np.lib.scimath.sqrt((B-F)/(2.0*A))
 	del R, P, L, S, D, B, F, A
-	return n1*omegas/const.c, n2*omegas/const.c, n3*omegas/const.c
-	# return (np.real(n1)*omegas)/const.c , (np.real(n2)*omegas)/const.c , np.real((n3*omegas)/const.c) #, (n4*omegas)/c, omegas
+	# return n1*omegas/const.c, n2*omegas/const.c, n3*omegas/const.c
+	return (np.real(n1)*omegas)/const.c , (np.real(n2)*omegas)/const.c , np.real((n3*omegas)/const.c) #, (n4*omegas)/c, omegas
 	
 # Plots the power spectrum of a signal from a 2d FFT (trans) matrix
 def powerspectrum(trans,wnorm,wklims=[None,None],wkmax=[0,None,0,None]):

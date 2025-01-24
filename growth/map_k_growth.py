@@ -103,6 +103,7 @@ def growth_wavenumber(sim_loc,normspecies='Alphas',omega_min=0,omega_max=50,dome
 	# loop through each harmonic index
 	for i in range(len(harmonics)):
 		# data = np.mean((FT1d[1:,round(harmonics[i])-1:round(harmonics[i])+1]),axis=1)
+		print(round(harmonics[i]))
 		data = (FT1d[1:,round(harmonics[i])])
 		
 		# extract peaks in data
@@ -251,7 +252,7 @@ def multi_empirical_growths(home,sim_lst,labels,minions='Alphas',majions='Deuter
 	# 					**tnrfont,ha='left',va='bottom',bbox=dict(boxstyle='square',pad=0.15,fc='w', ec='k', lw=1))
 	
 	fig.savefig(home+'referee_reports/Bz_kt_growth_rates.png',bbox_inches='tight')
-	# plt.show()
+	plt.show()
 	
 	# fig.savefig(home+'/Bz_kt_{}_{}_{}.png'.format(wmin,wmax,domega),bbox_inches='tight')
 	# fig.savefig(home+'/Bz_kt_{}_{}_{}.eps'.format(wmin,wmax,domega),bbox_inches='tight')
@@ -265,9 +266,10 @@ if __name__=='__main__':
 	home = '/storage/space2/phrmsf/traceT/'
 	sims = ['traceT_D_100_T_00','traceT_D_99_T_01','traceT_D_89_T_11']
 	tlabels = [r'$0\%$',r'$1\%$',r'$11\%$']
-	colors = ['darkturquoise','r','g']
+	colors = np.flip(['darkturquoise','r','g'])
 	multi_empirical_growths(home,np.flip(sims),np.flip(tlabels),theory_sim=home+sims[0],\
 							colors=colors,times=[[0.5,2.0]],nval=int(2e6),domega=0.25) # times=[[0.5,2.0]]
+	# nval=int(2e6)
 	
 	# # D-He3
 	# home = '/storage/space2/phrmsf/lowres_D_He3/'

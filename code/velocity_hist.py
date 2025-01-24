@@ -3,25 +3,6 @@ from func_load import *
 import energy.LarmorRadii as lr
 from scipy import stats
 
-""" TODO; parallelise loading velocities for each component, species and time
-def para_velocity_get(i,species=['Deuterons','He3']):
-    rstfl = sdfread(i)
-    VARR = []
-    for spec in species:
-        Vx=getQuantity1d(rstfl,'Particles_Px_'+spec)/getMass(spec)
-        Vy=getQuantity1d(rstfl,'Particles_Py_'+spec)/getMass(spec)
-        Vz=getQuantity1d(rstfl,'Particles_Pz_'+spec)/getMass(spec)
-        VARR.append([Vx,Vy,Vz])
-    return
-
-def para_velocity_hist(restart_files):
-    # pass indice of restart and both species, return vel component arrays size [nspec, ntimes, ndim, nbins] = [2, 25, 3, 100]
-    pool=mp.Pool(mp.cpu_count())
-    arr = np.array(pool.map_async(para_velocity_get,restart_files).get(99999))
-    pool.close()
-    pass
-"""
-
 def getRowsCols(num):
     N = 0
     M = num
@@ -38,6 +19,49 @@ def root_find(x,y,search_between=(6.45,6.5)):
     yminval = ythresh[np.argmin(ythresh**2)]
     minyarg = np.where(y==yminval)[0][0]
     return x[minyarg], y[minyarg]
+
+def plot_velocity_startend(home,sim,species,vrange=(0.8,1.8),colors=['b','r']):
+    ind_lst = list_sdf(sim)
+    # load start and end
+    d0 = sdfread(0)
+    dlast = sdfread(ind_lst[-1])
+    darr = [d0,dlast]
+    # mass [kg]
+    mass = getMass(species)
+    # if thermal ions
+    if species in ['Deuterons','Tritons','He3']: 
+        temp = (2/3)*getMeanquantity(d0,'Derived_Average_Particle_Energy_'+species)/const.kb
+        E0 = 3.5e6 * const.qe # (3/2)*const.kb*temp 
+        v0 = np.sqrt(2*E0/mass) # vth for bulk ions
+        vA = getAlfvenVel(d0)
+
+    # setup fig
+    fig,ax=plt.subplots(figsize=(7,3),layout='constrained')
+
+    # loop through time-steps
+    for i in range(len(darr)):
+        # load velocities (equiv. of energies)
+        vx = getQuantity1d(darr[i],'Particles_Px_'+species)/mass
+        vy = getQuantity1d(darr[i],'Particles_Py_'+species)/mass
+        vz = getQuantity1d(darr[i],'Particles_Pz_'+species)/mass
+        vi = np.sqrt(vx**2 + vy**2 + vz**2)
+        print('loaded velocities')
+        # plot dist KDE at start
+        kde= stats.gaussian_kde(vi/vA,bw_method='silverman')
+        yval = kde.pdf(evalpoints)
+        ax.fill_between(evalpoints,yval,0,color=colors[i],alpha=0.5)
+        # # plotting
+        # ax.hist(vi/vA,density=True,range=vrange,bins=1000,edgecolor='none',alpha=0.5,facecolor=colors[i])
+        # # check integrals --> 1
+        # print('integral ',np.sum(yval*(vrange[-1]-vrange[0])/(len(vrange))*vA)))
+
+    # format fig
+    ax.legend(labels,loc='best',frameon=False)
+    ax.set_xlabel(r'$|\mathbf{v}|/v_A$',**tnrfont)
+    ax.set_ylabel(r'$f_\alpha(|\mathbf{v}|)$',**tnrfont)
+    ax.set_xlim(vrange)
+    fig.savefig(home+'fv_dist_{}.png'.format(species))
+    plt.show()
 
 def plotVelocityKDE(home,sim,species=['Protons'],colors=['r'],dims=['x','y','z'],name='',logname='',num_bins=200):
     simloc = getSimulation(home+sim)
@@ -249,6 +273,15 @@ def plotVelocityScatter(home,sim,species='Protons'):
     return None
 
 if __name__=='__main__':
+    # DT
+    home = '/storage/space2/phrmsf/traceT/'
+    sim = getSimulation(home+'traceT_D_100_T_00_v3')
+    _labels=[r'$t/\tau_{c\alpha}=0.0$',r'$t/\tau_{c\alpha}=7.0$']
+    # plot velocity hist of Alphas at start and end
+    plot_velocity_startend(home,sim,'Alphas',labels=_labels)
+    sys.exit()
+
+    # DHe3 
     home = '/storage/space2/phrmsf/lowres_D_He3/'
     sims = np.sort([i for i in os.listdir(home) if 'p_90' in i and '.pdf' not in i])[1:] # remove 0%
     xiHe3 = [str(int(i.split('_')[1]))+'%' for i in sims] # 'Protons_'+
