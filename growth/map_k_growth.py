@@ -251,7 +251,7 @@ def multi_empirical_growths(home,sim_lst,labels,minions='Alphas',majions='Deuter
 	# ax_emp.annotate(str(ttimes[0])+r'$<t/\tau_{c\alpha}<$'+str(ttimes[1]),xy=(0.04,0.7125),xycoords='axes fraction',\
 	# 					**tnrfont,ha='left',va='bottom',bbox=dict(boxstyle='square',pad=0.15,fc='w', ec='k', lw=1))
 	
-	fig.savefig(home+'referee_reports/Bz_kt_growth_rates.png',bbox_inches='tight')
+	fig.savefig(home+'referee_reports/Bz_kt_growth_rates_{}.png'.format(domega),bbox_inches='tight')
 	plt.show()
 	
 	# fig.savefig(home+'/Bz_kt_{}_{}_{}.png'.format(wmin,wmax,domega),bbox_inches='tight')
@@ -268,7 +268,7 @@ if __name__=='__main__':
 	tlabels = [r'$0\%$',r'$1\%$',r'$11\%$']
 	colors = np.flip(['darkturquoise','r','g'])
 	multi_empirical_growths(home,np.flip(sims),np.flip(tlabels),theory_sim=home+sims[0],\
-							colors=colors,times=[[0.5,2.0]],nval=int(2e6),domega=0.25) # times=[[0.5,2.0]]
+							colors=colors,times=[[0.5,2.0]],nval=int(2e6),domega=0.125) # times=[[0.5,2.0]]
 	# nval=int(2e6)
 	
 	# # D-He3

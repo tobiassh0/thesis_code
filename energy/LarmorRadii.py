@@ -43,6 +43,7 @@ def linear_check_getVelocityPerp(restart_files,times,species,theta,theta_y=0):
         Vperp_squared.append(Vxperp**2 + Vyperp**2 + Vzperp**2)
         # Vperp[i] = np.sqrt(np.mean(Vxperp**2 + Vyperp**2 + Vzperp**2))
 
+    dumpfiles(Vperp_squared,'Vperpsquared_'+species)
     return np.array(Vperp_squared), restart_times
 
 def plotChangeEnergyLarmorRatio(home,sims,species,minspec='Protons',labels=[''],colors=['k']):
@@ -71,26 +72,34 @@ def plotChangeEnergyLarmorRatio(home,sims,species,minspec='Protons',labels=[''],
     return None
 
 def plotChangeLarmorRadius(home,sims,species=['Deuterons','He3'],minspec='Protons',labels=[''],colors=['b','r']):
+    fig,axes=plt.subplots(figsize=(8,10),nrows=3,ncols=2,sharex=True,sharey=True,layout='constrained')
+    ax=axes.ravel()
     for i in range(len(sims)):
         print(sims[i])
         simloc=getSimulation(home+sims[i])
         d0=sdfread(0)
         times=read_pkl('times')
         tcmin=2*const.PI/getCyclotronFreq(d0,minspec)
-        # find restart files where Vx, Vy and Vz are present # loop through all sdf files, see if Vx_Particle in keys
-        restart_files = para_check_restart(simloc)
-
-        # get magnetic field angle (wrt y) and field strength # TODO; generalise for B field rotated wrt y and x
-        theta,theta_y=getMagneticAngle(d0)
+        # get magnetic field angle (wrt y) and field strength
         B0 = getMeanField3D(d0,'Magnetic_Field_B')
         LDe = getDebyeLength(d0, 'Electrons')
+        theta,theta_y=getMagneticAngle(d0)
 
+        # # find restart files where Vx, Vy and Vz are present # loop through all sdf files, see if Vx_Particle in keys
+        # restart_files = para_check_restart(simloc)
+        restart_files = np.arange(0,12500,500) # TODO; switch back to parallel checker
+
+        print(restart_files)
         # linear loading velocities
         for j in range(len(species)):
-            mass_spec = getMass(species[j])
-            # get Vperp and times at restart
-            Vperp_squared,restart_times = linear_check_getVelocityPerp(restart_files,times,species[j],theta,theta_y)
-            
+            try: # already dumped
+                Vperp_squared = read_pkl('Vperpsquared_'+species[j])
+                restart_times = np.array([times[t] for t in restart_files])
+            except: # calculate
+                print('Failed load Vperpsquared, calculating')
+                # get Vperp and times at restart
+                Vperp_squared,restart_times = linear_check_getVelocityPerp(restart_files,times,species[j],theta,theta_y)
+                
             # # 2d Larmor array
             # rLarr = np.sqrt(Vperp_squared)*mass_spec/(getChargeNum(species[j])*const.qe*B0)
             # plt.imshow(rLarr,**imkwargs)
@@ -99,25 +108,29 @@ def plotChangeLarmorRadius(home,sims,species=['Deuterons','He3'],minspec='Proton
             Vperp = np.sqrt(np.mean(Vperp_squared,axis=1)) # mean Vperp per time step
             
             # plot rL^2 as function of time & total energy transferred (should be equal)
+            mass_spec = getMass(species[j])
             rL2 = (mass_spec*Vperp/(getChargeNum(species[j])*const.qe*B0))**2
             print(rL2.shape,restart_times.shape)
-            plt.plot(restart_times/tcmin,(rL2-rL2[0])/LDe**2,color=colors[j],marker='o')
+            ax[i].plot(restart_times/tcmin,(rL2-rL2[0])/LDe**2,color=colors[j],marker='o')
+            ax[i].annotate(labels[i]+"%",xy=(0.05,0.95),xycoords='axes fraction',ha='left',va='top',**tnrfont)
 
-        # format and save
-        plt.xlabel(r'$t/\tau_{cp}$',**tnrfont)
-        plt.ylabel(r'$\Delta r^2_{L\sigma}/\lambda_{De}$',**tnrfont)
-        plt.title(labels[i]+"%",**tnrfont)
-        plt.legend(species,loc='best')
-        plt.savefig(home+'Delta_LarmorRadiiSquared_'+labels[i]+'.png')
-        plt.clf()
+    # format and save
+    fig.supxlabel(r'$t/\tau_{cp}$',**tnrfont)
+    fig.supylabel(r'$\Delta r^2_{L\sigma}/\lambda_{De}$',**tnrfont)
+    ax[-1].set_xlim(0,times[-1]/tcmin)
+    # plt.legend(species,loc='best')
+    fig.savefig(home+'Delta_LarmorRadiiSquared-collection.png',bbox_inches='tight')
+    plt.show()
+    plt.clf()
     return None
 
 if __name__=='__main__':
 
     home = '/storage/space2/phrmsf/lowres_D_He3/'
     # load sim
-    xiHe3arr = ['05']
     xiHe3arr = ['05','10','15','22','25','34','38','45']
+    # xiHe3arr = ['10','22','34','45']
+    xiHe3arr = ['10','15','22','34','38','45']
     sims = ['0_'+xiHe3+'_p_90' for xiHe3 in xiHe3arr]
     species = ['Deuterons','He3']
     
