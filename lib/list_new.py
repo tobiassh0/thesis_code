@@ -198,7 +198,7 @@ def getTimes(files):
 	# Scans all sdf objs in the "files", returns the times and stores into an array
 	times=np.zeros((len(files)))
 	for i in range(0,len(files)):
-		times[i] = files[i].__dict__['Header']['time']
+		times[i] = sdfread(files[i]).__dict__['Header']['time']
 		# print(files[i].__dict__['Header']['time'])
 	# times[0] =float(0) #if you start from t=0, first timestep be small but not zero, so make it
 			#0. Remove if not starting from 0. There is probably a better way of doing this
@@ -639,9 +639,9 @@ def getPerpParaVel(d, species, theta_xz=3.14156/2, theta_xy=0):
 		vxpara = vx*np.cos(magnetic_angle_xy)*np.cos(magnetic_angle_xy)
 		vypara = vy*np.cos(magnetic_angle_xz)*np.sin(magnetic_angle_xy)
 		vzpara = vz*np.sin(magnetic_angle_xz)
+		return [vxperp, vyperp, vzperp], [vxpara, vypara, vzpara]
 	except:
 		print('# ERROR # : Particle momentum/energy not readable') ; return None, None
-	return [vxperp, vyperp, vzperp], [vxpara, vypara, vzpara]
 
 #	minE = getQuantity1d()
 #	phi_x, phi_y = getMagneticAngle(d)
@@ -2235,11 +2235,6 @@ def getFields(n=1):
 
 # Home function which can be called, will call on getEnergies(). Generates KE_Dens and field E_Dens for species 1, 2, 3 and e-
 def energies(sim_loc,frac=1,plot=False,leg=True,integ=False,linfit=False,electrons=True):
-	width = 10
-	height = 6
-	#height = width*(1/const.g_ratio)
-	fig,ax=plt.subplots(figsize=(width,height))
-	
 	d0 = sdfread(0)
 	species = list(getIonSpecies(d0))
 
@@ -2295,16 +2290,22 @@ def energies(sim_loc,frac=1,plot=False,leg=True,integ=False,linfit=False,electro
 
 	if plot:
 		print('Plotting energies...')
+
+		width = 10 ; height = 6
+		#height = width*(1/const.g_ratio)
+		fig,ax=plt.subplots(figsize=(width,height))
 		colors=['b','cyan','g','r','m','orange','k','salmon','lightgreen'] # will only use all of them if there are 3 +ve and 1 -ve species ## assuming no extra field values
 		tnorm=2*const.PI/getCyclotronFreq(d0,min_species) # last species
 		mean_to = 10
 		dt = (times[-1]-times[0])/len(times)
 		print('### dt :: ',dt)
 
-		# figure size
-		left, bottom, width, height = [0.5,0.15,0.3,0.22]
-		#ax2 = fig.add_axes([left,bottom,width,height]) # inset of zoomed in portion of energy dens
-		for i in range(0,len(energy_quant)): # loops over all species given in energy_mult
+		# # figure size
+		# left, bottom, width, height = [0.5,0.15,0.3,0.22]
+		# ax2 = fig.add_axes([left,bottom,width,height]) # inset of zoomed in portion of energy dens
+		
+		# loops over all species given in energy_mult
+		for i in range(0,len(energy_quant)): 
 			Energy=read_pkl(energy_quant[i])
 			mean_Energy=np.mean(Energy[:mean_to])
 			energy_plot = (Energy-mean_Energy)*Energy_mult[i]
