@@ -1316,7 +1316,8 @@ def coldplasmadispersion_analytical(omegas,wpf=[None,None,None],wcf=[None,None,N
 	n3 = -np.lib.scimath.sqrt((B+F)/(2.0*A))
 	#n4 = -np.lib.scimath.sqrt((B-F)/(2.0*A))
 	del R, P, L, S, D, B, F, A
-	return (np.real(n1)*omegas)/const.c , (np.real(n2)*omegas)/const.c , (np.real(n3)*omegas)/const.c #, (n4*omegas)/c, omegas
+	# return (np.real(n1)*omegas)/const.c , (np.real(n2)*omegas)/const.c , (np.real(n3)*omegas)/const.c #, (n4*omegas)/c, omegas
+	return (n1*omegas)/const.c , (n2*omegas)/const.c , (n3*omegas)/const.c #, (n4*omegas)/c, omegas
 	
 	
 # Plots the cold plasma dispersion for ionic species 1 and 2 (two maj or maj and min)
@@ -2901,3 +2902,11 @@ def para_check_restart(simloc):
 	rest_files = rest_files[rest_files != np.array(None)]
 	print('Done :: {} files found.\n{}'.format(len(rest_files),rest_files))
 	return rest_files
+
+"""
+	sort two arrays based off of the re-ordering of arr1
+"""
+def sort_arrays(arr1,arr2):
+    rearr1 = np.array([x/100 for x,_ in sorted(zip(arr1,arr2))])
+    rearr2 = np.array([x for _,x in sorted(zip(arr1,arr2))])
+    return rearr1, rearr2
