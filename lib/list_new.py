@@ -131,8 +131,9 @@ def getl4l5(l4=False,l5=True):
 	return l4, l5
 
 # Reads a given sdf file as per the index
-def sdfread(index,d=0,l5=True,l4=False):
-	l4, l5 = getl4l5()
+def sdfread(index,l5=True,l4=False):
+	if not l5 and not l4:
+		l4, l5 = getl4l5()
 	d = None
 	try:
 		if l5: 
@@ -1270,6 +1271,25 @@ def getMagneticAngle(d0):
 			phi_x = float(input('B0 angle to xhat [deg]::'))*(const.PI/180)
 		phi_y = 0 # const.PI/2
 	return phi_x, phi_y # will return 0 degrees for phi_y # hard-coded
+
+# get this pitch angle between perp and para velocity components
+def getPitchAngle(d, species, theta_xz=3.1415926/2, theta_xy=0):	
+	"""
+		in:
+			d : (obj) sdfread object
+			species : (str) name of species
+			theta_{} : (float) the magnetic field angle between the {xz} or {xy} domains (default pi/2, 0)
+		returns:
+			phi_arr : (np arr) pitch-angle array for each macroparticle
+			phi_mean : (float) mean pitch-angle for our species
+	"""
+	vperp_arr, vpara_arr = getPerpParaVel(d, species, theta_xz=theta_xz, theta_xy=theta_xy)
+	vxperp, vyperp, vzperp = vperp_arr
+	vxpara, vypara, vzpara = vpara_arr
+	vperp = vxperp**2 + vyperp**2 + vzperp**2
+	vperp = vxpara**2 + vypara**2 + vzpara**2
+	phi_arr = np.arctan(vperp/vpara)
+	return phi_arr, np.mean(phi_arr)
 
 def coldplasmadispersion_analytical(omegas,wpf=[None,None,None],wcf=[None,None,None],theta=None):
 	"""
@@ -2907,6 +2927,6 @@ def para_check_restart(simloc):
 	sort two arrays based off of the re-ordering of arr1
 """
 def sort_arrays(arr1,arr2):
-    rearr1 = np.array([x/100 for x,_ in sorted(zip(arr1,arr2))])
-    rearr2 = np.array([x for _,x in sorted(zip(arr1,arr2))])
-    return rearr1, rearr2
+	rearr1 = np.array([x/100 for x,_ in sorted(zip(arr1,arr2))])
+	rearr2 = np.array([x for _,x in sorted(zip(arr1,arr2))])
+	return rearr1, rearr2

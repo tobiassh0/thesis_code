@@ -49,22 +49,24 @@ def getdopgrad(FT2d,logthresh=1.8,norm=1,kernel='custom',dydxrange=(-0.5,0.5)):
 
     return grad, angle # radians 
 
-def getdoptheory(file0,Emin,wcmin,minspec,vA,uperp_vA=0.9):
+def getdoptheory(file0,wcmin,minspec,vA,Emin=14.68,uperp_vA=0.9):
     """
     DESCRIPTION HERE
         IN:
             file0       : sdf read object, 0th file (00000.sdf)
-            Emin        : float, energy of minority species [MeV]
             wcmin       : float, cyclotron frequency of minority species
             minspec     : str, name of minority species
-            vA          : float, Alfven speed in m/s
+            vA          : float, Alfven speed [m/s]
+            Emin        : float, energy of minority species [MeV]
             uperp_vA    : float, the ratio between the perpendicular birth velocity of minspec and the Alfven wave speed vA
         OUT:
             dsth        : float, returns the Doppler velocity as predicted by theory using pitch-angle and magnetic angle
     """
     # get minority birth uperp (in terms of vA)
-    theta_B,_ = getMagneticAngle(file0)
-    theta_B = 89*np.pi/180
+    try:
+        theta_B,_ = getMagneticAngle(file0)
+    except:
+        theta_B = 89*np.pi/180
     # get minority birth energy, mass and velocity
     umin = np.sqrt(2*Emin*1e6*const.qe/getMass(minspec))
     uperp = uperp_vA*vA

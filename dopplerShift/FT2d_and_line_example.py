@@ -45,7 +45,7 @@ def plot_example(home,simloc,wkmax=[10,20],minspec='Protons'):
     # line doppler on 4 example lines (same color and style)
     freqs = np.linspace(0,wmax_prime,tNw)
     ynarr = tNw*freqs/wmax_prime
-    dop_ang = -83.82*(np.pi/180) # theoretical = 96.18 deg
+    dop_ang = -83.82*(np.pi/180) # theoretical = 6.18 deg (+ve clockwise from North)
     angles = [-np.pi/2,dop_ang,-np.pi/2.5,-np.pi/4] # -90, 180-theory, -72, -45
     power_lines = np.zeros((len(angles),len(freqs)))
     # plot all cases
