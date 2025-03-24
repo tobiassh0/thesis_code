@@ -1301,7 +1301,7 @@ def coldplasmadispersion_analytical(omegas,wpf=[None,None,None],wcf=[None,None,N
 			wcf : arrays of cyclotron frequencies (electron, species1, species2, ..., speciesN)
 			theta : angle between wavevector and magnetic field [rad]
 		OUT:
-			n1, n2, n3 (n4) : Un-normalised solutions to dispersion, based on four solutions of n^2 \propto B pm F (++, +-, -+, (--))
+			n1, n2, n3 (n4) : Un-normalised solutions to dispersion, based on four solutions of n^2 \propto B pm F (++, +-, -+, --)
 	"""
 	if not theta: 
 		theta = 89.0*(const.PI/180) # assume an angle
@@ -1391,7 +1391,7 @@ def coldplasmadispersion(file0,omegas,theta=None):
 	F = (((R*L - P*S)**2)*(sin**4) + 4.0*(P**2)*(D**2)*(cos**2))**0.5
 	A = S*(sin**2) + P*(cos**2)
 	n1 = np.zeros(l, dtype=complex) ; n2=np.zeros(l, dtype=complex); n3=np.zeros(l, dtype=complex)#; n4=np.zeros(l, dtype=complex) 
-	n3 = np.lib.scimath.sqrt((R*L)/S)
+	# n3 = np.lib.scimath.sqrt((R*L)/S)
 	n1 =  np.lib.scimath.sqrt((B+F)/(2.0*A))
 	n2 = np.lib.scimath.sqrt((B-F)/(2.0*A))
 	n3 = -np.lib.scimath.sqrt((B+F)/(2.0*A))
